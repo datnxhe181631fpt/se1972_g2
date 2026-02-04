@@ -316,6 +316,13 @@ $('#brandForm').on('submit', function(e) {
         return false;
     }
     
+    if (brandName.length > 50) {
+        e.preventDefault();
+        alert('Tên thương hiệu phải có ít hơn 50 kí tự!');
+        $('brandName').focus();
+        return false;
+    }
+    
     return true;
 });
 
