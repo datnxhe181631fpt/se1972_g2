@@ -3,13 +3,12 @@ package controller;
 import DAO.BrandDAO;
 import entity.Brand;
 import java.io.IOException;
-import java.io.PrintWriter;
+import java.util.List;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import java.util.List;
 
 @WebServlet(name = "BrandController", urlPatterns = {"/admin/brands"})
 public class BrandController extends HttpServlet {
@@ -143,6 +142,20 @@ public class BrandController extends HttpServlet {
         String description = request.getParameter("description");
         boolean isActive = "on".equals(request.getParameter("isActive"));
         
+        // Check if brand name already exists
+        if (brandDAO.isBrandNameExists(brandName, null)) {
+            Brand brand = new Brand();
+            brand.setBrandName(brandName);
+            brand.setLogo(logo);
+            brand.setDescription(description);
+            brand.setIsActive(isActive);
+            
+            request.setAttribute("error", "Tên thương hiệu đã tồn tại! Vui lòng chọn tên khác.");
+            request.setAttribute("brand", brand);
+            request.getRequestDispatcher("/AdminLTE-3.2.0/admin-brand-detail.jsp").forward(request, response);
+            return;
+        }
+        
         Brand brand = new Brand();
         brand.setBrandName(brandName);
         brand.setLogo(logo);
@@ -155,6 +168,7 @@ public class BrandController extends HttpServlet {
             response.sendRedirect(request.getContextPath() + "/admin/brands?msg=add_success");
         } else {
             request.setAttribute("error", "Thêm thương hiệu thất bại!");
+            request.setAttribute("brand", brand);
             request.getRequestDispatcher("/AdminLTE-3.2.0/admin-brand-detail.jsp").forward(request, response);
         }
     }
@@ -166,6 +180,21 @@ public class BrandController extends HttpServlet {
         String logo = request.getParameter("logo");
         String description = request.getParameter("description");
         boolean isActive = "on".equals(request.getParameter("isActive"));
+        
+        // Check if brand name already exists (excluding current brand)
+        if (brandDAO.isBrandNameExists(brandName, brandID)) {
+            Brand brand = new Brand();
+            brand.setBrandID(brandID);
+            brand.setBrandName(brandName);
+            brand.setLogo(logo);
+            brand.setDescription(description);
+            brand.setIsActive(isActive);
+            
+            request.setAttribute("error", "Tên thương hiệu đã tồn tại! Vui lòng chọn tên khác.");
+            request.setAttribute("brand", brand);
+            request.getRequestDispatcher("/AdminLTE-3.2.0/admin-brand-detail.jsp").forward(request, response);
+            return;
+        }
         
         Brand brand = new Brand();
         brand.setBrandID(brandID);

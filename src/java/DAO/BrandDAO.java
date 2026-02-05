@@ -200,4 +200,31 @@ public class BrandDAO extends DBContext {
         }
         return false;
     }
+    
+    // Check if brand name exists (for duplicate validation)
+    public boolean isBrandNameExists(String brandName, Integer excludeBrandID) {
+        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM Brands WHERE BrandName = ?");
+        
+        // Exclude current brand when updating
+        if (excludeBrandID != null) {
+            sql.append(" AND BrandID != ?");
+        }
+        
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            ps.setString(1, brandName);
+            
+            if (excludeBrandID != null) {
+                ps.setInt(2, excludeBrandID);
+            }
+            
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1) > 0;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
 }
