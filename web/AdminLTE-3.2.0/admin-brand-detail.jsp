@@ -70,6 +70,15 @@ if (employee == null) {
         <!-- Main content -->
         <section class="content">
             <div class="container-fluid">
+                
+                <!-- Error Message -->
+                <c:if test="${not empty error}">
+                    <div class="alert alert-danger alert-dismissible fade show">
+                        <button type="button" class="close" data-dismiss="alert">&times;</button>
+                        <i class="icon fas fa-ban"></i> ${error}
+                    </div>
+                </c:if>
+                
                 <div class="row">
                     <!-- Form Column -->
                     <div class="col-md-8">
@@ -318,8 +327,8 @@ $('#brandForm').on('submit', function(e) {
     
     if (brandName.length > 50) {
         e.preventDefault();
-        alert('Tên thương hiệu phải có ít hơn 50 kí tự!');
-        $('brandName').focus();
+        alert('Tên thương hiệu phải có ít hơn 50 ký tự!');
+        $('#brandName').focus();
         return false;
     }
     
