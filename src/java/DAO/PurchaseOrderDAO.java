@@ -36,6 +36,38 @@ public class PurchaseOrderDAO extends DBContext {
         return lists;
     }
 
+    public PurchaseOrder getPurchaseOrderByCode(String purchaseNumber) {
+        String sql = "select * from PurchaseOrder where PONumber = ?";
+        Connection connection = getConnection();
+        try {
+            stm = connection.prepareStatement(sql);
+            stm.setString(1, purchaseNumber);
+            rs = stm.executeQuery();
+            if (rs.next()) {
+                return extractPurchaseOrderFromResultSet(rs);
+            }
+        } catch (Exception e) {
+            System.out.println("ERR: getPO by Code: " + e.getMessage());
+        }
+        return null;
+    }
+
+    public PurchaseOrder getPurchaseOrderById(long id) {
+        String sql = "select * from PurchaseOrders where POID = ?";
+        Connection connection = getConnection();
+        try {
+            stm = connection.prepareStatement(sql);
+            stm.setLong(1, id);
+            rs = stm.executeQuery();
+            if (rs.next()) {
+                return extractPurchaseOrderFromResultSet(rs);
+            }
+        } catch (Exception e) {
+            System.out.println("ERR: getPOById: " + e.getMessage());
+        }
+        return null;
+    }
+
     private PurchaseOrder extractPurchaseOrderFromResultSet(ResultSet rs) throws Exception {
         PurchaseOrder po = new PurchaseOrder();
         po.setId(rs.getLong("POID"));
