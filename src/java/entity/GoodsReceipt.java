@@ -14,6 +14,7 @@ import java.util.List;
  * @author qp
  */
 public class GoodsReceipt {
+
     public static final String STATUS_PENDING = "PENDING";
     public static final String STATUS_COMPLETED = "COMPLETED";
 
@@ -186,12 +187,12 @@ public class GoodsReceipt {
 
     @Override
     public String toString() {
-        return "GoodsReceipt{" +
-                "id=" + id +
-                ", receiptNumber='" + receiptNumber + '\'' +
-                ", status='" + status + '\'' +
-                ", totalQuantity=" + totalQuantity +
-                ", totalAmount=" + totalAmount +
-                '}';
+        return "GoodsReceipt{"
+                + "id=" + id
+                + ", receiptNumber='" + receiptNumber + '\''
+                + ", status='" + status + '\''
+                + ", totalQuantity=" + totalQuantity
+                + ", totalAmount=" + totalAmount
+                + '}';
     }
 }

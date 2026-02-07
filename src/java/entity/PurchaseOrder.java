@@ -28,7 +28,7 @@ public class PurchaseOrder {
     private LocalDate orderDate;
     private LocalDate expectedDate;
     private String status;
-    
+
     private BigDecimal subtotal;
     private BigDecimal totalDiscount;
     private BigDecimal totalAmount;
@@ -268,12 +268,12 @@ public class PurchaseOrder {
 
     @Override
     public String toString() {
-        return "PurchaseOrder{" +
-                "id=" + id +
-                ", poNumber='" + poNumber + '\'' +
-                ", status='" + status + '\'' +
-                ", totalAmount=" + totalAmount +
-                '}';
+        return "PurchaseOrder{"
+                + "id=" + id
+                + ", poNumber='" + poNumber + '\''
+                + ", status='" + status + '\''
+                + ", totalAmount=" + totalAmount
+                + '}';
     }
 
 }
