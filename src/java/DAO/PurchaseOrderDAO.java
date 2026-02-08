@@ -93,6 +93,24 @@ public class PurchaseOrderDAO extends DBContext {
         }
         return false;
     }
+
+    //cancel
+    public boolean cancelPO() {
+        Connection connection = getConnection();
+        String sql = """
+                    update PurchaseOrders set CancelledBy = ?,
+                                              CancellationReason = ?,
+                                              Status = 'CANCELLED'
+                                              where PONumber = ?
+                """;
+        try {
+            stm = connection.prepareStatement(sql);
+            return stm.executeUpdate() > 0;
+        } catch (Exception e) {
+            System.out.println("CancelPO: " + e.getMessage());
+        }
+        return false;
+    }
     
     
 
