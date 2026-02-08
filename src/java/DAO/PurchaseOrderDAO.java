@@ -68,6 +68,34 @@ public class PurchaseOrderDAO extends DBContext {
         return null;
     }
 
+    //add
+    public boolean addPurchaseOrder(PurchaseOrder po) {
+        String sql = """
+                INSERT INTO PurchaseOrders (PONumber, SupplierID, OrderDate, ExpectedDate, Subtotal, TotalDiscount, TotalAmount, Notes, CreatedBy)
+               VALUES(?,?,?,?,?,?,?,?,?)
+                    """;
+        Connection connection = getConnection();
+        try {
+            int index = 1;
+            stm = connection.prepareStatement(sql);
+            stm.setString(index++, po.getPoNumber());
+            stm.setLong(index++, po.getSupplierId());
+            stm.setDate(index++, Date.valueOf(po.getOrderDate()));
+            stm.setDate(index++, Date.valueOf(po.getExpectedDate()));
+            stm.setBigDecimal(index++, po.getSubtotal());
+            stm.setBigDecimal(index++, po.getTotalDiscount());
+            stm.setBigDecimal(index++, po.getTotalAmount());
+            stm.setString(index++, po.getNotes());
+            stm.setInt(index++, po.getCreatedBy());
+            return stm.executeUpdate() > 0;
+        } catch (Exception e) {
+            System.out.println("ERR: Add :" + e.getMessage());
+        }
+        return false;
+    }
+    
+    
+
     private PurchaseOrder extractPurchaseOrderFromResultSet(ResultSet rs) throws Exception {
         PurchaseOrder po = new PurchaseOrder();
         po.setId(rs.getLong("POID"));
