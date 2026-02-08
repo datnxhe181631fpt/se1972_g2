@@ -95,13 +95,57 @@ public class PurchaseOrderDAO extends DBContext {
     }
 
     //cancel
-    public boolean cancelPO() {
+    public boolean cancelPO(String poNumber, int by, String reason) {
         Connection connection = getConnection();
         String sql = """
                     update PurchaseOrders set CancelledBy = ?,
                                               CancellationReason = ?,
                                               Status = 'CANCELLED'
                                               where PONumber = ?
+                """;
+        try {
+            int index = 1;
+            stm = connection.prepareStatement(sql);
+            stm.setInt(index++, by);
+            stm.setString(index++, reason);
+            stm.setString(index++, poNumber);
+            return stm.executeUpdate() > 0;
+        } catch (Exception e) {
+            System.out.println("CancelPO: " + e.getMessage());
+        }
+        return false;
+    }
+
+    //reject
+    public boolean rejectPO(String poNumber, int by, String reason) {
+        Connection connection = getConnection();
+        String sql = """
+                  update PurchaseOrders set ApprovedBy = ?,
+                                                                     RejectionReason = ?,
+                                                                     Status = 'REJECTED'
+                                                                 where PONumber = ?
+                """;
+        try {
+            stm = connection.prepareStatement(sql);
+            int index = 1;
+            stm = connection.prepareStatement(sql);
+            stm.setInt(index++, by);
+            stm.setString(index++, reason);
+            stm.setString(index++, poNumber);
+            return stm.executeUpdate() > 0;
+        } catch (Exception e) {
+            System.out.println("CancelPO: " + e.getMessage());
+        }
+        return false;
+    }
+
+    //approve
+    public boolean approvePO(String poNumber, int by) {
+        Connection connection = getConnection();
+        String sql = """
+                  update PurchaseOrders set ApprovedBy = ?,
+                                                                     Status = 'APPROVED'
+                                                                 where PONumber = ?
                 """;
         try {
             stm = connection.prepareStatement(sql);
@@ -111,8 +155,6 @@ public class PurchaseOrderDAO extends DBContext {
         }
         return false;
     }
-    
-    
 
     private PurchaseOrder extractPurchaseOrderFromResultSet(ResultSet rs) throws Exception {
         PurchaseOrder po = new PurchaseOrder();
