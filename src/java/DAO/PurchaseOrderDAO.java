@@ -69,6 +69,22 @@ public class PurchaseOrderDAO extends DBContext {
         return null;
     }
 
+    public List<PurchaseOrder> getPurchaseOrdersBySupplier(int supplierId) {
+        String sql = "select * from PurchaseOrders where supplierId = ?";
+        List<PurchaseOrder> lists = new ArrayList<>();
+        Connection connection = getConnection();
+        try {
+            stm = connection.prepareStatement(sql);
+            rs = stm.executeQuery();
+            while (rs.next()) {
+                lists.add(extractPurchaseOrderFromResultSet(rs));
+            }
+        } catch (Exception e) {
+            System.out.println("ERR: getPurchaseOrdersBySupplier: " + e.getMessage());
+        }
+        return lists;
+    }
+
     //add
     public boolean addPurchaseOrder(PurchaseOrder po) {
         String sql = """
@@ -265,7 +281,7 @@ public class PurchaseOrderDAO extends DBContext {
         int offset = (page - 1) * pageSize;
         sql.append("select * from PurchaseOrders where 1 = 1 ");
         if (keyword != null && !keyword.trim().isEmpty()) {
-            sql.append("AND (PONumber like ? OR Notes like ? ");
+            sql.append("AND (PONumber like ? OR Notes like ?) ");
         }
         if (status != null && !status.trim().isEmpty()) {
             sql.append("AND Status = ? ");
@@ -334,7 +350,7 @@ public class PurchaseOrderDAO extends DBContext {
     //count by conditions
     public int countPOs(String keyword, String status, LocalDate fromDate, LocalDate toDate) {
         StringBuilder sql = new StringBuilder();
-        sql.append("select COUNT(*) from Suppliers where 1 = 1 ");
+        sql.append("select COUNT(*) from PurchaseOrders where 1 = 1 ");
         if (keyword != null && !keyword.trim().isEmpty()) {
             sql.append("AND (PONumber like ? OR Notes like ? ");
         }
@@ -375,7 +391,7 @@ public class PurchaseOrderDAO extends DBContext {
                 return rs.getInt(1);
             }
         } catch (Exception e) {
-            System.out.println("ERR: countSuppliers: " + e.getMessage());
+            System.out.println("ERR: countPurchaseOrders: " + e.getMessage());
         }
         return 0;
     }
@@ -416,7 +432,7 @@ public class PurchaseOrderDAO extends DBContext {
             if (rs.next()) {
                 String lastPONumber = rs.getString("PONumber");
                 String numberPart = lastPONumber.substring(lastPONumber.lastIndexOf("-") + 1);
-                int nextNumber = Integer.parseInt(numberPart + 1);
+                int nextNumber = Integer.parseInt(numberPart) + 1;
                 return String.format("PO-%d-%04d", currentYear, nextNumber);
             } else {
                 return String.format("PO-%d-%04d", currentYear, 1);
