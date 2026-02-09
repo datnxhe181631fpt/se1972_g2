@@ -140,7 +140,7 @@ public class PurchaseOrderDAO extends DBContext {
                   update PurchaseOrders set ApprovedBy = ?,
                                                                      RejectionReason = ?,
                                                                      Status = 'REJECTED',
-                                           ApprovedAt = GETUTCDATE()
+                                                                     ApprovedAt = GETUTCDATE()
                                                                  where PONumber = ?
                 """;
         try {
@@ -161,9 +161,9 @@ public class PurchaseOrderDAO extends DBContext {
         Connection connection = getConnection();
         String sql = """
                   update PurchaseOrders set ApprovedBy = ?,
-                                                                     Status = 'APPROVED',
-                      ApprovedAt = GETUTCDATE()
-                                                                 where PONumber = ?
+                                           Status = 'APPROVED',
+                                           ApprovedAt = GETUTCDATE()
+                                           where PONumber = ?
                 """;
         try {
             int index = 1;
