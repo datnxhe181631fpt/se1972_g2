@@ -413,7 +413,7 @@ public class PurchaseOrderDAO extends DBContext {
     }
 
     //generate poNumber : PO-nam-so : PO-2026-0001
-    public String generatePONumber() {
+    public String generateNextPONumber() {
         String sql = """
                      select top 1 PONumber
                      from PurchaseOrders
