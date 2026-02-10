@@ -15,6 +15,7 @@ import java.util.List;
  * @author qp
  */
 public class PurchaseOrder {
+
     public static final String STATUS_PENDING_APPROVAL = "PENDING_APPROVAL";
     public static final String STATUS_APPROVED = "APPROVED";
     public static final String STATUS_REJECTED = "REJECTED";
@@ -248,8 +249,21 @@ public class PurchaseOrder {
 
     public void recalculateTotals() {
         this.subtotal = BigDecimal.ZERO;
+        this.totalDiscount = BigDecimal.ZERO;
+
         for (PurchaseOrderItem item : items) {
-            this.subtotal = this.subtotal.add(item.getLineTotal());
+            BigDecimal lineSubtotal = item.getUnitPrice()
+                    .multiply(BigDecimal.valueOf(item.getQuantityOrdered()));
+            this.subtotal = this.subtotal.add(lineSubtotal);
+
+            BigDecimal lineDiscount = BigDecimal.ZERO;
+            if (PurchaseOrderItem.DISCOUNT_PERCENT.equals(item.getDiscountType())) {
+                lineDiscount = lineSubtotal.multiply(item.getDiscountValue())
+                        .divide(BigDecimal.valueOf(100), 2, java.math.RoundingMode.HALF_EVEN);
+            } else {
+                lineDiscount = item.getDiscountValue() != null ? item.getDiscountValue() : BigDecimal.ZERO;
+            }
+            this.totalDiscount = this.totalDiscount.add(lineDiscount);
         }
         this.totalAmount = this.subtotal.subtract(this.totalDiscount);
     }
