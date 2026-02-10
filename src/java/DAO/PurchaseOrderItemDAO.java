@@ -135,7 +135,7 @@ public class PurchaseOrderItemDAO extends DBContext {
     }
 
     //batch insert items
-    public boolean addItemBatch(List<PurchaseOrderItem> items, long poId) throws SQLException {
+    public boolean addItemsBatch(List<PurchaseOrderItem> items, long poId) throws SQLException {
         Connection connection = getConnection();
         String sql = """
                        insert into PurchaseOrderItems
