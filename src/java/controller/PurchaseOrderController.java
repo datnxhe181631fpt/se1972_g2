@@ -5,15 +5,21 @@
 package controller;
 
 import DAO.PurchaseOrderDAO;
+import DAO.PurchaseOrderItemDAO;
 import entity.PurchaseOrder;
+import entity.PurchaseOrderItem;
 import java.io.IOException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.math.BigDecimal;
+import java.sql.SQLException;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
+import util.Validation;
 
 /**
  *
@@ -21,9 +27,10 @@ import java.util.List;
  */
 @WebServlet(name = "PurchaseOrderController", urlPatterns = {"/purchaseorder"})
 public class PurchaseOrderController extends HttpServlet {
-    
+
     private PurchaseOrderDAO poDAO = new PurchaseOrderDAO();
-    
+    private PurchaseOrderItemDAO itemDAO = new PurchaseOrderItemDAO();
+
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -31,7 +38,7 @@ public class PurchaseOrderController extends HttpServlet {
         if (action == null || action.trim().isEmpty()) {
             action = "list";
         }
-        
+
         switch (action) {
             case "list":
             case "search":
@@ -50,14 +57,14 @@ public class PurchaseOrderController extends HttpServlet {
                 showList(request, response);
         }
     }
-    
+
     private void showList(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         String keyword = request.getParameter("key");
         String status = request.getParameter("status");
         String from = request.getParameter("from");
         String to = request.getParameter("to");
-        
+
         LocalDate fromDate = null;
         LocalDate toDate = null;
         if (from != null && !from.trim().isEmpty()) {
@@ -66,7 +73,7 @@ public class PurchaseOrderController extends HttpServlet {
         if (to != null && !to.trim().isEmpty()) {
             toDate = LocalDate.parse(to);
         }
-        
+
         int page = 1;
         int pageSize = 5;
         try {
@@ -77,15 +84,15 @@ public class PurchaseOrderController extends HttpServlet {
         } catch (NumberFormatException e) {
             page = 1;
         }
-        
+
         int totalRecords = poDAO.countPOs(keyword, status, fromDate, toDate);
         int totalPages = (int) Math.ceil((double) totalRecords / pageSize);
-        
+
         List<PurchaseOrder> lists = poDAO.searchPOWithPaginated(keyword, status, fromDate, toDate, page, pageSize);
         request.setAttribute("lists", lists);
         request.setAttribute("totalPages", totalPages);
         request.setAttribute("currentPage", page);
-        
+
         String msg = (String) request.getSession().getAttribute("msg");
         if (msg != null) {
             request.setAttribute("msg", msg);
@@ -93,32 +100,184 @@ public class PurchaseOrderController extends HttpServlet {
         }
         request.getRequestDispatcher("/AdminLTE-3.2.0/po-list.jsp").forward(request, response);
     }
-    
+
     private void showAddForm(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         String poNumber = poDAO.generateNextPONumber();
-        
+
         String err = (String) request.getSession().getAttribute("error");
-        
+
         PurchaseOrder po = new PurchaseOrder();
         po.setPoNumber(poNumber);
-        po.setOrderDate(java.time.LocalDate.now());
-        
+        po.setOrderDate(LocalDate.now());
+
         if (err != null) {
             request.setAttribute("error", err);
             request.getSession().removeAttribute("error");
         }
-        
+
         request.setAttribute("po", po);
-        request.setAttribute("code", poNumber);
+        request.setAttribute("poNumber", poNumber);
         request.setAttribute("mode", "add");
         request.getRequestDispatcher("/AdminLTE-3.2.0/po-form.jsp").forward(request, response);
     }
-    
+
+    private void showEditForm(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        String poNumber = request.getParameter("poNumber");
+        PurchaseOrder po = poDAO.getPurchaseOrderByCode(poNumber);
+        List<PurchaseOrderItem> items = itemDAO.getItemsByPOId(po.getId());
+
+        request.setAttribute("po", po);
+        request.setAttribute("poNumber", poNumber);
+        request.setAttribute("items", items);
+        request.setAttribute("mode", "edit");
+        request.getRequestDispatcher("/AdminLTE-3.2.0/po-form.jsp").forward(request, response);
+    }
+
+    private void showDetail(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        String poNumber = request.getParameter("poNumber");
+        PurchaseOrder po = poDAO.getPurchaseOrderByCode(poNumber);
+        List<PurchaseOrderItem> items = itemDAO.getItemsByPOId(po.getId());
+
+        request.setAttribute("po", po);
+        request.setAttribute("items", items);
+        request.getRequestDispatcher("/AdminLTE-3.2.0/po-detail.jsp").forward(request, response);
+    }
+
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        
+
+        //check role
+        String action = request.getParameter("action");
+        if (action == null) {
+            action = "";
+        }
+
+        String poNumber = request.getParameter("poNumber");
+        String byParam = request.getParameter("by");
+        Integer by = null;
+        if (byParam != null && !byParam.trim().isEmpty()) {
+            by = Integer.parseInt(byParam);
+        }
+        String reason = request.getParameter("reason");
+
+        String msg = "";
+        boolean success;
+        switch (action) {
+            case "delete":
+                success = poDAO.deletePurchaseOrder(poNumber);
+                msg = success ? "success_delete" : "fail";
+                break;
+            case "approve":
+                success = poDAO.approvePO(poNumber, by);
+                msg = success ? "success_approve" : "fail";
+                break;
+            case "reject":
+                success = poDAO.rejectPO(poNumber, by, reason);
+                msg = success ? "success_reject" : "fail";
+                break;
+            case "cancel":
+                success = poDAO.cancelPO(poNumber, by, reason);
+                msg = success ? "success_cancel" : "fail";
+                break;
+            case "save":
+                String supplierIdParam = request.getParameter("supplierId");
+                String orderDateParam = request.getParameter("orderDate");
+                String expectedDateParam = request.getParameter("expectedDate");
+
+                String[] productIds = request.getParameterValues("productId");
+                String[] quantities = request.getParameterValues("quantity");
+                String[] unitPrices = request.getParameterValues("unitPrice");
+                String[] discountTypes = request.getParameterValues("discountType");
+                String[] discountValues = request.getParameterValues("discountValue");
+                String[] itemNotes = request.getParameterValues("itemNote");
+
+                String notes = request.getParameter("notes");
+                String createdByParam = request.getParameter("createdBy");
+
+                //validate
+                Validation valid = new Validation();
+                valid.required("Mã đơn đặt hàng", poNumber)
+                        .required("Nhà cung cấp", supplierIdParam)
+                        .required("Ngày đặt hàng", orderDateParam)
+                        .required("Ngày dự kiến", expectedDateParam);
+                //validate items: so luong, don gia, 
+
+                if (productIds == null || productIds.length == 0) {
+                    valid.addError("Vui lòng thêm ít nhất 1 sản phẩm");
+                }
+
+                if (!valid.isValid()) {
+                    PurchaseOrder po = new PurchaseOrder();
+                    po.setPoNumber(poNumber);
+                    request.setAttribute("po", po);
+                    request.setAttribute("poNumber", poNumber);
+                    request.setAttribute("error", valid.getFirstError());
+
+                    String mode = poDAO.isCodeExist(poNumber) ? "edit" : "add";
+                    request.setAttribute("mode", mode);
+                    request.getRequestDispatcher("/AdminLTE-3.2.0/po-form.jsp").forward(request, response);
+                    return;
+                }
+
+                //build item list
+                PurchaseOrder po = new PurchaseOrder();
+                po.setPoNumber(poNumber);
+                po.setSupplierId(Integer.valueOf(supplierIdParam));
+                po.setOrderDate(LocalDate.parse(orderDateParam));
+                po.setExpectedDate(LocalDate.parse(expectedDateParam));
+                po.setNotes(notes);
+                po.setCreatedBy(Integer.valueOf(createdByParam));
+
+                //add items to PO
+                for (int i = 0; i < productIds.length; i++) {
+                    PurchaseOrderItem item = new PurchaseOrderItem();
+                    item.setProductId(Integer.valueOf(productIds[i]));
+                    item.setQuantityOrdered(Integer.valueOf(quantities[i]));
+                    item.setUnitPrice(new BigDecimal(unitPrices[i]));
+                    item.setDiscountType(discountTypes != null && i < discountTypes.length
+                            ? discountTypes[i] : "AMOUNT");
+                    item.setDiscountValue(discountValues != null && i < discountValues.length
+                            ? new BigDecimal(discountValues[i]) : BigDecimal.ZERO);
+                    item.setNotes(itemNotes != null && i < itemNotes.length ? itemNotes[i] : null);
+
+                    item.calculateLineTotal();
+                    po.addItem(item);
+                }
+                po.recalculateTotals();
+
+                boolean result;
+                if (poDAO.isCodeExist(poNumber)) {
+                    //update
+                    PurchaseOrder existingPO = poDAO.getPurchaseOrderByCode(poNumber);
+
+                    if (!PurchaseOrder.STATUS_PENDING_APPROVAL.equals(existingPO.getStatus()) && !PurchaseOrder.STATUS_REJECTED.equals(existingPO.getStatus())) {
+                        request.getSession().setAttribute("error", "Không thể chỉnh sửa đơn hàng đã được duyệt hoặc đang nhập hàng!");
+                        response.sendRedirect("purchaseorder?action=edit&poNumber=" + poNumber);
+                        return;
+                    }
+
+                    po.setId(existingPO.getId());
+                    po.setStatus(existingPO.getStatus());
+
+                    result = poDAO.updateOrderWithItems(po);
+                    msg = result ? "success_edit" : "fail";
+                } else {
+                    //add
+                    result = poDAO.createOrderWithItems(po);
+                    msg = result ? "success_add" : "fail";
+                }
+                if (!result) {
+                    request.getSession().setAttribute("error", "Lỗi hệ thống khi lưu đơn hàng.");
+                }
+                break;
+        }
+
+        request.getSession().setAttribute("msg", msg);
+        response.sendRedirect("purchaseorder?action=list");
     }
-    
+
 }
