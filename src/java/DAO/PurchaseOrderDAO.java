@@ -5,6 +5,7 @@
 package DAO;
 
 import entity.PurchaseOrder;
+import entity.PurchaseOrderItem;
 import java.util.ArrayList;
 import java.util.List;
 import java.sql.*;
@@ -109,6 +110,164 @@ public class PurchaseOrderDAO extends DBContext {
             System.out.println("ERR: Add :" + e.getMessage());
         }
         return false;
+    }
+
+    public boolean createOrderWithItems(PurchaseOrder po) {
+        PreparedStatement stmPO = null;
+        PreparedStatement stmItems = null;
+        Connection connection = null;
+        String sqlPO = """
+                       insert into PurchaseOrder (PONumber, SupplierID, OrderDate, ExpectedDate, Subtotal, TotalDiscount, TotalAmount, Notes, CreatedBy)
+                                        values(?,?,?,?,?,?,?,?,?)
+                       """;
+        String sqlItem = """
+                         insert into PurchaseOrderItems
+                                          (POID, ProductID, QuantityOrdered, UnitPrice, DiscountType, DiscountValue, LineTotal, Notes)
+                                          values (?,?,?,?,?,?,?,?)
+                         """;
+
+        try {
+            connection = getConnection();
+            connection.setAutoCommit(false);
+
+            //insert po header
+            stmPO = connection.prepareStatement(sqlPO, Statement.RETURN_GENERATED_KEYS);
+            int index = 1;
+            stmPO.setString(index++, po.getPoNumber());
+            stmPO.setLong(index++, po.getSupplierId());
+            stmPO.setDate(index++, Date.valueOf(po.getOrderDate()));
+            stmPO.setDate(index++, Date.valueOf(po.getExpectedDate()));
+            stmPO.setBigDecimal(index++, po.getSubtotal());
+            stmPO.setBigDecimal(index++, po.getTotalDiscount());
+            stmPO.setBigDecimal(index++, po.getTotalAmount());
+            stmPO.setString(index++, po.getNotes());
+            stmPO.setInt(index++, po.getCreatedBy());
+
+            int affectedRows = stmPO.executeUpdate();
+            if (affectedRows == 0) {
+                throw new SQLException("Creating PO failed, no rows affected.");
+            }
+
+            long generatedPoId = 0;
+            try {
+                ResultSet generatedKey = stmPO.getGeneratedKeys();
+                if (generatedKey.next()) {
+                    generatedPoId = generatedKey.getLong(1);
+                    po.setId(generatedPoId);
+                } else {
+                    throw new SQLException("Creating PO failed, no rows affected.");
+                }
+            } catch (Exception e) {
+                System.out.println("Creating PO failed, no rows affected.");
+            }
+
+            //insert po items 
+            if (po.getItems() != null && !po.getItems().isEmpty()) {
+                stmItems = connection.prepareStatement(sqlItem);
+                for (PurchaseOrderItem item : po.getItems()) {
+                    int idx = 1;
+                    stmItems.setLong(idx++, generatedPoId);
+                    stmItems.setInt(idx++, item.getProductId());
+                    stmItems.setInt(idx++, item.getQuantityOrdered());
+                    stmItems.setBigDecimal(idx++, item.getUnitPrice());
+                    stmItems.setString(idx++, item.getDiscountType());
+                    stmItems.setBigDecimal(idx++, item.getDiscountValue());
+                    stmItems.setBigDecimal(idx++, item.getLineTotal());
+                    stmItems.setString(idx++, item.getNotes());
+
+                    stmItems.addBatch();
+                }
+                stmItems.executeBatch();
+            }
+            connection.commit();
+            return true;
+        } catch (Exception e) {
+            System.out.println("ERR: Transaction Create Order Failed: " + e.getMessage());
+            try {
+                if (connection != null) {
+                    connection.rollback();
+                }
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
+            return false;
+        }
+    }
+
+    public boolean updateOrderWithItems(PurchaseOrder po) {
+        Connection connection = null;
+        PreparedStatement stmUpdatePO = null;
+        PreparedStatement stmDelItems = null;
+        PreparedStatement stmAddItems = null;
+
+        String sqlUpdatePO = """
+                             update PurchaseOrders 
+                             set SupplierID = ?, OrderDate = ?, ExpectedDate=?, Subtotal=?,
+                             TotalDiscount=?, TotalAmount=?, Notes=?, UpdatedAt=GETUTCDATE()
+                             where PONumber=?
+                             """;
+
+        String sqlDeleteItem = """
+                             delete from PurchaseOrderItems where POID = ?
+                            """;
+
+        String sqlAddItem = """
+                            insert into PurchaseOrderItems
+                                             (POID, ProductID, QuantityOrdered, UnitPrice, DiscountType, DiscountValue, LineTotal, Notes)
+                                             values (?,?,?,?,?,?,?,?)
+                            """;
+        try {
+            connection = getConnection();
+            connection.setAutoCommit(false);
+
+            stmUpdatePO = connection.prepareStatement(sqlUpdatePO);
+            int index = 1;
+            stmUpdatePO.setLong(index++, po.getSupplierId());
+            stmUpdatePO.setDate(index++, Date.valueOf(po.getOrderDate()));
+            stmUpdatePO.setDate(index++, Date.valueOf(po.getExpectedDate()));
+            stmUpdatePO.setBigDecimal(index++, po.getSubtotal());
+            stmUpdatePO.setBigDecimal(index++, po.getTotalDiscount());
+            stmUpdatePO.setBigDecimal(index++, po.getTotalAmount());
+            stmUpdatePO.setString(index++, po.getNotes());
+            stmUpdatePO.setString(index++, po.getPoNumber());
+            stmUpdatePO.executeUpdate();
+
+            long poId = po.getId();
+
+            stmDelItems = connection.prepareStatement(sqlDeleteItem);
+            stmDelItems.setLong(1, poId);
+            stmDelItems.executeUpdate();
+
+            if (po.getItems() != null && !po.getItems().isEmpty()) {
+                stmAddItems = connection.prepareStatement(sqlAddItem);
+                for (PurchaseOrderItem item : po.getItems()) {
+                    int idx = 1;
+                    stmAddItems.setLong(idx++, poId);
+                    stmAddItems.setInt(idx++, item.getProductId());
+                    stmAddItems.setInt(idx++, item.getQuantityOrdered());
+                    stmAddItems.setBigDecimal(idx++, item.getUnitPrice());
+                    stmAddItems.setString(idx++, item.getDiscountType());
+                    stmAddItems.setBigDecimal(idx++, item.getDiscountValue());
+                    stmAddItems.setBigDecimal(idx++, item.getLineTotal());
+                    stmAddItems.setString(idx++, item.getNotes());
+                    stmAddItems.addBatch();
+                }
+                stmAddItems.executeBatch();
+            }
+
+            connection.commit();
+            return true;
+        } catch (Exception e) {
+            System.out.println("ERR: Transaction Update Order Failed: " + e.getMessage());
+            try {
+                if (connection != null) {
+                    connection.rollback();
+                }
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
+            return false;
+        }
     }
 
     //cancel
@@ -229,7 +388,7 @@ public class PurchaseOrderDAO extends DBContext {
         StringBuilder sql = new StringBuilder();
         sql.append("select * from PurchaseOrders where 1 = 1 ");
         if (keyword != null && !keyword.trim().isEmpty()) {
-            sql.append("AND (PONumber like ? OR Notes like ? ");
+            sql.append("AND (PONumber like ? OR Notes like ?) ");
         }
         if (status != null && !status.trim().isEmpty()) {
             sql.append("AND Status = ? ");
@@ -352,7 +511,7 @@ public class PurchaseOrderDAO extends DBContext {
         StringBuilder sql = new StringBuilder();
         sql.append("select COUNT(*) from PurchaseOrders where 1 = 1 ");
         if (keyword != null && !keyword.trim().isEmpty()) {
-            sql.append("AND (PONumber like ? OR Notes like ? ");
+            sql.append("AND (PONumber like ? OR Notes like ?) ");
         }
         if (status != null && !status.trim().isEmpty()) {
             sql.append("AND Status = ? ");
