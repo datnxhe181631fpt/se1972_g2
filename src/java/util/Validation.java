@@ -88,6 +88,13 @@ public class Validation {
         return this;
     }
 
+    public Validation addError(String msg) {
+        if (msg != null && !msg.trim().isEmpty()) {
+            this.errors.add(msg);
+        }
+        return this;
+    }
+
     public boolean isValid() {
         return errors.isEmpty();
     }
