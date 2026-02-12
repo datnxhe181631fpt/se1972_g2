@@ -293,11 +293,13 @@
                     <label for="productSelect">Chọn sản phẩm: <span class="text-danger">*</span></label>
                     <select class="form-control" id="productSelect">
                         <option value="">-- Chọn sản phẩm --</option>
-                        <option value="1" data-name="Sách Lập trình Java" data-price="150000">Sách Lập trình Java - 150,000đ</option>
-                        <option value="2" data-name="Sách Python cơ bản" data-price="120000">Sách Python cơ bản - 120,000đ</option>
-                        <option value="3" data-name="Sách JavaScript nâng cao" data-price="180000">Sách JavaScript nâng cao - 180,000đ</option>
-                        <option value="4" data-name="Sách SQL Server" data-price="200000">Sách SQL Server - 200,000đ</option>
-                        <option value="5" data-name="Sách HTML5 & CSS3" data-price="130000">Sách HTML5 & CSS3 - 130,000đ</option>
+                        <c:forEach var="item" items="${productList}">
+                            <option value="${item.id}" 
+                                    data-name="${product.productName}" 
+                                    data-price="${product.sellingPrice}">
+                               ${product.productName} - ${product.sellingPrice}đ 
+                            </option>
+                        </c:forEach>
                     </select>                         
                 </div>
                 <div class="row">
@@ -336,16 +338,22 @@
 
 <script>
                     // Danh sách sản phẩm
-                    const products = [
-                        {id: '1', name: 'Sách Lập trình Java', price: 150000},
-                        {id: '2', name: 'Sách Python cơ bản', price: 120000},
-                        {id: '3', name: 'Sách JavaScript nâng cao', price: 180000},
-                        {id: '4', name: 'Sách SQL Server', price: 200000},
-                        {id: '5', name: 'Sách HTML5 & CSS3', price: 130000},
-                        {id: '6', name: 'Sách Design Patterns', price: 170000},
-                        {id: '7', name: 'Sách Clean Code', price: 190000}
-                    ];
+//                    const products = [
+//                        {id: '1', name: 'Sách Lập trình Java', price: 150000},
+//                        {id: '2', name: 'Sách Python cơ bản', price: 120000},
+//                        {id: '3', name: 'Sách JavaScript nâng cao', price: 180000},
+//                        {id: '4', name: 'Sách SQL Server', price: 200000},
+//                        {id: '5', name: 'Sách HTML5 & CSS3', price: 130000},
+//                        {id: '6', name: 'Sách Design Patterns', price: 170000},
+//                        {id: '7', name: 'Sách Clean Code', price: 190000}
+//                    ];
 
+const products = [
+    <c:forEach var="item" items="${productList}" varStatus="status">
+             {id: '${product.id}', name: '${product.productName}', price: ${product.sellingPrice}}
+                          <c:if test="${!status.last}">,</c:if>
+    </c:forEach>
+];
 
                     $(document).ready(function () {
                         // Khởi tạo Select2
