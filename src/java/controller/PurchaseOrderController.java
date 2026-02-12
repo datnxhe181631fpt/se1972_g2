@@ -6,8 +6,10 @@ package controller;
 
 import DAO.PurchaseOrderDAO;
 import DAO.PurchaseOrderItemDAO;
+import DAO.SupplierDAO;
 import entity.PurchaseOrder;
 import entity.PurchaseOrderItem;
+import entity.Supplier;
 import java.io.IOException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -15,9 +17,7 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.math.BigDecimal;
-import java.sql.SQLException;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 import util.Validation;
 
@@ -30,6 +30,7 @@ public class PurchaseOrderController extends HttpServlet {
 
     private PurchaseOrderDAO poDAO = new PurchaseOrderDAO();
     private PurchaseOrderItemDAO itemDAO = new PurchaseOrderItemDAO();
+    private SupplierDAO supDAO = new SupplierDAO();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -92,7 +93,7 @@ public class PurchaseOrderController extends HttpServlet {
         request.setAttribute("lists", lists);
         request.setAttribute("totalPages", totalPages);
         request.setAttribute("currentPage", page);
-
+        
         String msg = (String) request.getSession().getAttribute("msg");
         if (msg != null) {
             request.setAttribute("msg", msg);
@@ -115,6 +116,9 @@ public class PurchaseOrderController extends HttpServlet {
             request.setAttribute("error", err);
             request.getSession().removeAttribute("error");
         }
+        
+        List<Supplier> supList = supDAO.getAllSuppliers();
+        request.setAttribute("supList", supList);
 
         request.setAttribute("po", po);
         request.setAttribute("poNumber", poNumber);
