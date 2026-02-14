@@ -26,6 +26,8 @@ public class PurchaseOrderItem {
     private BigDecimal lineTotal;
     private String notes;
 
+    private String productName; //for PO-form
+    
     public PurchaseOrderItem() {
         this.quantityReceived = 0;
         this.discountType = DISCOUNT_AMOUNT;
