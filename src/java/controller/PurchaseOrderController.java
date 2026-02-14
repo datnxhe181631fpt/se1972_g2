@@ -4,9 +4,11 @@
  */
 package controller;
 
+import DAO.ProductDAO;
 import DAO.PurchaseOrderDAO;
 import DAO.PurchaseOrderItemDAO;
 import DAO.SupplierDAO;
+import entity.Product;
 import entity.PurchaseOrder;
 import entity.PurchaseOrderItem;
 import entity.Supplier;
@@ -17,7 +19,10 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.math.BigDecimal;
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import util.Validation;
 
@@ -31,6 +36,7 @@ public class PurchaseOrderController extends HttpServlet {
     private PurchaseOrderDAO poDAO = new PurchaseOrderDAO();
     private PurchaseOrderItemDAO itemDAO = new PurchaseOrderItemDAO();
     private SupplierDAO supDAO = new SupplierDAO();
+    private ProductDAO productDAO = new ProductDAO();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -93,7 +99,7 @@ public class PurchaseOrderController extends HttpServlet {
         request.setAttribute("lists", lists);
         request.setAttribute("totalPages", totalPages);
         request.setAttribute("currentPage", page);
-        
+
         String msg = (String) request.getSession().getAttribute("msg");
         if (msg != null) {
             request.setAttribute("msg", msg);
@@ -104,25 +110,27 @@ public class PurchaseOrderController extends HttpServlet {
 
     private void showAddForm(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        List<Product> productList = productDAO.getAllActiveProducts();
+        request.setAttribute("productList", productList);
+
+        List<Supplier> supList = supDAO.getAllActiveSuppliers();
+        request.setAttribute("supList", supList);
+
         String poNumber = poDAO.generateNextPONumber();
+        request.setAttribute("poNumber", poNumber);
+
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        String today = sdf.format(new Date());
+        request.setAttribute("orderDate", today);
+
+        request.setAttribute("mode", "add");
 
         String err = (String) request.getSession().getAttribute("error");
-
-        PurchaseOrder po = new PurchaseOrder();
-        po.setPoNumber(poNumber);
-        po.setOrderDate(LocalDate.now());
 
         if (err != null) {
             request.setAttribute("error", err);
             request.getSession().removeAttribute("error");
         }
-        
-        List<Supplier> supList = supDAO.getAllSuppliers();
-        request.setAttribute("supList", supList);
-
-        request.setAttribute("po", po);
-        request.setAttribute("poNumber", poNumber);
-        request.setAttribute("mode", "add");
         request.getRequestDispatcher("/AdminLTE-3.2.0/po-form.jsp").forward(request, response);
     }
 
@@ -130,13 +138,26 @@ public class PurchaseOrderController extends HttpServlet {
             throws ServletException, IOException {
         String poNumber = request.getParameter("poNumber");
         PurchaseOrder po = poDAO.getPurchaseOrderByCode(poNumber);
-        List<PurchaseOrderItem> items = itemDAO.getItemsByPOId(po.getId());
+        if (po != null) {
+            List<Product> productList = productDAO.getAllActiveProducts();
+            request.setAttribute("productList", productList);
 
-        request.setAttribute("po", po);
-        request.setAttribute("poNumber", poNumber);
-        request.setAttribute("items", items);
-        request.setAttribute("mode", "edit");
-        request.getRequestDispatcher("/AdminLTE-3.2.0/po-form.jsp").forward(request, response);
+            List<Supplier> supList = supDAO.getAllActiveSuppliers();
+            request.setAttribute("supList", supList);
+
+            request.setAttribute("poNumber", po.getPoNumber());
+            request.setAttribute("orderDate", po.getOrderDate());
+            request.setAttribute("expectedDate", po.getExpectedDate());
+            request.setAttribute("notes", po.getNotes());
+
+            List<PurchaseOrderItem> items = itemDAO.getItemsByPOId(po.getId());
+            request.setAttribute("items", items);
+
+            request.setAttribute("mode", "edit");
+            request.getRequestDispatcher("/AdminLTE-3.2.0/po-form.jsp").forward(request, response);
+        } else {
+            response.sendRedirect(request.getContextPath() + "/purchaseorder?action=list");
+        }
     }
 
     private void showDetail(HttpServletRequest request, HttpServletResponse response)
@@ -164,7 +185,7 @@ public class PurchaseOrderController extends HttpServlet {
         String byParam = request.getParameter("by");
         Integer by = null;
         if (byParam != null && !byParam.trim().isEmpty()) {
-            by = Integer.parseInt(byParam);
+            by = Integer.valueOf(byParam);
         }
         String reason = request.getParameter("reason");
 
@@ -215,14 +236,78 @@ public class PurchaseOrderController extends HttpServlet {
                 }
 
                 if (!valid.isValid()) {
-                    PurchaseOrder po = new PurchaseOrder();
-                    po.setPoNumber(poNumber);
-                    request.setAttribute("po", po);
+                    List<Product> productList = productDAO.getAllActiveProducts();
+                    request.setAttribute("productList", productList);
+
+                    List<Supplier> supList = supDAO.getAllActiveSuppliers();
+                    request.setAttribute("supList", supList);
+
+                    PurchaseOrder poE = new PurchaseOrder();
+                    poE.setPoNumber(poNumber);
+                    if (supplierIdParam != null && !supplierIdParam.isEmpty()) {
+                        poE.setSupplierId(Integer.valueOf(supplierIdParam));
+                    }
+
+                    try {
+                        if (orderDateParam != null && !orderDateParam.isEmpty()) {
+                            poE.setOrderDate(LocalDate.parse(orderDateParam));
+                        }
+                        if (expectedDateParam != null && !expectedDateParam.isEmpty()) {
+                            poE.setExpectedDate(LocalDate.parse(expectedDateParam));
+                        }
+                    } catch (Exception e) {
+                    }
+
+                    poE.setNotes(notes);
+
+                    request.setAttribute("orderDate", orderDateParam);
+                    request.setAttribute("expectedDate", expectedDateParam);
+
+                    List<PurchaseOrderItem> items = new ArrayList<>();
+                    if (productIds != null) {
+                        for (int i = 0; i < productIds.length; i++) {
+                            PurchaseOrderItem item = new PurchaseOrderItem();
+                            try {
+                                int pId = Integer.parseInt(productIds[i]);
+                                item.setProductId(pId);
+
+                                for (Product p : productList) {
+                                    if (p.getId() == pId) {
+                                        item.setProductName(p.getProductName());
+                                        break;
+                                    }
+                                }
+
+                                String qtyStr = (quantities != null && i < quantities.length) ? quantities[i] : "0";
+                                item.setQuantityOrdered(parseIntSafe(qtyStr));
+
+                                String priceStr = (unitPrices != null && i < unitPrices.length) ? unitPrices[i] : "0";
+                                item.setUnitPrice(parseBigDecimalSafe(priceStr));
+
+                                String discountStr = (discountValues != null && i < discountValues.length) ? discountValues[i] : "0";
+                                item.setDiscountValue(parseBigDecimalSafe(discountStr));
+
+                                String noteStr = (itemNotes != null && i < itemNotes.length) ? itemNotes[i] : "";
+                                item.setNotes(noteStr);
+
+                                item.calculateLineTotal();
+
+                                items.add(item);
+
+                            } catch (Exception e) {
+                                // Log lỗi nếu cần thiết để debug
+                                System.out.println("Error parsing item at index " + i + ": " + e.getMessage());
+                                continue;
+                            }
+                        }
+                    }
+                    request.setAttribute("po", poE);
+                    request.setAttribute("orderItems", items);
                     request.setAttribute("poNumber", poNumber);
                     request.setAttribute("error", valid.getFirstError());
-
                     String mode = poDAO.isCodeExist(poNumber) ? "edit" : "add";
                     request.setAttribute("mode", mode);
+
                     request.getRequestDispatcher("/AdminLTE-3.2.0/po-form.jsp").forward(request, response);
                     return;
                 }
@@ -282,6 +367,25 @@ public class PurchaseOrderController extends HttpServlet {
 
         request.getSession().setAttribute("msg", msg);
         response.sendRedirect("purchaseorder?action=list");
+
     }
 
+    private int parseIntSafe(String value) {
+        try {
+            return Integer.parseInt(value);
+        } catch (Exception e) {
+            return 0;
+        }
+    }
+
+    private BigDecimal parseBigDecimalSafe(String value) {
+        try {
+            if (value == null || value.trim().isEmpty()) {
+                return BigDecimal.ZERO;
+            }
+            return new BigDecimal(value);
+        } catch (Exception e) {
+            return BigDecimal.ZERO;
+        }
+    }
 }

@@ -108,7 +108,9 @@
                                                     <select class="form-control select2" id="supplierId" name="supplierId" required>
                                                         <option value="">-- Chọn nhà cung cấp --</option>
                                                         <c:forEach var="item" items="${supList}">
-                                                            <option value="${item.id}">${item.supplierName}</option>
+                                                            <option value="${item.id}" ${item.id == po.supplierId ? 'selected' : ''}>
+                                                                ${item.supplierName}
+                                                            </option>
                                                         </c:forEach>
                                                     </select>
                                                 </div>
@@ -198,29 +200,33 @@
                                                                         <c:forEach var="item" items="${orderItems}" varStatus="status">
                                                                             <tr>
                                                                                 <td class="text-center">${status.index + 1}</td>
-                                                                                <td> ${item.productName} </td>
+
+                                                                                <td> ${item.productName}
+                                                                                    <input type="hidden" name="productId" value="${item.productId}">
+                                                                                </td>
+                                                                                
                                                                                 <td>
-                                                                                    <input type="number" class="form-control form-control-sm qty-input" 
-                                                                                           value="${item.quantity}" min="1" onchange="calculateRowTotal(this)">
+                                                                                    <input type="number"  name="quantity" class="form-control form-control-sm qty-input" 
+                                                                                           value="${item.quantityOrdered}" min="1" onchange="calculateRowTotal(this)">
                                                                                 </td>
                                                                                 <td>
-                                                                                    <input type="number" class="form-control form-control-sm price-input" 
+                                                                                    <input type="number" name="unitPrice" class="form-control form-control-sm price-input" 
                                                                                            value="${item.unitPrice}" min="0" step="1000" onchange="calculateRowTotal(this)">
                                                                                 </td>
                                                                                 <td>
                                                                                     <div class="input-group input-group-sm">
-                                                                                        <input type="number" class="form-control discount-input" 
-                                                                                               value="${item.discount}" min="0" max="100" onchange="calculateRowTotal(this)">
+                                                                                        <input type="number"  name="discountValue" class="form-control discount-input" 
+                                                                                               value="${item.discountValue}" min="0" max="100" onchange="calculateRowTotal(this)">
                                                                                         <div class="input-group-append">
                                                                                             <span class="input-group-text">%</span>
                                                                                         </div>
                                                                                     </div>
                                                                                 </td>
                                                                                 <td class="text-right">
-                                                                                    <strong class="text-success">${item.totalPrice}đ</strong>
+                                                                                    <strong class="text-success">${item.lineTotal}đ</strong>
                                                                                 </td>
                                                                                 <td>
-                                                                                    <input type="text" class="form-control form-control-sm" value="${item.notes}" placeholder="Ghi chú...">
+                                                                                    <input type="text" name="itemNote" class="form-control form-control-sm" value="${item.notes}" placeholder="Ghi chú...">
                                                                                 </td>
                                                                                 <td class="text-center">
                                                                                     <button type="button" class="btn btn-danger btn-sm" onclick="removeProduct(this)">
@@ -295,9 +301,9 @@
                         <option value="">-- Chọn sản phẩm --</option>
                         <c:forEach var="item" items="${productList}">
                             <option value="${item.id}" 
-                                    data-name="${product.productName}" 
-                                    data-price="${product.sellingPrice}">
-                               ${product.productName} - ${product.sellingPrice}đ 
+                                    data-name="${item.productName}" 
+                                    data-price="${item.sellingPrice}">
+                                ${item.productName} - ${item.sellingPrice}đ 
                             </option>
                         </c:forEach>
                     </select>                         
@@ -348,12 +354,12 @@
 //                        {id: '7', name: 'Sách Clean Code', price: 190000}
 //                    ];
 
-const products = [
+                    const products = [
     <c:forEach var="item" items="${productList}" varStatus="status">
-             {id: '${product.id}', name: '${product.productName}', price: ${product.sellingPrice}}
-                          <c:if test="${!status.last}">,</c:if>
+                    {id: '${item.id}', name: '${item.productName}', price: ${item.sellingPrice}}
+        <c:if test="${!status.last}">,</c:if>
     </c:forEach>
-];
+                    ];
 
                     $(document).ready(function () {
                         // Khởi tạo Select2
