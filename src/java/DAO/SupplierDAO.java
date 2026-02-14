@@ -72,7 +72,7 @@ public class SupplierDAO extends DBContext {
         return null;
     }
 
-    public List<Supplier> getAllActiveSupliers() {
+    public List<Supplier> getAllActiveSuppliers() {
         String sql = "select SupplierID, SupplierName from Suppliers where isActive='true' order by SupplierName";
         List<Supplier> suppliers = new ArrayList<>();
 
