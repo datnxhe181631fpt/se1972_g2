@@ -12,6 +12,7 @@ import java.math.RoundingMode;
  * @author qp
  */
 public class PurchaseOrderItem {
+
     public static final String DISCOUNT_PERCENT = "PERCENT";
     public static final String DISCOUNT_AMOUNT = "AMOUNT";
 
@@ -27,7 +28,7 @@ public class PurchaseOrderItem {
     private String notes;
 
     private String productName; //for PO-form
-    
+
     public PurchaseOrderItem() {
         this.quantityReceived = 0;
         this.discountType = DISCOUNT_AMOUNT;
@@ -123,6 +124,14 @@ public class PurchaseOrderItem {
         this.notes = notes;
     }
 
+    public String getProductName() {
+        return productName;
+    }
+
+    public void setProductName(String productName) {
+        this.productName = productName;
+    }
+
     public void calculateLineTotal() {
         BigDecimal gross = unitPrice.multiply(BigDecimal.valueOf(quantityOrdered)); //tong so tien theo don gia
 
@@ -143,7 +152,7 @@ public class PurchaseOrderItem {
     public boolean isFullyReceived() {
         return quantityReceived >= quantityOrdered;
     }
-    
+
     public boolean isPartiallyReceived() {
         return quantityReceived > 0 && quantityReceived < quantityOrdered;
     }
