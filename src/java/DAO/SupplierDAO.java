@@ -82,8 +82,8 @@ public class SupplierDAO extends DBContext {
             rs = stm.executeQuery();
             while (rs.next()) {
                 Supplier s = new Supplier();
-                s.setId(rs.getInt("SupplierId"));
-                s.setSupplierName("SupplierName");
+                s.setId(rs.getInt("SupplierID"));
+                s.setSupplierName(rs.getString("SupplierName"));
                 suppliers.add(s);
             }
         } catch (Exception e) {
