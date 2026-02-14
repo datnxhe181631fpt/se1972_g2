@@ -72,6 +72,26 @@ public class SupplierDAO extends DBContext {
         return null;
     }
 
+    public List<Supplier> getAllActiveSupliers() {
+        String sql = "select SupplierID, SupplierName from Suppliers where isActive='true' order by SupplierName";
+        List<Supplier> suppliers = new ArrayList<>();
+
+        try {
+            Connection connection = getConnection();
+            stm = connection.prepareStatement(sql);
+            rs = stm.executeQuery();
+            while (rs.next()) {
+                Supplier s = new Supplier();
+                s.setId(rs.getInt("SupplierId"));
+                s.setSupplierName("SupplierName");
+                suppliers.add(s);
+            }
+        } catch (Exception e) {
+            System.out.println("ERR: getAllActiveSupplier: " + e.getMessage());
+        }
+        return suppliers;
+    }
+
     //add
     public boolean addSupplier(Supplier sp) {
         String sql = """
