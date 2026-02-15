@@ -51,6 +51,11 @@ public class PurchaseOrder {
     private List<PurchaseOrderItem> items;
     private List<GoodsReceipt> goodsReceipts;
 
+    //table suppliers
+    private String supplierName;
+    //table user
+    private String createdByName;
+
     public PurchaseOrder() {
         this.status = STATUS_PENDING_APPROVAL;
         this.subtotal = BigDecimal.ZERO;
@@ -235,6 +240,22 @@ public class PurchaseOrder {
 
     public void setGoodsReceipts(List<GoodsReceipt> goodsReceipts) {
         this.goodsReceipts = goodsReceipts;
+    }
+
+    public String getSupplierName() {
+        return supplierName;
+    }
+
+    public void setSupplierName(String supplierName) {
+        this.supplierName = supplierName;
+    }
+
+    public String getCreatedByName() {
+        return createdByName;
+    }
+
+    public void setCreatedByName(String createdByName) {
+        this.createdByName = createdByName;
     }
 
     public void addItem(PurchaseOrderItem item) {

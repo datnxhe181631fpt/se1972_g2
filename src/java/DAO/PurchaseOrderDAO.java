@@ -455,11 +455,70 @@ public class PurchaseOrderDAO extends DBContext {
     }
 
     //search
+//    public List<PurchaseOrder> searchPOWithPaginated(String keyword, String status, LocalDate fromDate, LocalDate toDate, int page, int pageSize) {
+//        List<PurchaseOrder> lists = new ArrayList<>();
+//        StringBuilder sql = new StringBuilder();
+//        int offset = (page - 1) * pageSize;
+//        sql.append("select * from PurchaseOrders where 1 = 1 ");
+//        if (keyword != null && !keyword.trim().isEmpty()) {
+//            sql.append("AND (PONumber like ? OR Notes like ?) ");
+//        }
+//        if (status != null && !status.trim().isEmpty()) {
+//            sql.append("AND Status = ? ");
+//        }
+//        if (fromDate != null) {
+//            sql.append(" AND OrderDate >= ?");
+//        }
+//        if (toDate != null) {
+//            sql.append(" AND OrderDate <= ?");
+//        }
+//
+//        sql.append("order by poID desc ");
+//        sql.append("offset ? rows fetch next ? rows only");
+//        try {
+//            Connection connection = getConnection();
+//
+//            stm = connection.prepareStatement(sql.toString());
+//            int paramIndex = 1;
+//
+//            if (keyword != null && !keyword.trim().isEmpty()) {
+//                String searchPattern = "%" + keyword + "%";
+//                stm.setString(paramIndex++, searchPattern);
+//                stm.setString(paramIndex++, searchPattern);
+//            }
+//            if (status != null && !status.trim().isEmpty()) {
+//                stm.setString(paramIndex++, status);
+//            }
+//            if (fromDate != null) {
+//                stm.setDate(paramIndex++, Date.valueOf(fromDate));
+//            }
+//            if (toDate != null) {
+//                stm.setDate(paramIndex++, Date.valueOf(toDate));
+//            }
+//
+//            stm.setInt(paramIndex++, offset);
+//            stm.setInt(paramIndex++, pageSize);
+//
+//            rs = stm.executeQuery();
+//            while (rs.next()) {
+//                lists.add(extractPurchaseOrderFromResultSet(rs));
+//            }
+//        } catch (Exception e) {
+//            System.out.println("ERR: SearchPurchaseOrdersWithPaginated: " + e.getMessage());
+//
+//        }
+//        return lists;
+//    }
+    //add supplierName + userName
     public List<PurchaseOrder> searchPOWithPaginated(String keyword, String status, LocalDate fromDate, LocalDate toDate, int page, int pageSize) {
         List<PurchaseOrder> lists = new ArrayList<>();
         StringBuilder sql = new StringBuilder();
         int offset = (page - 1) * pageSize;
-        sql.append("select * from PurchaseOrders where 1 = 1 ");
+        sql.append("select p.*, s.SupplierName, e.FullName as CreatedByName ");
+        sql.append("from PurchaseOrders p ");
+        sql.append("left join Suppliers s on p.SupplierId = s.SupplierId ");
+        sql.append("left join Employees e on p.CreatedBy = e.EmployeeID ");
+        sql.append("where 1 = 1 ");
         if (keyword != null && !keyword.trim().isEmpty()) {
             sql.append("AND (PONumber like ? OR Notes like ?) ");
         }
@@ -501,7 +560,10 @@ public class PurchaseOrderDAO extends DBContext {
 
             rs = stm.executeQuery();
             while (rs.next()) {
-                lists.add(extractPurchaseOrderFromResultSet(rs));
+                PurchaseOrder po = extractPurchaseOrderFromResultSet(rs);
+                po.setSupplierName(rs.getString("SupplierName"));
+                po.setCreatedByName(rs.getString("CreatedByName"));
+                lists.add(po);
             }
         } catch (Exception e) {
             System.out.println("ERR: SearchPurchaseOrdersWithPaginated: " + e.getMessage());

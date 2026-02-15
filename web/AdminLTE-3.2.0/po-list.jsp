@@ -127,7 +127,7 @@
                                                             style="cursor: pointer">
                                                             <td>${item.poNumber}</td>
                                                             <td>${item.createdAt}</td>
-                                                            <td>${item.supplierId}</td>
+                                                            <td>${item.supplierName}</td>
                                                             <td>${item.totalAmount}</td>
                                                             <td>
                                                                 <c:if test="${item.status == 'PENDING_APPROVAL'}">
@@ -140,7 +140,7 @@
                                                                     <span class="badge badge-danger">Từ chối</span>
                                                                 </c:if>
                                                             </td>
-                                                            <td>${item.createdBy}</td>
+                                                            <td>${item.createdByName}</td>
                                                         </tr>
 
                                                     </c:forEach>
