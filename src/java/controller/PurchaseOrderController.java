@@ -223,13 +223,15 @@ public class PurchaseOrderController extends HttpServlet {
                 String notes = request.getParameter("notes");
                 String createdByParam = request.getParameter("createdBy");
 
+                LocalDate orderDate = parseLocalDate(orderDateParam);
+                LocalDate expectedDate = parseLocalDate(expectedDateParam);
+
                 //validate
                 Validation valid = new Validation();
                 valid.required("Mã đơn đặt hàng", poNumber)
                         .required("Nhà cung cấp", supplierIdParam)
                         .required("Ngày đặt hàng", orderDateParam)
-                        .required("Ngày dự kiến", expectedDateParam);
-                //validate items: so luong, don gia, 
+                        .validDates(orderDate, expectedDate);
 
                 if (productIds == null || productIds.length == 0) {
                     valid.addError("Vui lòng thêm ít nhất 1 sản phẩm");
@@ -248,15 +250,8 @@ public class PurchaseOrderController extends HttpServlet {
                         poE.setSupplierId(Integer.valueOf(supplierIdParam));
                     }
 
-                    try {
-                        if (orderDateParam != null && !orderDateParam.isEmpty()) {
-                            poE.setOrderDate(LocalDate.parse(orderDateParam));
-                        }
-                        if (expectedDateParam != null && !expectedDateParam.isEmpty()) {
-                            poE.setExpectedDate(LocalDate.parse(expectedDateParam));
-                        }
-                    } catch (Exception e) {
-                    }
+                    poE.setOrderDate(orderDate);
+                    poE.setExpectedDate(expectedDate);
 
                     poE.setNotes(notes);
 
@@ -295,7 +290,6 @@ public class PurchaseOrderController extends HttpServlet {
                                 items.add(item);
 
                             } catch (Exception e) {
-                                // Log lỗi nếu cần thiết để debug
                                 System.out.println("Error parsing item at index " + i + ": " + e.getMessage());
                                 continue;
                             }
@@ -319,8 +313,11 @@ public class PurchaseOrderController extends HttpServlet {
                 po.setOrderDate(LocalDate.parse(orderDateParam));
                 po.setExpectedDate(LocalDate.parse(expectedDateParam));
                 po.setNotes(notes);
-                po.setCreatedBy(Integer.valueOf(createdByParam));
-
+//                po.setCreatedBy(Integer.valueOf(createdByParam));
+                //chưa kết hợp với user , fake data
+                po.setCreatedBy(1);
+                
+                
                 //add items to PO
                 for (int i = 0; i < productIds.length; i++) {
                     PurchaseOrderItem item = new PurchaseOrderItem();
@@ -387,5 +384,15 @@ public class PurchaseOrderController extends HttpServlet {
         } catch (Exception e) {
             return BigDecimal.ZERO;
         }
+    }
+
+    private LocalDate parseLocalDate(String value) {
+        try {
+            if (value != null && !value.isEmpty()) {
+                return LocalDate.parse(value);
+            }
+        } catch (Exception e) {
+        }
+        return null;
     }
 }

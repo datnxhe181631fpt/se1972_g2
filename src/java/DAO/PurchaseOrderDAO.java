@@ -116,8 +116,10 @@ public class PurchaseOrderDAO extends DBContext {
         PreparedStatement stmPO = null;
         PreparedStatement stmItems = null;
         Connection connection = null;
+        ResultSet generatedKey = null;
+
         String sqlPO = """
-                       insert into PurchaseOrder (PONumber, SupplierID, OrderDate, ExpectedDate, Subtotal, TotalDiscount, TotalAmount, Notes, CreatedBy)
+                       insert into PurchaseOrders (PONumber, SupplierID, OrderDate, ExpectedDate, Subtotal, TotalDiscount, TotalAmount, Notes, CreatedBy)
                                         values(?,?,?,?,?,?,?,?,?)
                        """;
         String sqlItem = """
@@ -134,14 +136,14 @@ public class PurchaseOrderDAO extends DBContext {
             stmPO = connection.prepareStatement(sqlPO, Statement.RETURN_GENERATED_KEYS);
             int index = 1;
             stmPO.setString(index++, po.getPoNumber());
-            stmPO.setLong(index++, po.getSupplierId());
+            stmPO.setObject(index++, po.getSupplierId());
             stmPO.setDate(index++, Date.valueOf(po.getOrderDate()));
             stmPO.setDate(index++, Date.valueOf(po.getExpectedDate()));
             stmPO.setBigDecimal(index++, po.getSubtotal());
             stmPO.setBigDecimal(index++, po.getTotalDiscount());
             stmPO.setBigDecimal(index++, po.getTotalAmount());
             stmPO.setString(index++, po.getNotes());
-            stmPO.setInt(index++, po.getCreatedBy());
+            stmPO.setObject(index++, po.getCreatedBy());
 
             int affectedRows = stmPO.executeUpdate();
             if (affectedRows == 0) {
@@ -150,7 +152,7 @@ public class PurchaseOrderDAO extends DBContext {
 
             long generatedPoId = 0;
             try {
-                ResultSet generatedKey = stmPO.getGeneratedKeys();
+                generatedKey = stmPO.getGeneratedKeys();
                 if (generatedKey.next()) {
                     generatedPoId = generatedKey.getLong(1);
                     po.setId(generatedPoId);
@@ -191,6 +193,25 @@ public class PurchaseOrderDAO extends DBContext {
                 ex.printStackTrace();
             }
             return false;
+
+        } finally {
+            // Close resources
+            try {
+                if (generatedKey != null) {
+                    generatedKey.close();
+                }
+                if (stmPO != null) {
+                    stmPO.close();
+                }
+                if (stmItems != null) {
+                    stmItems.close();
+                }
+                if (connection != null) {
+                    connection.close(); // Quan trọng: Trả connection về pool
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
         }
     }
 

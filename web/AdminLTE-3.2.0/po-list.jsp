@@ -168,11 +168,11 @@
                                                 <c:if test="${currentPage > 1}">
                                                     <li class="page-item">
                                                         <a class="page-link"
-                                                           href="purchaseorder?action=list&page=1&key=${param.key}&status=${param.status}&from=${param.from}&to=${param.to}}">First</a>
+                                                           href="purchaseorder?action=list&page=1&key=${param.key}&status=${param.status}&from=${param.from}&to=${param.to}">First</a>
                                                     </li>
                                                     <li class="page-item">
                                                         <a class="page-link"
-                                                           href="purchaseorder?action=list&page=${currentPage - 1}&key=${param.key}&status=${param.status}&from=${param.from}&to=${param.to}}">«</a>
+                                                           href="purchaseorder?action=list&page=${currentPage - 1}&key=${param.key}&status=${param.status}&from=${param.from}&to=${param.to}">«</a>
                                                     </li>
                                                 </c:if>
 
@@ -180,7 +180,7 @@
                                                     <c:if test="${i == currentPage || i == currentPage - 1 || i == currentPage + 1}">
                                                         <li class="page-item ${i == currentPage ? 'active' : ''}">
                                                             <a class="page-link"
-                                                               href="purchaseorder?action=list&page=${i}&key=${param.key}&status=${param.status}&from=${param.from}&to=${param.to}}">${i}</a>
+                                                               href="purchaseorder?action=list&page=${i}&key=${param.key}&status=${param.status}&from=${param.from}&to=${param.to}">${i}</a>
                                                         </li>
                                                     </c:if>
                                                 </c:forEach>
@@ -188,11 +188,11 @@
                                                 <c:if test="${currentPage < totalPages}">
                                                     <li class="page-item">
                                                         <a class="page-link"
-                                                           href="purchaseorder?action=list&page=${currentPage + 1}&key=${param.key}&status=${param.status}&from=${param.from}&to=${param.to}}">»</a>
+                                                           href="purchaseorder?action=list&page=${currentPage + 1}&key=${param.key}&status=${param.status}&from=${param.from}&to=${param.to}">»</a>
                                                     </li>
                                                     <li class="page-item">
                                                         <a class="page-link"
-                                                           href="purchaseorder?action=list&page=${totalPages}&key=${param.key}&status=${param.status}&from=${param.from}&to=${param.to}}">Last</a>
+                                                           href="purchaseorder?action=list&page=${totalPages}&key=${param.key}&status=${param.status}&from=${param.from}&to=${param.to}">Last</a>
                                                     </li>
                                                 </c:if>
                                             </ul>
