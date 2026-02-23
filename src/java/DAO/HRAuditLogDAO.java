@@ -1,29 +1,27 @@
-package DAO;
+package dao;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
-public class HRAuditLogDAO extends DBContext {
+public class HRAuditLogDAO {
 
-    public boolean insertLog(int employeeId, String action, String performedBy) {
+    public void insert(Connection conn,
+                       int employeeId,
+                       String action,
+                       int performedBy) throws SQLException {
+
         String sql = """
             INSERT INTO HRAuditLogs
-            (EmployeeID, Action, PerformedBy, LogTime)
-            VALUES (?, ?, ?, CURRENT_TIMESTAMP)
+            (EmployeeID, Action, PerformedBy)
+            VALUES (?, ?, ?)
         """;
 
-        try (Connection conn = getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, employeeId);
             ps.setString(2, action);
-            ps.setString(3, performedBy);
-
-            return ps.executeUpdate() > 0;
-        } catch (SQLException e) {
-            e.printStackTrace();
+            ps.setInt(3, performedBy);
+            ps.executeUpdate();
         }
-        return false;
     }
 }
