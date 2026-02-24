@@ -27,7 +27,7 @@ public class EmployeeController extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest request,
-                         HttpServletResponse response)
+            HttpServletResponse response)
             throws ServletException, IOException {
 
         String action = request.getParameter("action");
@@ -40,6 +40,8 @@ public class EmployeeController extends HttpServlet {
             showEditForm(request, response);
         } else if (action.equals("toggle")) {
             toggleStatus(request, response);
+        } else if (action.equals("delete")) {
+            deleteEmployee(request, response);
         } else {
             listEmployees(request, response);
         }
@@ -47,7 +49,7 @@ public class EmployeeController extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest request,
-                          HttpServletResponse response)
+            HttpServletResponse response)
             throws ServletException, IOException {
 
         String action = request.getParameter("action");
@@ -63,7 +65,7 @@ public class EmployeeController extends HttpServlet {
     // LIST + FILTER + PAGING
     // =====================================================
     private void listEmployees(HttpServletRequest request,
-                               HttpServletResponse response)
+            HttpServletResponse response)
             throws ServletException, IOException {
 
         String search = request.getParameter("key");
@@ -86,10 +88,12 @@ public class EmployeeController extends HttpServlet {
         int total = employeeDAO.getTotalEmployees(search, roleId, status);
         int totalPages = (int) Math.ceil((double) total / pageSize);
 
-        List<Employee> list =
-                employeeDAO.getEmployees(search, roleId, status, page, pageSize);
+        List<Employee> list
+                = employeeDAO.getEmployees(search, roleId, status, page, pageSize);
 
+        List<Role> roles = roleDAO.getAllRoles();
         request.setAttribute("lists", list);
+        request.setAttribute("roleList", roles);
         request.setAttribute("currentPage", page);
         request.setAttribute("totalPages", totalPages);
 
@@ -102,7 +106,7 @@ public class EmployeeController extends HttpServlet {
     // SHOW ADD FORM
     // =====================================================
     private void showAddForm(HttpServletRequest request,
-                             HttpServletResponse response)
+            HttpServletResponse response)
             throws ServletException, IOException {
 
         List<Role> roles = roleDAO.getAllRoles();
@@ -117,7 +121,7 @@ public class EmployeeController extends HttpServlet {
     // INSERT
     // =====================================================
     private void insertEmployee(HttpServletRequest request,
-                                HttpServletResponse response)
+            HttpServletResponse response)
             throws IOException {
 
         try {
@@ -139,20 +143,28 @@ public class EmployeeController extends HttpServlet {
             // giả sử admin login lưu trong session
             HttpSession session = request.getSession();
             Integer adminId = (Integer) session.getAttribute("adminId");
-            if (adminId == null) adminId = 1;
+            if (adminId == null) {
+                adminId = 1;
+            }
 
-            boolean success =
-                    employeeDAO.insertEmployee(e, adminId);
+            boolean success
+                    = employeeDAO.insertEmployee(e, adminId);
 
             if (success) {
-                response.sendRedirect("employees?action=list&success=insert");
+                response.sendRedirect(
+                        request.getContextPath() + "/admin/employees?action=list&success=insert"
+                );
             } else {
-                response.sendRedirect("employees?action=list&error=insert");
+                response.sendRedirect(
+                        request.getContextPath() + "/admin/employees?action=list&error=insert"
+                );
             }
 
         } catch (Exception ex) {
             ex.printStackTrace();
-            response.sendRedirect("employees?action=list&error=insert");
+            response.sendRedirect(
+                    request.getContextPath() + "/admin/employees?action=list&error=insert"
+            );
         }
     }
 
@@ -160,7 +172,7 @@ public class EmployeeController extends HttpServlet {
     // SHOW EDIT FORM
     // =====================================================
     private void showEditForm(HttpServletRequest request,
-                              HttpServletResponse response)
+            HttpServletResponse response)
             throws ServletException, IOException {
 
         int id = Integer.parseInt(request.getParameter("id"));
@@ -180,7 +192,7 @@ public class EmployeeController extends HttpServlet {
     // UPDATE
     // =====================================================
     private void updateEmployee(HttpServletRequest request,
-                                HttpServletResponse response)
+            HttpServletResponse response)
             throws IOException {
 
         try {
@@ -198,7 +210,12 @@ public class EmployeeController extends HttpServlet {
                 e.setHireDate(Date.valueOf(hireDate));
             }
 
-            e.setStatus(request.getParameter("status"));
+            String status = request.getParameter("status");
+            if (status == null) {
+                e.setStatus("INACTIVE");
+            } else {
+                e.setStatus("ACTIVE");
+            }
 
             Role r = new Role();
             r.setRoleId(Integer.parseInt(request.getParameter("roleId")));
@@ -206,28 +223,36 @@ public class EmployeeController extends HttpServlet {
 
             HttpSession session = request.getSession();
             Integer adminId = (Integer) session.getAttribute("adminId");
-            if (adminId == null) adminId = 1;
+            if (adminId == null) {
+                adminId = 1;
+            }
 
-            boolean success =
-                    employeeDAO.updateEmployee(e, adminId);
+            boolean success
+                    = employeeDAO.updateEmployee(e, adminId);
 
             if (success) {
-                response.sendRedirect("employees?action=list&success=update");
+                response.sendRedirect(
+                        request.getContextPath() + "/admin/employees?action=list&success=update"
+                );
             } else {
-                response.sendRedirect("employees?action=list&error=update");
+                response.sendRedirect(
+                        request.getContextPath() + "/admin/employees?action=list&error=update"
+                );
             }
 
         } catch (Exception ex) {
             ex.printStackTrace();
-            response.sendRedirect("employees?action=list&error=update");
+            response.sendRedirect(
+                    request.getContextPath() + "/admin/employees?action=list&error=update"
+            );
         }
     }
 
     // =====================================================
-    // TOGGLE STATUS
-    // =====================================================
-    private void toggleStatus(HttpServletRequest request,
-                              HttpServletResponse response)
+// DELETE
+// =====================================================
+    private void deleteEmployee(HttpServletRequest request,
+            HttpServletResponse response)
             throws IOException {
 
         try {
@@ -235,10 +260,49 @@ public class EmployeeController extends HttpServlet {
 
             HttpSession session = request.getSession();
             Integer adminId = (Integer) session.getAttribute("adminId");
-            if (adminId == null) adminId = 1;
+            if (adminId == null) {
+                adminId = 1;
+            }
 
-            boolean success =
-                    employeeDAO.toggleStatus(id, adminId);
+            boolean success
+                    = employeeDAO.deleteEmployee(id, adminId);
+
+            if (success) {
+                response.sendRedirect(
+                        request.getContextPath() + "/admin/employees?action=list&success=delete"
+                );
+            } else {
+                response.sendRedirect(
+                        request.getContextPath() + "/admin/employees?action=list&error=delete"
+                );
+            }
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            response.sendRedirect(
+                    request.getContextPath() + "/admin/employees?action=list&error=delete"
+            );
+        }
+    }
+
+    // =====================================================
+    // TOGGLE STATUS
+    // =====================================================
+    private void toggleStatus(HttpServletRequest request,
+            HttpServletResponse response)
+            throws IOException {
+
+        try {
+            int id = Integer.parseInt(request.getParameter("id"));
+
+            HttpSession session = request.getSession();
+            Integer adminId = (Integer) session.getAttribute("adminId");
+            if (adminId == null) {
+                adminId = 1;
+            }
+
+            boolean success
+                    = employeeDAO.toggleStatus(id, adminId);
 
             if (success) {
                 response.sendRedirect("employees?action=list&success=toggle");
