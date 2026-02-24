@@ -21,7 +21,12 @@ public class PurchaseOrderItemDAO extends DBContext {
     public List<PurchaseOrderItem> getItemsByPOId(long poId) {
         Connection connection = getConnection();
         List<PurchaseOrderItem> items = new ArrayList<>();
-        String sql = "select * from PurchaseOrderItems where POID = ? order by POItemID";
+        String sql = """
+                     select i.*, p.ProductName 
+                                      from PurchaseOrderItems i
+                                      join Products p on i.ProductID = p.ProductID
+                                      where i.POID = ? 
+                                      order by i.LineItemID""";
         try {
             stm = connection.prepareStatement(sql);
             stm.setLong(1, poId);
@@ -37,7 +42,7 @@ public class PurchaseOrderItemDAO extends DBContext {
 
     public PurchaseOrderItem getItemById(long itemId) {
         Connection connection = getConnection();
-        String sql = "select * from PurchaseOrderItems where POItemID = ?";
+        String sql = "select * from PurchaseOrderItems where LineItemID = ?";
         try {
             stm = connection.prepareStatement(sql);
             stm.setLong(1, itemId);
@@ -170,7 +175,7 @@ public class PurchaseOrderItemDAO extends DBContext {
 
     private PurchaseOrderItem extractItemFromResultSet(ResultSet rs) throws Exception {
         PurchaseOrderItem item = new PurchaseOrderItem();
-        item.setId(rs.getLong("POItemID"));
+        item.setId(rs.getLong("LineItemID"));
         item.setProductId(rs.getInt("ProductID"));
         item.setQuantityOrdered(rs.getInt("QuantityOrdered"));
         item.setQuantityReceived(rs.getInt("QuantityReceived"));
@@ -179,6 +184,8 @@ public class PurchaseOrderItemDAO extends DBContext {
         item.setDiscountValue(rs.getBigDecimal("DiscountValue"));
         item.setLineTotal(rs.getBigDecimal("LineTotal"));
         item.setNotes(rs.getString("Notes"));
+        
+        item.setProductName(rs.getString("ProductName"));
         return item;
     }
 }

@@ -123,7 +123,7 @@
                                                 </thead>
                                                 <tbody>
                                                     <c:forEach var="item" items="${lists}">
-                                                        <tr class="expandable-row" onclick="toggleDetail('${item.poNumber}')"
+                                                        <tr class="clickable-row" data-href="${pageContext.request.contextPath}/purchaseorder?action=detail&poNumber=${item.poNumber}"
                                                             style="cursor: pointer">
                                                             <td>${item.poNumber}</td>
                                                             <td>${item.createdAt}</td>
@@ -219,5 +219,19 @@
         <!-- AdminLTE App -->
         <script src="${pageContext.request.contextPath}/assets/AdminLTE-3.2.0/dist/js/adminlte.min.js"></script>
 
+        <script>
+            document.addEventListener("DOMContentLoaded", function(){
+                var rows = document.querySelectorAll(".clickable-row");
+                
+                rows.forEach(function(row){
+                    row.addEventListener("click", funtion(){
+                        var url = this.getAttribute("data-href");
+                        if(url){
+                            window.location.href = url;
+                        }
+                    });
+                });
+            });
+        </script>
     </body>
 </html>

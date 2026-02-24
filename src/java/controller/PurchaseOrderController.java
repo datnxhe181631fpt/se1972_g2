@@ -163,7 +163,21 @@ public class PurchaseOrderController extends HttpServlet {
     private void showDetail(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         String poNumber = request.getParameter("poNumber");
+    
+        if (poNumber == null || poNumber.trim().isEmpty()) {
+            request.getSession().setAttribute("error", "Mã đơn hàng không hợp lệ.");
+            response.sendRedirect("purchaseorder?action=list");
+            return;
+        }
+        
         PurchaseOrder po = poDAO.getPurchaseOrderByCode(poNumber);
+        
+        if (po == null) {
+            request.getSession().setAttribute("error", "Không tìm thấy đơn hàng với mã: " + poNumber);
+            response.sendRedirect("purchaseorder?action=list");
+            return;
+        }
+        
         List<PurchaseOrderItem> items = itemDAO.getItemsByPOId(po.getId());
 
         request.setAttribute("po", po);

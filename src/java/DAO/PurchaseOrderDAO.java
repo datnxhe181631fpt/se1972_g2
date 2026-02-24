@@ -25,7 +25,16 @@ public class PurchaseOrderDAO extends DBContext {
     public List<PurchaseOrder> getAllPurchaseOrders() {
         List<PurchaseOrder> lists = new ArrayList<>();
         Connection connection = getConnection();
-        String sql = "select * from PurchaseOrders";
+        String sql = """
+                     select po.*, s.SupplierName, e1.FullName as CreatedByName, 
+                     e2.FullName as ApprovedByName,
+                     e3.FullName as CancelledByName
+                     from PurchaseOrders po
+                     left join Suppliers s on po.SupplierID = s.SupplierID
+                     left join Employees e1 on po.CreatedBy = e1.EmployeeID
+                     left join Employees e2 on po.ApprovedBy = e2.EmployeeID  
+                     left join Employees e3 ON po.CancelledBy= e3.EmployeeID 
+                     """;
         try {
             stm = connection.prepareStatement(sql);
             rs = stm.executeQuery();
@@ -39,7 +48,17 @@ public class PurchaseOrderDAO extends DBContext {
     }
 
     public PurchaseOrder getPurchaseOrderByCode(String purchaseNumber) {
-        String sql = "select * from PurchaseOrders where PONumber = ?";
+        String sql = """
+                      select po.*, s.SupplierName, e1.FullName as CreatedByName, 
+                                          e2.FullName as ApprovedByName,
+                                          e3.FullName as CancelledByName
+                                          from PurchaseOrders po
+                                          left join Suppliers s on po.SupplierID = s.SupplierID
+                                          left join Employees e1 on po.CreatedBy = e1.EmployeeID
+                                          left join Employees e2 on po.ApprovedBy = e2.EmployeeID  
+                                          left join Employees e3 ON po.CancelledBy= e3.EmployeeID
+                     where po.PONumber = ?
+                     """;
         Connection connection = getConnection();
         try {
             stm = connection.prepareStatement(sql);
@@ -55,7 +74,17 @@ public class PurchaseOrderDAO extends DBContext {
     }
 
     public PurchaseOrder getPurchaseOrderById(long id) {
-        String sql = "select * from PurchaseOrders where POID = ?";
+        String sql = """
+                      select po.*, s.SupplierName, e1.FullName as CreatedByName, 
+                                          e2.FullName as ApprovedByName,
+                                          e3.FullName as CancelledByName
+                                          from PurchaseOrders po
+                                          left join Suppliers s on po.SupplierID = s.SupplierID
+                                          left join Employees e1 on po.CreatedBy = e1.EmployeeID
+                                          left join Employees e2 on po.ApprovedBy = e2.EmployeeID  
+                                          left join Employees e3 ON po.CancelledBy= e3.EmployeeID
+                     where po.POID = ?
+                     """;
         Connection connection = getConnection();
         try {
             stm = connection.prepareStatement(sql);
@@ -713,6 +742,22 @@ public class PurchaseOrderDAO extends DBContext {
         po.setUpdatedAt(getLocalDateTime(rs, "UpdatedAt"));
         po.setNotes(rs.getString("Notes"));
 
+        try {
+            po.setSupplierName(rs.getString("SupplierName"));
+        } catch (SQLException e) {
+        }
+        try {
+            po.setCreatedByName(rs.getString("CreatedByName"));
+        } catch (SQLException e) {
+        }
+        try {
+            po.setApprovedByName(rs.getString("ApprovedByName"));
+        } catch (SQLException e) {
+        }
+        try {
+            po.setCancelledByName(rs.getString("CancelledByName"));
+        } catch (SQLException e) {
+        }
         return po;
     }
 

@@ -48,13 +48,14 @@ public class PurchaseOrder {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
+    // Additional fields for display
+    private String supplierName;
+    private String createdByName;
+    private String approvedByName;
+    private String cancelledByName;
+
     private List<PurchaseOrderItem> items;
     private List<GoodsReceipt> goodsReceipts;
-
-    //table suppliers
-    private String supplierName;
-    //table user
-    private String createdByName;
 
     public PurchaseOrder() {
         this.status = STATUS_PENDING_APPROVAL;
@@ -226,22 +227,6 @@ public class PurchaseOrder {
         this.updatedAt = updatedAt;
     }
 
-    public List<PurchaseOrderItem> getItems() {
-        return items;
-    }
-
-    public void setItems(List<PurchaseOrderItem> items) {
-        this.items = items;
-    }
-
-    public List<GoodsReceipt> getGoodsReceipts() {
-        return goodsReceipts;
-    }
-
-    public void setGoodsReceipts(List<GoodsReceipt> goodsReceipts) {
-        this.goodsReceipts = goodsReceipts;
-    }
-
     public String getSupplierName() {
         return supplierName;
     }
@@ -258,6 +243,38 @@ public class PurchaseOrder {
         this.createdByName = createdByName;
     }
 
+    public String getApprovedByName() {
+        return approvedByName;
+    }
+
+    public void setApprovedByName(String approvedByName) {
+        this.approvedByName = approvedByName;
+    }
+
+    public String getCancelledByName() {
+        return cancelledByName;
+    }
+
+    public void setCancelledByName(String cancelledByName) {
+        this.cancelledByName = cancelledByName;
+    }
+
+    public List<PurchaseOrderItem> getItems() {
+        return items;
+    }
+
+    public void setItems(List<PurchaseOrderItem> items) {
+        this.items = items;
+    }
+
+    public List<GoodsReceipt> getGoodsReceipts() {
+        return goodsReceipts;
+    }
+
+    public void setGoodsReceipts(List<GoodsReceipt> goodsReceipts) {
+        this.goodsReceipts = goodsReceipts;
+    }
+
     public void addItem(PurchaseOrderItem item) {
         items.add(item);
         item.setPurchaseOrder(this);
@@ -271,12 +288,14 @@ public class PurchaseOrder {
     public void recalculateTotals() {
         this.subtotal = BigDecimal.ZERO;
         this.totalDiscount = BigDecimal.ZERO;
-
+        
         for (PurchaseOrderItem item : items) {
+            // Calculate subtotal (before discount)
             BigDecimal lineSubtotal = item.getUnitPrice()
                     .multiply(BigDecimal.valueOf(item.getQuantityOrdered()));
             this.subtotal = this.subtotal.add(lineSubtotal);
-
+            
+            // Calculate line discount
             BigDecimal lineDiscount = BigDecimal.ZERO;
             if (PurchaseOrderItem.DISCOUNT_PERCENT.equals(item.getDiscountType())) {
                 lineDiscount = lineSubtotal.multiply(item.getDiscountValue())
@@ -286,6 +305,7 @@ public class PurchaseOrder {
             }
             this.totalDiscount = this.totalDiscount.add(lineDiscount);
         }
+        
         this.totalAmount = this.subtotal.subtract(this.totalDiscount);
     }
 
@@ -303,12 +323,12 @@ public class PurchaseOrder {
 
     @Override
     public String toString() {
-        return "PurchaseOrder{"
-                + "id=" + id
-                + ", poNumber='" + poNumber + '\''
-                + ", status='" + status + '\''
-                + ", totalAmount=" + totalAmount
-                + '}';
+        return "PurchaseOrder{" +
+                "id=" + id +
+                ", poNumber='" + poNumber + '\'' +
+                ", status='" + status + '\'' +
+                ", totalAmount=" + totalAmount +
+                '}';
     }
 
 }
