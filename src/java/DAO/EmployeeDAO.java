@@ -19,13 +19,13 @@ public class EmployeeDAO extends DBContext {
             (FullName, Email, Phone, RoleID, HireDate, Status)
             VALUES (?, ?, ?, ?, ?, ?)
         """;
-        
+
         String auditSql = """
             INSERT INTO HRAuditLogs
             (EmployeeID, Action, PerformedBy)
             VALUES (?, 'CREATE', ?)
         """;
-        
+
         try (Connection conn = getConnection()) {
 
             conn.setAutoCommit(false);
@@ -33,19 +33,20 @@ public class EmployeeDAO extends DBContext {
             int newId;
 
             // 1️⃣ Insert employee
-            try (PreparedStatement ps =
-                         conn.prepareStatement(insertSql,
-                                 Statement.RETURN_GENERATED_KEYS)) {
+            try (PreparedStatement ps
+                    = conn.prepareStatement(insertSql,
+                            Statement.RETURN_GENERATED_KEYS)) {
 
                 ps.setString(1, e.getFullName());
                 ps.setString(2, e.getEmail());
                 ps.setString(3, e.getPhone());
                 ps.setInt(4, e.getRole().getRoleId());
 
-                if (e.getHireDate() != null)
+                if (e.getHireDate() != null) {
                     ps.setDate(5, e.getHireDate());
-                else
+                } else {
                     ps.setNull(5, Types.DATE);
+                }
 
                 ps.setString(6, "ACTIVE");
 
@@ -106,10 +107,11 @@ public class EmployeeDAO extends DBContext {
                 ps.setString(3, e.getPhone());
                 ps.setInt(4, e.getRole().getRoleId());
 
-                if (e.getHireDate() != null)
+                if (e.getHireDate() != null) {
                     ps.setDate(5, e.getHireDate());
-                else
+                } else {
                     ps.setNull(5, Types.DATE);
+                }
 
                 ps.setString(6, e.getStatus());
                 ps.setInt(7, e.getEmployeeId());
@@ -176,17 +178,61 @@ public class EmployeeDAO extends DBContext {
     }
 
     // ==========================
+// DELETE EMPLOYEE (HARD DELETE)
+// ==========================
+    public boolean deleteEmployee(int id, int performedBy) {
+
+        String sql = """
+        UPDATE Employees
+        SET Status = 'INACTIVE'
+        WHERE EmployeeID = ?
+    """;
+
+        String auditSql = """
+        INSERT INTO HRAuditLogs
+        (EmployeeID, Action, PerformedBy)
+        VALUES (?, 'DELETE', ?)
+    """;
+
+        try (Connection conn = getConnection()) {
+
+            conn.setAutoCommit(false);
+
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setInt(1, id);
+                ps.executeUpdate();
+            }
+
+            try (PreparedStatement ps = conn.prepareStatement(auditSql)) {
+                ps.setInt(1, id);
+                ps.setInt(2, performedBy);
+                ps.executeUpdate();
+            }
+
+            conn.commit();
+            return true;
+
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+
+        return false;
+    }
+
+    // ==========================
     // TOGGLE STATUS
     // ==========================
     public boolean toggleStatus(int id, int performedBy) {
 
         Employee e = getEmployeeByID(id);
-        if (e == null) return false;
+        if (e == null) {
+            return false;
+        }
 
-        String newStatus =
-                e.getStatus().equalsIgnoreCase("ACTIVE")
-                        ? "INACTIVE"
-                        : "ACTIVE";
+        String newStatus
+                = e.getStatus().equalsIgnoreCase("ACTIVE")
+                ? "INACTIVE"
+                : "ACTIVE";
 
         String updateSql = """
             UPDATE Employees
@@ -214,8 +260,8 @@ public class EmployeeDAO extends DBContext {
                 ps.setInt(1, id);
                 ps.setString(2,
                         newStatus.equals("ACTIVE")
-                                ? "ACTIVATE"
-                                : "DEACTIVATE");
+                        ? "ACTIVATE"
+                        : "DEACTIVATE");
                 ps.setInt(3, performedBy);
                 ps.executeUpdate();
             }
@@ -242,8 +288,7 @@ public class EmployeeDAO extends DBContext {
             WHERE e.EmployeeID = ?
         """;
 
-        try (Connection conn = getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, id);
             ResultSet rs = ps.executeQuery();
@@ -284,7 +329,7 @@ public class EmployeeDAO extends DBContext {
             int pageSize) {
 
         List<Employee> list = new ArrayList<>();
-        
+
         StringBuilder sql = new StringBuilder("""
             SELECT e.*, r.RoleName
             FROM Employees e
@@ -307,9 +352,8 @@ public class EmployeeDAO extends DBContext {
         sql.append(" ORDER BY e.EmployeeID DESC ");
         sql.append(" OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
 
-        try (Connection conn = getConnection();
-             PreparedStatement ps =
-                     conn.prepareStatement(sql.toString())) {
+        try (Connection conn = getConnection(); PreparedStatement ps
+                = conn.prepareStatement(sql.toString())) {
 
             int index = 1;
 
@@ -383,9 +427,8 @@ public class EmployeeDAO extends DBContext {
             sql.append(" AND Status = ?");
         }
 
-        try (Connection conn = getConnection();
-             PreparedStatement ps =
-                     conn.prepareStatement(sql.toString())) {
+        try (Connection conn = getConnection(); PreparedStatement ps
+                = conn.prepareStatement(sql.toString())) {
 
             int index = 1;
 
