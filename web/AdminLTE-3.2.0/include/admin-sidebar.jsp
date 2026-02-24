@@ -42,7 +42,7 @@
         <!-- Sidebar Menu -->
         <nav class="mt-2">
             <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
-                
+
                 <!-- Dashboard -->
                 <li class="nav-item">
                     <a href="#" class="nav-link">
@@ -244,7 +244,8 @@
                     </a>
                     <ul class="nav nav-treeview">
                         <li class="nav-item">
-                            <a href="#" class="nav-link">
+                            <a href="${pageContext.request.contextPath}/admin/employees"
+                               class="nav-link ${pageContext.request.requestURI.contains('/admin/employees') ? 'active' : ''}">
                                 <i class="far fa-circle nav-icon"></i>
                                 <p>Danh sách nhân viên</p>
                             </a>
@@ -256,7 +257,7 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="#" class="nav-link">
+                            <a href="${pageContext.request.contextPath}/admin/shift-management" class="nav-link">
                                 <i class="far fa-circle nav-icon"></i>
                                 <p>Ca làm việc</p>
                             </a>
