@@ -1,10 +1,11 @@
 package entity;
 
-
 import java.lang.*;
 import java.util.*;
 import java.io.*;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+
 /*
 *
 *
@@ -24,7 +25,8 @@ public class Promotion {
     public Promotion() {
     }
 
-    public Promotion(int promotionID, String promotionCode, String promotionName, String promotionType, LocalDate startDate, LocalDate endDate, int priority, String status, Boolean isStackable) {
+    public Promotion(int promotionID, String promotionCode, String promotionName, String promotionType,
+            LocalDate startDate, LocalDate endDate, int priority, String status, Boolean isStackable) {
         this.promotionID = promotionID;
         this.promotionCode = promotionCode;
         this.promotionName = promotionName;
@@ -107,6 +109,18 @@ public class Promotion {
     public void setIsStackable(Boolean isStackable) {
         this.isStackable = isStackable;
     }
-    
-    
+
+
+    public String getStartDateFormatted() {
+        if (startDate == null)
+            return "";
+        return startDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+    }
+
+    public String getEndDateFormatted() {
+        if (endDate == null)
+            return "";
+        return endDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+    }
+
 }
