@@ -138,6 +138,7 @@
                                                             </div>
                                                             <input type="date" class="form-control" id="expectedDate" name="expectedDate" value="${expectedDate}">
                                                         </div>
+                                                        <small class="form-text text-muted">Có thể cập nhật sau khi trao đổi với nhà cung cấp</small>
                                                     </div>
                                                 </div>
                                             </div>
@@ -185,12 +186,12 @@
                                                             <thead>
                                                                 <tr>
                                                                     <th style="width: 5%">STT</th>
-                                                                    <th style="width: 25%">Sản phẩm</th>
-                                                                    <th style="width: 10%">Số lượng</th>
-                                                                    <th style="width: 15%">Đơn giá</th>
-                                                                    <th style="width: 10%">Giảm giá</th>
-                                                                    <th style="width: 15%">Thành tiền</th>
-                                                                    <th style="width: 15%">Ghi chú</th>
+                                                                    <th style="width: 22%">Sản phẩm</th>
+                                                                    <th style="width: 8%">Số lượng</th>
+                                                                    <th style="width: 13%">Đơn giá</th>
+                                                                    <th style="width: 18%">Giảm giá</th>
+                                                                    <th style="width: 13%">Thành tiền</th>
+                                                                    <th style="width: 16%">Ghi chú</th>
                                                                     <th style="width: 5%">Xóa</th>
                                                                 </tr>
                                                             </thead>
@@ -204,10 +205,10 @@
                                                                                 <td> ${item.productName}
                                                                                     <input type="hidden" name="productId" value="${item.productId}">
                                                                                 </td>
-                                                                                
+
                                                                                 <td>
                                                                                     <input type="number"  name="quantity" class="form-control form-control-sm qty-input" 
-                                                                                           value="${item.quantityOrdered}" min="1" onchange="calculateRowTotal(this)">
+                                                                                           value="${item.quantity}" min="1" onchange="calculateRowTotal(this)">
                                                                                 </td>
                                                                                 <td>
                                                                                     <input type="number" name="unitPrice" class="form-control form-control-sm price-input" 
@@ -216,14 +217,15 @@
                                                                                 <td>
                                                                                     <div class="input-group input-group-sm">
                                                                                         <input type="number"  name="discountValue" class="form-control discount-input" 
-                                                                                               value="${item.discountValue}" min="0" max="100" onchange="calculateRowTotal(this)">
-                                                                                        <div class="input-group-append">
-                                                                                            <span class="input-group-text">%</span>
-                                                                                        </div>
+                                                                                               value="${item.discountValue}" min="0" onchange="calculateRowTotal(this)">
+                                                                                        <select name="discountType" class="form-control discount-type-select" style="max-width: 80px" onchange="updateDiscountConstraints(this); calculateRowTotal(this)">
+                                                                                            <option value="PERCENT" ${item.discountType == 'PERCENT' ? 'selected' : ''}>%</option>
+                                                                                            <option value="AMOUNT" ${item.discountType == 'AMOUNT' ? 'selected' : ''}>VND</option>
+                                                                                        </select>
                                                                                     </div>
                                                                                 </td>
                                                                                 <td class="text-right">
-                                                                                    <strong class="text-success">${item.lineTotal}đ</strong>
+                                                                                    <strong class="text-success">${item.totalPrice}đ</strong>
                                                                                 </td>
                                                                                 <td>
                                                                                     <input type="text" name="itemNote" class="form-control form-control-sm" value="${item.notes}" placeholder="Ghi chú...">
@@ -324,7 +326,13 @@
                     <div class="col-md-4">
                         <div class="form-group">
                             <label for="productDiscount">Giảm giá (%):</label>
-                            <input type="number" class="form-control" id="productDiscount" value="0" min="0" max="100">
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="productDiscount" value="0" min="0">
+                                <select class="form-control" id="productDiscountType" style="max-width: 100px;">
+                                    <option value="PERCENT">%</option>
+                                    <option value="AMOUNT">VND</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -458,6 +466,10 @@
                             }
                         });
 
+                        document.querySelectorAll('.discount-type-select').forEach(function (select) {
+                            updateDiscountConstraints(select);
+                        });
+
                         calculateGrandTotal();
                     });
 
@@ -509,9 +521,11 @@
                             html += '<td><input type="number" name="unitPrice" class="form-control form-control-sm price-input" value="' + price + '" min="0" step="1000"></td>';
                             html += '<td>';
                             html += '  <div class="input-group input-group-sm">';
-                            html += '    <input type="number" name="discountValue" class="form-control discount-input" value="0" min="0" max="100">';
-                            html += '    <input type="hidden" name="discountType" value="PERCENT">';
-                            html += '    <div class="input-group-append"><span class="input-group-text">%</span></div>';
+                            html += '    <input type="number" name="discountValue" class="form-control discount-input" value="0" min="0" onchange="calculateRowTotal(this)">';
+                            html += '    <select name="discountType" class="form-control discount-type-select" style="max-width: 80px;" onchange="updateDiscountConstraints(this); calculateRowTotal(this);">';
+                            html += '      <option value="PERCENT" selected>%</option>';
+                            html += '      <option value="AMOUNT">VND</option>';
+                            html += '    </select>';
                             html += '  </div>';
                             html += '</td>';
                             html += '<td class="text-right align-middle row-total"><strong class="text-success">' + formatCurrency(total) + '</strong></td>';
@@ -545,7 +559,9 @@
                         var productName = selectedOption.getAttribute('data-name');
                         var quantity = parseInt(document.getElementById('productQty').value) || 1;
                         var price = parseInt(document.getElementById('productPrice').value) || 0;
-                        var discount = parseInt(document.getElementById('productDiscount').value) || 0;
+                        var discount = parseFloat(document.getElementById('productDiscount').value) || 0;
+                        var discountType = document.getElementById('productDiscountType').value;
+
                         var notes = document.getElementById('productNotes').value;
 
                         createRow(productId, productName, price, quantity);
@@ -562,7 +578,9 @@
 
                         if (targetRow) {
                             targetRow.querySelector('.discount-input').value = discount;
+                            targetRow.querySelector('.discount-type-select').value = discountType;
                             targetRow.querySelector('input[name="itemNote"]').value = notes;
+                            updateDiscountConstraints(targetRow.querySelector('.discount-type-select'));
                             calculateRowTotal(targetRow.querySelector('.qty-input'));
                         }
 
@@ -571,6 +589,7 @@
                         document.getElementById('productQty').value = 1;
                         document.getElementById('productPrice').value = 0;
                         document.getElementById('productDiscount').value = 0;
+                        document.getElementById('productDiscountType').value = 'PERCENT';
                         document.getElementById('productNotes').value = '';
 
 
@@ -580,10 +599,21 @@
                         var row = element.closest('tr');
                         var quantity = parseInt(row.querySelector('.qty-input').value) || 0;
                         var price = parseInt(row.querySelector('.price-input').value) || 0;
-                        var discount = parseInt(row.querySelector('.discount-input').value) || 0;
+                        var discountValue = parseFloat(row.querySelector('.discount-input').value) || 0;
+                        var discountType = row.querySelector('.discount-type-select').value;
 
                         var subtotal = quantity * price;
-                        var total = subtotal - (subtotal * discount / 100);
+                        var discountAmount = 0;
+
+                        if (discountType === 'PERCENT') {
+                            discountAmount = subtotal * discountValue / 100;
+                        } else {
+                            discountAmount = discountValue;
+                        }
+
+                        var total = subtotal - discountAmount;
+                        if (total < 0)
+                            total = 0;
 
                         row.querySelector('.row-total strong').textContent = formatCurrency(total);
                         calculateGrandTotal();
@@ -636,20 +666,50 @@
                             var qInput = row.querySelector('.qty-input');
                             var pInput = row.querySelector('.price-input');
                             var dInput = row.querySelector('.discount-input');
+                            var dTypeSelect = row.querySelector('.discount-type-select');
 
-                            if (qInput && pInput && dInput) {
+                            if (qInput && pInput && dInput && dTypeSelect) {
                                 var qty = parseInt(qInput.value) || 0;
                                 var price = parseInt(pInput.value) || 0;
-                                var discount = parseInt(dInput.value) || 0;
+                                var discountValue = parseFloat(dInput.value) || 0;
+                                var discountType = dTypeSelect.value;
 
                                 totalQty += qty;
                                 var subtotal = qty * price;
-                                totalAmount += subtotal - (subtotal * discount / 100);
+                                var discountAmount = 0;
+
+                                if (discountType === 'PERCENT') {
+                                    discountAmount = subtotal * discountValue / 100;
+                                } else {
+                                    discountAmount = discountValue;
+                                }
+
+                                totalAmount += subtotal - discountAmount;
                             }
                         });
 
                         document.getElementById('totalQuantity').textContent = totalQty;
                         document.getElementById('totalAmount').textContent = formatCurrency(totalAmount);
+                    }
+
+                    function updateDiscountConstraints(selectElement) {
+                        var row = selectElement.closest('tr');
+                        if (!row)
+                            return;
+
+                        var discountInput = row.querySelector('.discount-input');
+                        var discountType = selectElement.value;
+
+                        if (discountType === 'PERCENT') {
+                            discountInput.setAttribute('max', '100');
+                            discountInput.setAttribute('step', '0.01');
+                            if (parseFloat(discountInput.value) > 100) {
+                                discountInput.value = '100';
+                            }
+                        } else {
+                            discountInput.removeAttribute('max');
+                            discountInput.setAttribute('step', '1000');
+                        }
                     }
 
                     function formatCurrency(value) {
@@ -678,7 +738,26 @@
                                 $('body').removeClass('modal-open').css('padding-right', '');
                             }
                         });
+
+                        //handle discount type change in modal
+                        $('#productDiscountType').on('change', function () {
+                            var discountInput = $('#productDiscount');
+                            var discountType = $(this).val();
+
+                            if (discountType === 'PERCENT') {
+                                discountInput.attr('max', '100');
+                                discountInput.attr('step', '0.01');
+                                if (parseFloat(discountInput.val()) > 100) {
+                                    discountInput.val('100');
+                                }
+                            } else {
+                                discountInput.removeAttr('max');
+                                discountInput.attr('step', '1000');
+                            }
+                        });
+
                     });
+
 </script>
 
 </body>
