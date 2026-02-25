@@ -126,7 +126,7 @@
                 width: 36px;
                 height: 36px;
                 border-radius: 12px;
-                background: white;
+                background: #dea600;
                 display: flex;
                 align-items: center;
                 justify-content: center;
@@ -135,7 +135,7 @@
             }
 
             .pos-product-name {
-                font-size: 14px;
+                font-size: 20px;
                 font-weight: 500;
                 color: black;
                 margin-bottom: 4px;
@@ -143,7 +143,7 @@
             }
 
             .pos-product-sku {
-                font-size: 11px;
+                font-size: 15px;
                 color: black;
                 margin-bottom: 10px;
             }
