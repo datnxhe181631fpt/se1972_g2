@@ -5,8 +5,6 @@ import entity.Promotion;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.lang.*;
-import java.io.*;
 
 /*
 *
@@ -14,13 +12,14 @@ import java.io.*;
  */
 public class PromotionDAO extends DBContext {
 
-    public void insert(Promotion p) {
+    public int insert(Promotion p) {
         String sql = """
                     INSERT INTO Promotions
                     (PromotionCode, PromotionName, PromotionType, StartDate, EndDate, Priority, Status, IsStackable)
                     VALUES (?,?,?,?,?,?,?,?)
                 """;
-        try (Connection con = getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
+        try (Connection con = getConnection();
+                PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
             ps.setString(1, p.getPromotionCode());
             ps.setString(2, p.getPromotionName());
@@ -29,30 +28,27 @@ public class PromotionDAO extends DBContext {
             ps.setDate(5, Date.valueOf(p.getEndDate()));
             ps.setInt(6, p.getPriority());
             ps.setString(7, p.getStatus());
-            ps.setBoolean(8, p.getIsStackable());
+            ps.setInt(8, p.getIsStackable() ? 1 : 0);
             ps.executeUpdate();
+
+            try (ResultSet rs = ps.getGeneratedKeys()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
         } catch (SQLException e) {
             e.printStackTrace();
         }
+        return -1;
     }
 
     public List<Promotion> getAll() {
         List<Promotion> list = new ArrayList<>();
-        String sql = "SELECT * FROM Promotions";
+        String sql = "SELECT * FROM Promotions ORDER BY PromotionID ASC";
         try (Connection con = getConnection(); ResultSet rs = con.prepareStatement(sql).executeQuery()) {
 
             while (rs.next()) {
-                Promotion p = new Promotion();
-                p.setPromotionID(rs.getInt("PromotionID"));
-                p.setPromotionCode(rs.getString("PromotionCode"));
-                p.setPromotionName(rs.getString("PromotionName"));
-                p.setPromotionType(rs.getString("PromotionType"));
-                p.setStartDate(rs.getDate("StartDate").toLocalDate());
-                p.setEndDate(rs.getDate("EndDate").toLocalDate());
-                p.setPriority(rs.getInt("Priority"));
-                p.setStatus(rs.getString("Status"));
-                p.setIsStackable(rs.getBoolean("IsStackable"));
-                list.add(p);
+                list.add(mapRow(rs));
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -62,21 +58,11 @@ public class PromotionDAO extends DBContext {
 
     public List<Promotion> getAllActive() {
         List<Promotion> list = new ArrayList<>();
-        String sql = "SELECT * FROM Promotions WHERE Status='ACTIVE'";
+        String sql = "SELECT * FROM Promotions WHERE Status='ACTIVE' ORDER BY PromotionID ASC";
         try (Connection con = getConnection(); ResultSet rs = con.prepareStatement(sql).executeQuery()) {
 
             while (rs.next()) {
-                Promotion p = new Promotion();
-                p.setPromotionID(rs.getInt("PromotionID"));
-                p.setPromotionCode(rs.getString("PromotionCode"));
-                p.setPromotionName(rs.getString("PromotionName"));
-                p.setPromotionType(rs.getString("PromotionType"));
-                p.setStartDate(rs.getDate("StartDate").toLocalDate());
-                p.setEndDate(rs.getDate("EndDate").toLocalDate());
-                p.setPriority(rs.getInt("Priority"));
-                p.setStatus(rs.getString("Status"));
-                p.setIsStackable(rs.getBoolean("IsStackable"));
-                list.add(p);
+                list.add(mapRow(rs));
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -94,7 +80,7 @@ public class PromotionDAO extends DBContext {
             sql.append(" AND Status = ?");
         if (type != null && !type.isEmpty())
             sql.append(" AND PromotionType = ?");
-        sql.append(" ORDER BY Priority ASC");
+        sql.append(" ORDER BY PromotionID ASC");
 
         try (Connection con = getConnection();
                 PreparedStatement ps = con.prepareStatement(sql.toString())) {
@@ -170,7 +156,7 @@ public class PromotionDAO extends DBContext {
             ps.setDate(4, java.sql.Date.valueOf(p.getEndDate()));
             ps.setInt(5, p.getPriority());
             ps.setString(6, p.getStatus());
-            ps.setBoolean(7, p.getIsStackable());
+            ps.setInt(7, p.getIsStackable() ? 1 : 0);
             ps.setInt(8, p.getPromotionID());
             ps.executeUpdate();
         } catch (SQLException e) {
@@ -189,7 +175,7 @@ public class PromotionDAO extends DBContext {
         p.setEndDate(rs.getDate("EndDate").toLocalDate());
         p.setPriority(rs.getInt("Priority"));
         p.setStatus(rs.getString("Status"));
-        p.setIsStackable(rs.getBoolean("IsStackable"));
+        p.setIsStackable(rs.getInt("IsStackable") == 1);
         return p;
     }
 
