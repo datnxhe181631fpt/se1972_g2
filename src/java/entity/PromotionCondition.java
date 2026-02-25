@@ -1,9 +1,9 @@
 package entity;
 
-
 import java.lang.*;
 import java.util.*;
 import java.io.*;
+
 /*
 *
 *
@@ -20,7 +20,8 @@ public class PromotionCondition {
     public PromotionCondition() {
     }
 
-    public PromotionCondition(int conditionID, int promotionID, String conditionType, String operator, String conditionValue, String logicalGroup) {
+    public PromotionCondition(int conditionID, int promotionID, String conditionType, String operator,
+            String conditionValue, String logicalGroup) {
         this.conditionID = conditionID;
         this.promotionID = promotionID;
         this.conditionType = conditionType;
@@ -76,6 +77,5 @@ public class PromotionCondition {
     public void setLogicalGroup(String logicalGroup) {
         this.logicalGroup = logicalGroup;
     }
-
 
 }
