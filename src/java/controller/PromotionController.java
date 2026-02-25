@@ -39,7 +39,7 @@ public class PromotionController extends HttpServlet {
         switch (action) {
             case "create":
                 request.setAttribute("customerTiers", new CustomerTierDAO().getAll());
-                request.getRequestDispatcher("/AdminLTE-3.2.0/promotion-form.jsp").forward(request, response);
+                request.getRequestDispatcher("/AdminLTE-3.2.0/promotion-create.jsp").forward(request, response);
                 break;
             case "edit":
                 handleEditForm(request, response);
