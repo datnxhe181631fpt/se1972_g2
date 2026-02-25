@@ -128,7 +128,7 @@ public class PurchaseOrderDAO extends DBContext {
             stm.setString(index++, po.getPoNumber());
             stm.setLong(index++, po.getSupplierId());
             stm.setDate(index++, Date.valueOf(po.getOrderDate()));
-            stm.setDate(index++, Date.valueOf(po.getExpectedDate()));
+            stm.setDate(index++, po.getExpectedDate() != null ? Date.valueOf(po.getExpectedDate()) : null);
             stm.setBigDecimal(index++, po.getSubtotal());
             stm.setBigDecimal(index++, po.getTotalDiscount());
             stm.setBigDecimal(index++, po.getTotalAmount());
@@ -167,7 +167,7 @@ public class PurchaseOrderDAO extends DBContext {
             stmPO.setString(index++, po.getPoNumber());
             stmPO.setObject(index++, po.getSupplierId());
             stmPO.setDate(index++, Date.valueOf(po.getOrderDate()));
-            stmPO.setDate(index++, Date.valueOf(po.getExpectedDate()));
+            stmPO.setDate(index++, po.getExpectedDate() != null ? Date.valueOf(po.getExpectedDate()) : null);
             stmPO.setBigDecimal(index++, po.getSubtotal());
             stmPO.setBigDecimal(index++, po.getTotalDiscount());
             stmPO.setBigDecimal(index++, po.getTotalAmount());
@@ -274,7 +274,7 @@ public class PurchaseOrderDAO extends DBContext {
             int index = 1;
             stmUpdatePO.setLong(index++, po.getSupplierId());
             stmUpdatePO.setDate(index++, Date.valueOf(po.getOrderDate()));
-            stmUpdatePO.setDate(index++, Date.valueOf(po.getExpectedDate()));
+            stmUpdatePO.setDate(index++, po.getExpectedDate() != null ? Date.valueOf(po.getExpectedDate()) : null);
             stmUpdatePO.setBigDecimal(index++, po.getSubtotal());
             stmUpdatePO.setBigDecimal(index++, po.getTotalDiscount());
             stmUpdatePO.setBigDecimal(index++, po.getTotalAmount());
@@ -405,7 +405,7 @@ public class PurchaseOrderDAO extends DBContext {
             stm = connection.prepareStatement(sql);
             stm.setLong(index++, po.getSupplierId());
             stm.setDate(index++, Date.valueOf(po.getOrderDate()));
-            stm.setDate(index++, Date.valueOf(po.getExpectedDate()));
+            stm.setDate(index++, po.getExpectedDate() != null ? Date.valueOf(po.getExpectedDate()) : null);
             stm.setBigDecimal(index++, po.getSubtotal());
             stm.setBigDecimal(index++, po.getTotalDiscount());
             stm.setBigDecimal(index++, po.getTotalAmount());
@@ -549,19 +549,19 @@ public class PurchaseOrderDAO extends DBContext {
         sql.append("left join Employees e on p.CreatedBy = e.EmployeeID ");
         sql.append("where 1 = 1 ");
         if (keyword != null && !keyword.trim().isEmpty()) {
-            sql.append("AND (PONumber like ? OR Notes like ?) ");
+            sql.append("AND (p.PONumber like ? OR p.Notes like ? OR s.SupplierName like ?) ");
         }
         if (status != null && !status.trim().isEmpty()) {
-            sql.append("AND Status = ? ");
+            sql.append("AND p.Status = ? ");
         }
         if (fromDate != null) {
-            sql.append(" AND OrderDate >= ?");
+            sql.append(" AND p.OrderDate >= ?");
         }
         if (toDate != null) {
-            sql.append(" AND OrderDate <= ?");
+            sql.append(" AND p.OrderDate <= ?");
         }
 
-        sql.append("order by poID desc ");
+        sql.append("order by p.poID desc ");
         sql.append("offset ? rows fetch next ? rows only");
         try {
             Connection connection = getConnection();
@@ -571,6 +571,7 @@ public class PurchaseOrderDAO extends DBContext {
 
             if (keyword != null && !keyword.trim().isEmpty()) {
                 String searchPattern = "%" + keyword + "%";
+                stm.setString(paramIndex++, searchPattern);
                 stm.setString(paramIndex++, searchPattern);
                 stm.setString(paramIndex++, searchPattern);
             }
@@ -621,18 +622,18 @@ public class PurchaseOrderDAO extends DBContext {
     //count by conditions
     public int countPOs(String keyword, String status, LocalDate fromDate, LocalDate toDate) {
         StringBuilder sql = new StringBuilder();
-        sql.append("select COUNT(*) from PurchaseOrders where 1 = 1 ");
+        sql.append("select COUNT(*) from PurchaseOrders p where 1 = 1 ");
         if (keyword != null && !keyword.trim().isEmpty()) {
-            sql.append("AND (PONumber like ? OR Notes like ?) ");
+            sql.append("AND (p.PONumber like ? OR p.Notes like ?) ");
         }
         if (status != null && !status.trim().isEmpty()) {
-            sql.append("AND Status = ? ");
+            sql.append("AND p.Status = ? ");
         }
         if (fromDate != null) {
-            sql.append(" AND OrderDate >= ?");
+            sql.append(" AND p.OrderDate >= ?");
         }
         if (toDate != null) {
-            sql.append(" AND OrderDate <= ?");
+            sql.append(" AND p.OrderDate <= ?");
         }
 
 //        sql.append("order by poID desc ");
@@ -721,7 +722,8 @@ public class PurchaseOrderDAO extends DBContext {
         po.setSupplierId(rs.getInt("SupplierID"));
 
         po.setOrderDate(rs.getDate("OrderDate").toLocalDate());
-        po.setExpectedDate(rs.getDate("ExpectedDate").toLocalDate());
+        Date expectedDate = rs.getDate("ExpectedDate");
+        po.setExpectedDate(expectedDate != null ? expectedDate.toLocalDate() : null);
         po.setStatus(rs.getString("Status"));
 
         po.setSubtotal(rs.getBigDecimal("Subtotal"));

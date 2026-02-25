@@ -137,21 +137,44 @@ public class PurchaseOrderController extends HttpServlet {
     private void showEditForm(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         String poNumber = request.getParameter("poNumber");
+
+        if (poNumber == null || poNumber.trim().isEmpty()) {
+            request.getSession().setAttribute("error", "Mã đơn hàng không hợp lệ.");
+            response.sendRedirect("purchaseorder?action=list");
+            return;
+        }
+
         PurchaseOrder po = poDAO.getPurchaseOrderByCode(poNumber);
+
+        if (po == null) {
+            request.getSession().setAttribute("error", "Không tìm thấy đơn hàng với mã: " + poNumber);
+            response.sendRedirect("purchaseorder?action=list");
+            return;
+        }
+
+        //xóa err
+        String err = (String) request.getSession().getAttribute("error");
+        if (err != null) {
+            request.getSession().removeAttribute("error");
+            request.setAttribute("error", err);
+        }
+
         if (po != null) {
             List<Product> productList = productDAO.getAllActiveProducts();
             request.setAttribute("productList", productList);
 
             List<Supplier> supList = supDAO.getAllActiveSuppliers();
             request.setAttribute("supList", supList);
-
+            
+            request.setAttribute("po", po);
             request.setAttribute("poNumber", po.getPoNumber());
             request.setAttribute("orderDate", po.getOrderDate());
             request.setAttribute("expectedDate", po.getExpectedDate());
             request.setAttribute("notes", po.getNotes());
-
+        
             List<PurchaseOrderItem> items = itemDAO.getItemsByPOId(po.getId());
-            request.setAttribute("items", items);
+
+            request.setAttribute("orderItems", items);
 
             request.setAttribute("mode", "edit");
             request.getRequestDispatcher("/AdminLTE-3.2.0/po-form.jsp").forward(request, response);
@@ -163,21 +186,28 @@ public class PurchaseOrderController extends HttpServlet {
     private void showDetail(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         String poNumber = request.getParameter("poNumber");
-    
+
         if (poNumber == null || poNumber.trim().isEmpty()) {
             request.getSession().setAttribute("error", "Mã đơn hàng không hợp lệ.");
             response.sendRedirect("purchaseorder?action=list");
             return;
         }
-        
+
         PurchaseOrder po = poDAO.getPurchaseOrderByCode(poNumber);
-        
+
         if (po == null) {
             request.getSession().setAttribute("error", "Không tìm thấy đơn hàng với mã: " + poNumber);
             response.sendRedirect("purchaseorder?action=list");
             return;
         }
-        
+
+        //xóa err
+        String err = (String) request.getSession().getAttribute("error");
+        if (err != null) {
+            request.getSession().removeAttribute("error");
+            request.setAttribute("error", err);
+        }
+
         List<PurchaseOrderItem> items = itemDAO.getItemsByPOId(po.getId());
 
         request.setAttribute("po", po);
@@ -211,14 +241,93 @@ public class PurchaseOrderController extends HttpServlet {
                 msg = success ? "success_delete" : "fail";
                 break;
             case "approve":
+                if (poNumber == null || poNumber.trim().isEmpty()) {
+                    request.getSession().setAttribute("error", "Mã đơn hàng không hợp lệ.");
+                    response.sendRedirect("purchaseorder?action=list");
+                    return;
+                }
+                if (by == null) {
+                    request.getSession().setAttribute("error", "Thông tin người duyệt không hợp lệ.");
+                    response.sendRedirect("purchaseorder?action=detail&poNumber=" + poNumber);
+                    return;
+                }
+                
+                PurchaseOrder poToApprove = poDAO.getPurchaseOrderByCode(poNumber);
+                if (poToApprove == null) {
+                    request.getSession().setAttribute("error", "Không tìm thấy đơn hàng.");
+                    response.sendRedirect("purchaseorder?action=list");
+                    return;
+                }
+                if (!poToApprove.canBeApproved()) {
+                    request.getSession().setAttribute("error", "Đơn hàng không thể duyệt. Chỉ có thể duyệt đơn đang chờ duyệt.");
+                    response.sendRedirect("purchaseorder?action=detail&poNumber=" + poNumber);
+                    return;
+                }
+                
                 success = poDAO.approvePO(poNumber, by);
                 msg = success ? "success_approve" : "fail";
                 break;
             case "reject":
+                if (poNumber == null || poNumber.trim().isEmpty()) {
+                    request.getSession().setAttribute("error", "Mã đơn hàng không hợp lệ.");
+                    response.sendRedirect("purchaseorder?action=list");
+                    return;
+                }
+                if (by == null) {
+                    request.getSession().setAttribute("error", "Thông tin người từ chối không hợp lệ.");
+                    response.sendRedirect("purchaseorder?action=detail&poNumber=" + poNumber);
+                    return;
+                }
+                if (reason == null || reason.trim().isEmpty()) {
+                    request.getSession().setAttribute("error", "Vui lòng nhập lý do từ chối.");
+                    response.sendRedirect("purchaseorder?action=detail&poNumber=" + poNumber);
+                    return;
+                }
+                
+                PurchaseOrder poToReject = poDAO.getPurchaseOrderByCode(poNumber);
+                if (poToReject == null) {
+                    request.getSession().setAttribute("error", "Không tìm thấy đơn hàng.");
+                    response.sendRedirect("purchaseorder?action=list");
+                    return;
+                }
+                if (!poToReject.canBeApproved()) { // Reject cũng chỉ có thể khi status = PENDING_APPROVAL
+                    request.getSession().setAttribute("error", "Đơn hàng không thể từ chối. Chỉ có thể từ chối đơn đang chờ duyệt.");
+                    response.sendRedirect("purchaseorder?action=detail&poNumber=" + poNumber);
+                    return;
+                }
+                
                 success = poDAO.rejectPO(poNumber, by, reason);
                 msg = success ? "success_reject" : "fail";
                 break;
             case "cancel":
+                if (poNumber == null || poNumber.trim().isEmpty()) {
+                    request.getSession().setAttribute("error", "Mã đơn hàng không hợp lệ.");
+                    response.sendRedirect("purchaseorder?action=list");
+                    return;
+                }
+                if (by == null) {
+                    request.getSession().setAttribute("error", "Thông tin người hủy không hợp lệ.");
+                    response.sendRedirect("purchaseorder?action=detail&poNumber=" + poNumber);
+                    return;
+                }
+                if (reason == null || reason.trim().isEmpty()) {
+                    request.getSession().setAttribute("error", "Vui lòng nhập lý do hủy đơn.");
+                    response.sendRedirect("purchaseorder?action=detail&poNumber=" + poNumber);
+                    return;
+                }
+                
+                PurchaseOrder poToCancel = poDAO.getPurchaseOrderByCode(poNumber);
+                if (poToCancel == null) {
+                    request.getSession().setAttribute("error", "Không tìm thấy đơn hàng.");
+                    response.sendRedirect("purchaseorder?action=list");
+                    return;
+                }
+                if (!poToCancel.canBeCancelled()) {
+                    request.getSession().setAttribute("error", "Đơn hàng không thể hủy. Chỉ có thể hủy đơn đã được duyệt.");
+                    response.sendRedirect("purchaseorder?action=detail&poNumber=" + poNumber);
+                    return;
+                }
+                
                 success = poDAO.cancelPO(poNumber, by, reason);
                 msg = success ? "success_cancel" : "fail";
                 break;
@@ -251,6 +360,31 @@ public class PurchaseOrderController extends HttpServlet {
                     valid.addError("Vui lòng thêm ít nhất 1 sản phẩm");
                 }
 
+                // Validate discount values
+                if (discountValues != null && discountTypes != null) {
+                    for (int i = 0; i < discountValues.length; i++) {
+                        if (discountValues[i] != null && !discountValues[i].trim().isEmpty()) {
+                            try {
+                                BigDecimal discountVal = new BigDecimal(discountValues[i]);
+                                
+                                if (discountVal.compareTo(BigDecimal.ZERO) < 0) {
+                                    valid.addError("Giảm giá không được nhỏ hơn 0");
+                                    break;
+                                }
+                                
+                                String discountType = (i < discountTypes.length) ? discountTypes[i] : "AMOUNT";
+                                if ("PERCENT".equals(discountType) && discountVal.compareTo(new BigDecimal("100")) > 0) {
+                                    valid.addError("Giảm giá theo phần trăm không được vượt quá 100%");
+                                    break;
+                                }
+                            } catch (NumberFormatException e) {
+                                valid.addError("Giá trị giảm giá không hợp lệ");
+                                break;
+                            }
+                        }
+                    }
+                }
+                
                 if (!valid.isValid()) {
                     List<Product> productList = productDAO.getAllActiveProducts();
                     request.setAttribute("productList", productList);
@@ -311,6 +445,7 @@ public class PurchaseOrderController extends HttpServlet {
                     }
                     request.setAttribute("po", poE);
                     request.setAttribute("orderItems", items);
+                    request.setAttribute("notes", notes);
                     request.setAttribute("poNumber", poNumber);
                     request.setAttribute("error", valid.getFirstError());
                     String mode = poDAO.isCodeExist(poNumber) ? "edit" : "add";
@@ -324,14 +459,13 @@ public class PurchaseOrderController extends HttpServlet {
                 PurchaseOrder po = new PurchaseOrder();
                 po.setPoNumber(poNumber);
                 po.setSupplierId(Integer.valueOf(supplierIdParam));
-                po.setOrderDate(LocalDate.parse(orderDateParam));
-                po.setExpectedDate(LocalDate.parse(expectedDateParam));
+                po.setOrderDate(orderDate);
+                po.setExpectedDate(expectedDate);
                 po.setNotes(notes);
 //                po.setCreatedBy(Integer.valueOf(createdByParam));
                 //chưa kết hợp với user , fake data
                 po.setCreatedBy(1);
-                
-                
+
                 //add items to PO
                 for (int i = 0; i < productIds.length; i++) {
                     PurchaseOrderItem item = new PurchaseOrderItem();
@@ -361,14 +495,53 @@ public class PurchaseOrderController extends HttpServlet {
                     }
 
                     po.setId(existingPO.getId());
-                    po.setStatus(existingPO.getStatus());
+                    // Nếu đơn bị từ chối, khi sửa lại phải đổi về trạng thái chờ duyệt
+                    if (PurchaseOrder.STATUS_REJECTED.equals(existingPO.getStatus())) {
+                        po.setStatus(PurchaseOrder.STATUS_PENDING_APPROVAL);
+                    } else {
+                        po.setStatus(existingPO.getStatus());
+                    }
 
                     result = poDAO.updateOrderWithItems(po);
-                    msg = result ? "success_edit" : "fail";
+                   if (!result) {
+                        List<Product> productList = productDAO.getAllActiveProducts();
+                        request.setAttribute("productList", productList);
+
+                        List<Supplier> supList = supDAO.getAllActiveSuppliers();
+                        request.setAttribute("supList", supList);
+
+                        request.setAttribute("po", po);
+                        request.setAttribute("orderItems", po.getItems());
+                        request.setAttribute("poNumber", poNumber);
+                        request.setAttribute("orderDate", orderDateParam);
+                        request.setAttribute("expectedDate", expectedDateParam);
+                        request.setAttribute("error", "Lỗi khi cập nhật đơn hàng. Vui lòng kiểm tra lại thông tin.");
+                        request.setAttribute("mode", "edit");
+                        request.getRequestDispatcher("/AdminLTE-3.2.0/po-form.jsp").forward(request, response);
+                        return;
+                    }
+                    msg = "success_edit";
                 } else {
                     //add
                     result = poDAO.createOrderWithItems(po);
-                    msg = result ? "success_add" : "fail";
+                    if (!result) {
+                        List<Product> productList = productDAO.getAllActiveProducts();
+                        request.setAttribute("productList", productList);
+
+                        List<Supplier> supList = supDAO.getAllActiveSuppliers();
+                        request.setAttribute("supList", supList);
+
+                        request.setAttribute("po", po);
+                        request.setAttribute("orderItems", po.getItems());
+                        request.setAttribute("poNumber", poNumber);
+                        request.setAttribute("orderDate", orderDateParam);
+                        request.setAttribute("expectedDate", expectedDateParam);
+                        request.setAttribute("error", "Lỗi khi tạo đơn hàng. Mã đơn có thể đã tồn tại hoặc dữ liệu không hợp lệ.");
+                        request.setAttribute("mode", "add");
+                        request.getRequestDispatcher("/AdminLTE-3.2.0/po-form.jsp").forward(request, response);
+                        return;
+                    }
+                    msg = "success_add";
                 }
                 if (!result) {
                     request.getSession().setAttribute("error", "Lỗi hệ thống khi lưu đơn hàng.");

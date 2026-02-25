@@ -46,6 +46,23 @@
                 <!-- main content -->
                 <section class="content">
                     <div class="container-fluid">
+                        <!-- Success/Error Messages -->
+                        <c:if test="${not empty msg}">
+                            <div class="alert ${msg.contains('success') ? 'alert-success' : 'alert-danger'} alert-dismissible">
+                                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                                <i class="icon fas ${msg.contains('success') ? 'fa-check' : 'fa-ban'}"></i>
+                                <c:choose>
+                                    <c:when test="${msg == 'success_add'}">Thêm đơn hàng thành công!</c:when>
+                                    <c:when test="${msg == 'success_edit'}">Cập nhật đơn hàng thành công!</c:when>
+                                    <c:when test="${msg == 'success_delete'}">Xóa đơn hàng thành công!</c:when>
+                                    <c:when test="${msg == 'success_approve'}">Duyệt đơn hàng thành công!</c:when>
+                                    <c:when test="${msg == 'success_reject'}">Từ chối đơn hàng thành công!</c:when>
+                                    <c:when test="${msg == 'success_cancel'}">Hủy đơn hàng thành công!</c:when>
+                                    <c:otherwise>Có lỗi xảy ra. Vui lòng thử lại!</c:otherwise>
+                                </c:choose>
+                            </div>
+                        </c:if>
+                        
                         <div class="row">
                             <div class="col-12">
                                 <!-- Search & Filter Card -->
@@ -62,7 +79,7 @@
                                     <div class="card-body">
                                         <form action="${pageContext.request.contextPath}/purchaseorder" method="get"
                                               class="form-inline">
-                                            <input type="hidden" name="action" value="search">
+                                            <input type="hidden" name="action" value="list">
                                             <div class="form-group mr-3 mb-2">
                                                 <label for="key" class="mr-2">Tìm kiếm:</label>
                                                 <input type="text" class="form-control" id="key" name="key" value="${param.key}"
@@ -72,12 +89,13 @@
                                             <div class="form-group mr-3 mb-2">
                                                 <label for="status" class="mr-2">Trạng thái:</label>
                                                 <select name="status" id="status" class="form-control">
-                                                    <option value="PENDING_APPROVAL">Chờ duyệt</option>
-                                                    <option value="APPROVED">Đã duyệt</option>
-                                                    <option value="CANCELLED">Đã hủy</option>
-                                                    <option value="REJECTED">Đã từ chối</option>
-                                                    <option value="PARTIAL">Nhận một phần</option>
-                                                    <option value="COMPLETED">Đã hoàn thành</option>
+                                                    <option value="" ${empty param.status ? 'selected' : ''}>-- Tất cả --</option>
+                                                    <option value="PENDING_APPROVAL" ${param.status == 'PENDING_APPROVAL' ? 'selected' : ''}>Chờ duyệt</option>
+                                                    <option value="APPROVED" ${param.status == 'APPROVED' ? 'selected' : ''}>Đã duyệt</option>
+                                                    <option value="REJECTED" ${param.status == 'REJECTED' ? 'selected' : ''}>Đã từ chối</option>
+                                                    <option value="CANCELLED" ${param.status == 'CANCELLED' ? 'selected' : ''}>Đã hủy</option>
+                                                    <option value="PARTIAL_RECEIVED" ${param.status == 'PARTIAL_RECEIVED' ? 'selected' : ''}>Nhận một phần</option>
+                                                    <option value="COMPLETED" ${param.status == 'COMPLETED' ? 'selected' : ''}>Đã hoàn thành</option>
                                                 </select>
                                             </div>
                                             <div class="form-group mr-3 mb-2">
@@ -130,15 +148,29 @@
                                                             <td>${item.supplierName}</td>
                                                             <td>${item.totalAmount}</td>
                                                             <td>
-                                                                <c:if test="${item.status == 'PENDING_APPROVAL'}">
-                                                                    <span class="badge badge-success">Chờ duyệt</span>
-                                                                </c:if>
-                                                                <c:if test="${item.status == 'APPROVED'}">
-                                                                    <span class="badge badge-success">Đã duyệt</span>
-                                                                </c:if>
-                                                                <c:if test="${item.status == 'REJECTED'}">
-                                                                    <span class="badge badge-danger">Từ chối</span>
-                                                                </c:if>
+                                                                <c:choose>
+                                                                    <c:when test="${item.status == 'PENDING_APPROVAL'}">
+                                                                        <span class="badge badge-warning">Chờ duyệt</span>
+                                                                    </c:when>
+                                                                    <c:when test="${item.status == 'APPROVED'}">
+                                                                        <span class="badge badge-success">Đã duyệt</span>
+                                                                    </c:when>
+                                                                    <c:when test="${item.status == 'REJECTED'}">
+                                                                        <span class="badge badge-danger">Từ chối</span>
+                                                                    </c:when>
+                                                                    <c:when test="${item.status == 'CANCELLED'}">
+                                                                        <span class="badge badge-dark">Đã hủy</span>
+                                                                    </c:when>
+                                                                    <c:when test="${item.status == 'PARTIAL_RECEIVED'}">
+                                                                        <span class="badge badge-info">Nhận một phần</span>
+                                                                    </c:when>
+                                                                    <c:when test="${item.status == 'COMPLETED'}">
+                                                                        <span class="badge badge-primary">Hoàn thành</span>
+                                                                    </c:when>
+                                                                    <c:otherwise>
+                                                                        <span class="badge badge-secondary">${item.status}</span>
+                                                                    </c:otherwise>
+                                                                </c:choose>
                                                             </td>
                                                             <td>${item.createdByName}</td>
                                                         </tr>
@@ -224,7 +256,7 @@
                 var rows = document.querySelectorAll(".clickable-row");
                 
                 rows.forEach(function(row){
-                    row.addEventListener("click", funtion(){
+                    row.addEventListener("click", function(){
                         var url = this.getAttribute("data-href");
                         if(url){
                             window.location.href = url;
