@@ -457,4 +457,153 @@ public class EmployeeDAO extends DBContext {
 
         return 0;
     }
+
+    // =====================================================
+    // LOGIN
+    // =====================================================
+    public Employee login(String email, String password) {
+
+        String sql = """
+            SELECT e.*, r.RoleName
+            FROM Employees e
+            JOIN Roles r ON e.RoleID = r.RoleID
+            WHERE e.Email = ?
+              AND e.Password = ?
+              AND e.Status = 'ACTIVE'
+        """;
+
+        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, email);
+            ps.setString(2, password);
+
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) {
+
+                Employee e = new Employee();
+                e.setEmployeeId(rs.getInt("EmployeeID"));
+                e.setFullName(rs.getString("FullName"));
+                e.setEmail(rs.getString("Email"));
+                e.setPhone(rs.getString("Phone"));
+                e.setHireDate(rs.getDate("HireDate"));
+                e.setStatus(rs.getString("Status"));
+                e.setPassword(rs.getString("Password"));
+
+                Role r = new Role();
+                r.setRoleId(rs.getInt("RoleID"));
+                r.setRoleName(rs.getString("RoleName"));
+                e.setRole(r);
+
+                return e;
+            }
+
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+
+        return null;
+    }
+
+    // =====================================================
+    // CHECK EMAIL EXISTS
+    // =====================================================
+    public boolean checkEmailExists(String email) {
+
+        String sql = "SELECT 1 FROM Employees WHERE Email = ?";
+
+        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, email);
+            ResultSet rs = ps.executeQuery();
+
+            return rs.next();
+
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+
+        return false;
+    }
+
+    // =====================================================
+    // UPDATE PASSWORD (DÙNG CHO FUTURE FORGOT PASSWORD)
+    // =====================================================
+    public boolean updatePassword(int employeeId, String newPassword) {
+
+        String sql = """
+            UPDATE Employees
+            SET Password = ?
+            WHERE EmployeeID = ?
+        """;
+
+        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, newPassword);
+            ps.setInt(2, employeeId);
+
+            return ps.executeUpdate() > 0;
+
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+
+        return false;
+    }
+
+    public Employee checkLogin(String email, String password) {
+
+        String sql = "SELECT * FROM Employees WHERE Email = ? AND Password = ? AND Status = 'ACTIVE'";
+
+        try {
+            DBContext db = new DBContext();
+            Connection conn = db.getConnection();
+
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setString(1, email);
+            ps.setString(2, password);
+
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) {
+                Employee e = new Employee();
+                e.setEmployeeId(rs.getInt("EmployeeID"));
+                e.setFullName(rs.getString("FullName"));
+                e.setEmail(rs.getString("Email"));
+                e.setStatus(rs.getString("Status"));
+                return e;
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+    public boolean register(Employee e) {
+
+        String sql = "INSERT INTO Employees (FullName, Email, Password, Phone, Status) VALUES (?, ?, ?, ?, ?)";
+
+        try {
+            DBContext db = new DBContext();      
+            Connection conn = db.getConnection(); 
+
+            PreparedStatement ps = conn.prepareStatement(sql);
+
+            ps.setString(1, e.getFullName());
+            ps.setString(2, e.getEmail());
+            ps.setString(3, e.getPassword());
+            ps.setString(4, e.getPhone());
+            ps.setString(5, e.getStatus());
+
+            return ps.executeUpdate() > 0;
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+
+        return false;
+    }
+
 }

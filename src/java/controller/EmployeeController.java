@@ -42,6 +42,18 @@ public class EmployeeController extends HttpServlet {
             toggleStatus(request, response);
         } else if (action.equals("delete")) {
             deleteEmployee(request, response);
+        } else if (action.equals("login")) {
+            showLoginForm(request, response);
+
+        } else if (action.equals("register")) {
+            showRegisterForm(request, response);
+
+        } else if (action.equals("logout")) {
+            logout(request, response);
+        } else if (action.equals("forgot")) {
+            request.getRequestDispatcher("/forgot-password.jsp").forward(request, response);
+        } else if (action.equals("recover")) {
+            request.getRequestDispatcher("/recover-password.jsp").forward(request, response);
         } else {
             listEmployees(request, response);
         }
@@ -58,6 +70,11 @@ public class EmployeeController extends HttpServlet {
             insertEmployee(request, response);
         } else if ("update".equals(action)) {
             updateEmployee(request, response);
+        } else if ("login".equals(action)) {
+            login(request, response);
+
+        } else if ("register".equals(action)) {
+            register(request, response);
         }
     }
 
@@ -314,5 +331,96 @@ public class EmployeeController extends HttpServlet {
             ex.printStackTrace();
             response.sendRedirect("employees?action=list&error=toggle");
         }
+    }
+
+    private void showLoginForm(HttpServletRequest request,
+            HttpServletResponse response)
+            throws ServletException, IOException {
+
+        request.getRequestDispatcher("/login.jsp")
+                .forward(request, response);
+    }
+
+    private void showRegisterForm(HttpServletRequest request,
+            HttpServletResponse response)
+            throws ServletException, IOException {
+
+        request.getRequestDispatcher("/register.jsp")
+                .forward(request, response);
+    }
+
+    private void login(HttpServletRequest request,
+            HttpServletResponse response)
+            throws IOException, ServletException {
+
+        String email = request.getParameter("email");
+        String password = request.getParameter("password");
+
+        Employee emp = employeeDAO.checkLogin(email, password);
+
+        if (emp != null) {
+
+            HttpSession session = request.getSession();
+            session.setAttribute("adminId", emp.getEmployeeId());
+            session.setAttribute("admin", emp);
+
+            response.sendRedirect(
+                    request.getContextPath() + "/admin/employees?action=list"
+            );
+
+        } else {
+            request.setAttribute("error", "Invalid email or password");
+            request.getRequestDispatcher("/login.jsp")
+                    .forward(request, response);
+        }
+    }
+
+    private void register(HttpServletRequest request,
+            HttpServletResponse response)
+            throws IOException, ServletException {
+
+        try {
+
+            Employee e = new Employee();
+            e.setFullName(request.getParameter("fullName"));
+            e.setEmail(request.getParameter("email"));
+            e.setPassword(request.getParameter("password"));
+            e.setPhone(request.getParameter("phone"));
+            e.setStatus("ACTIVE");
+
+            boolean success = employeeDAO.register(e);
+
+            if (success) {
+                response.sendRedirect(
+                        request.getContextPath()
+                        + "/admin/employees?action=login&success=register"
+                );
+            } else {
+                request.setAttribute("error", "Register failed");
+                request.getRequestDispatcher("/register.jsp")
+                        .forward(request, response);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.sendRedirect(
+                    request.getContextPath()
+                    + "/admin/employees?action=register&error=true"
+            );
+        }
+    }
+
+    private void logout(HttpServletRequest request,
+            HttpServletResponse response)
+            throws IOException {
+
+        HttpSession session = request.getSession(false);
+        if (session != null) {
+            session.invalidate();
+        }
+
+        response.sendRedirect(
+                request.getContextPath() + "/admin/employees?action=login"
+        );
     }
 }

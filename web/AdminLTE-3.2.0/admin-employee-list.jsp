@@ -210,7 +210,6 @@
             <jsp:include page="include/admin-footer.jsp"/>
         </div>
 
-        <script src="${pageContext.request.contextPath}/AdminLTE-3.2.0/plugins/jquery/jquery.min.js"></script>
-        <script src="${pageContext.request.contextPath}/AdminLTE-3.2.0/dist/js/adminlte.min.js"></script>
+        
     </body>
 </html>
