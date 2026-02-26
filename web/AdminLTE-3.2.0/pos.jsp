@@ -25,13 +25,37 @@
                 color: black;
             }
 
-            .pos-no-sidebar .main-sidebar,
-            .pos-no-sidebar .control-sidebar {
-                display: none !important;
+            .pos-no-sidebar .main-sidebar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                height: 100vh;
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+                z-index: 1050;
+            }
+
+            .pos-sidebar-open .main-sidebar {
+                transform: translateX(0);
             }
 
             .pos-wrapper-full .content-wrapper {
                 margin-left: 0 !important;
+            }
+            
+            .pos-offcanvas-backdrop {
+                position: fixed;
+                inset: 0;
+                background: rgba(15, 23, 42, 0.6);
+                z-index: 1040;
+                opacity: 0;
+                visibility: hidden;
+                transition: opacity 0.3s ease, visibility 0.3s ease;
+            }
+            
+            .pos-sidebar-open .pos-offcanvas-backdrop {
+                opacity: 1;
+                visibility: visible;
             }
 
             .dark-pos .card,
@@ -114,6 +138,10 @@
                 position: relative;
                 cursor: pointer;
                 transition: transform 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease;
+                display: flex;
+                flex-direction: column;
+                height: 100%;
+                min-height: 210px;
             }
 
             .pos-product-card:hover {
@@ -152,6 +180,7 @@
                 display: flex;
                 align-items: center;
                 justify-content: space-between;
+                margin-top: auto;
             }
 
             .pos-product-price {
@@ -187,7 +216,7 @@
                 border-radius: 20px;
                 border: 1px solid #1f2937;
                 padding: 16px 16px 10px;
-                box-shadow: 0 18px 40px rgba(15, 23, 42, 0.9);
+                box-shadow: 0 8px 20px rgba(15, 23, 42, 0.6);
             }
 
             .pos-order-header {
@@ -356,13 +385,18 @@
     </head>
     <body class="hold-transition dark-pos pos-no-sidebar">
         <div class="wrapper pos-wrapper-full">
+            <jsp:include page="include/admin-sidebar.jsp"/>
+            <div class="pos-offcanvas-backdrop"></div>
             <!-- Content Wrapper (full width, no sidebar) -->
             <div class="content-wrapper">
                 <section class="content-header">
                     <div class="container-fluid">
                         <div class="row mb-2">
-                            <div class="col-sm-6">
-                                <h1>Bán hàng (POS)</h1>
+                            <div class="col-sm-6 d-flex align-items-center">
+                                <button type="button" id="pos-sidebar-toggle" class="btn btn-sm btn-outline-secondary mr-2">
+                                    <i class="fas fa-bars"></i>
+                                </button>
+                                <h1 class="mb-0">Bán hàng (POS)</h1>
                             </div>
                             <div class="col-sm-6">
                                 <ol class="breadcrumb float-sm-right">
@@ -436,7 +470,7 @@
                                                         <div class="pos-product-icon">
                                                             <i class="fas fa-book"></i>
                                                         </div>
-                                                        <span class="badge badge-secondary" style="background: #111827; border-radius: 999px; font-size: 10px;">
+                                                        <span class="badge badge-secondary" style="background: #ffffff; color: #000000; border-radius: 999px; font-size: 10px; border: 1px solid #1f2937;">
                                                             <i class="fas fa-box-open"></i> ${p.stock}
                                                         </span>
                                                     </div>
@@ -589,7 +623,7 @@
                                         </div>
                                         <div class="mb-2">
                                             <label class="mb-1"><small>Phương thức thanh toán</small></label>
-                                            <div class="d-flex gap-2">
+                                            <div class="d-flex" style="gap: 12px;">
                                                 <label class="pos-payment-option active">
                                                     <input form="checkout-form" type="radio" name="paymentMethod" value="CASH" checked>
                                                     <i class="fas fa-money-bill-wave d-block mb-1"></i>
@@ -603,9 +637,9 @@
                                             </div>
                                         </div>
                                         <div class="mb-2">
-                                            <label for="customerId" class="mb-1"><small>Mã khách hàng (tùy chọn)</small></label>
-                                            <input form="checkout-form" type="text" id="customerId" name="customerId" class="form-control form-control-sm"
-                                                   placeholder="VD: KH001">
+                                            <label for="customerId" class="mb-1"><small>Email khách hàng (tùy chọn)</small></label>
+                                            <input form="checkout-form" type="email" id="customerId" name="customerId" class="form-control form-control-sm"
+                                                   placeholder="VD: khachhang@example.com">
                                         </div>
                                         <div class="mb-2">
                                             <label class="mb-1"><small>Ghi chú hóa đơn</small></label>
@@ -663,6 +697,13 @@
                                                                                 $('input[name="paymentMethod"]').on('change', function () {
                                                                                     $('.pos-payment-option').removeClass('active');
                                                                                     $(this).closest('.pos-payment-option').addClass('active');
+                                                                                });
+
+                                                                                $('#pos-sidebar-toggle').on('click', function () {
+                                                                                    $('body').toggleClass('pos-sidebar-open');
+                                                                                });
+                                                                                $('.pos-offcanvas-backdrop').on('click', function () {
+                                                                                    $('body').removeClass('pos-sidebar-open');
                                                                                 });
                                                                             });
                                                                             $(document).on('change', 'input[name="quantity"]', function () {

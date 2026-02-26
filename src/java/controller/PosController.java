@@ -5,10 +5,15 @@ package controller;
 
 import DAO.CategoryDAO;
 import DAO.ProductDAO;
+import DAO.CustomerDAO;
 import DAO.SalesInvoiceDAO;
+import DAO.EmployeeDAO;
+import entity.Customer;
 import entity.CartItem;
 import entity.Category;
 import entity.Product;
+import entity.Employee;
+import util.VnPayConfig;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -25,6 +30,8 @@ public class PosController extends HttpServlet {
     private final ProductDAO productDAO = new ProductDAO();
     private final CategoryDAO categoryDAO = new CategoryDAO();
     private final SalesInvoiceDAO salesInvoiceDAO = new SalesInvoiceDAO();
+    private final CustomerDAO customerDAO = new CustomerDAO();
+    private final EmployeeDAO employeeDAO = new EmployeeDAO();
     // Tạm thời hard-code nhân viên & ca làm để dev POS nhanh
     private static final int DEFAULT_STAFF_ID = 5; // cashiers sample data
     private static final Integer DEFAULT_SHIFT_ID = 1;
@@ -228,7 +235,7 @@ public class PosController extends HttpServlet {
             response.sendRedirect("pos");
             return;
         }
-        String customerId = request.getParameter("customerId");
+        String customerInput = request.getParameter("customerId");
         String note = request.getParameter("note");
         String discountPercentStr = request.getParameter("discountPercent");
         String paymentMethod = request.getParameter("paymentMethod");
@@ -245,10 +252,85 @@ public class PosController extends HttpServlet {
             paymentMethod = "CASH";
         }
 
+        // Resolve customer: nhập mã KH (KH001...) hoặc email; nếu email mới chưa có thì tự tạo khách hàng
+        String resolvedCustomerId = null;
+        if (customerInput != null && !customerInput.trim().isEmpty()) {
+            String trimmed = customerInput.trim();
+            Customer customer = customerDAO.getById(trimmed);
+            if (customer == null) {
+                customer = customerDAO.getByEmail(trimmed);
+            }
+            if (customer == null) {
+                // Email/mã mới chưa có trong hệ thống -> tự động tạo khách hàng (coi input là email)
+                Customer newCustomer = new Customer();
+                newCustomer.setCustomerID(customerDAO.getNextCustomerId());
+                newCustomer.setFullName("");
+                newCustomer.setEmail(trimmed);
+                newCustomer.setBirthday(java.time.LocalDate.of(1990, 1, 1));
+                newCustomer.setStatus("ACTIVE");
+                newCustomer.setNote(null);
+                customerDAO.insert(newCustomer);
+                resolvedCustomerId = newCustomer.getCustomerID();
+            } else {
+                resolvedCustomerId = customer.getCustomerID();
+            }
+        }
+
+        // Resolve staff: nếu DEFAULT_STAFF_ID không tồn tại, chọn 1 nhân viên bất kỳ
+        int staffId = DEFAULT_STAFF_ID;
+        Employee staff = employeeDAO.getEmployeeByID(DEFAULT_STAFF_ID);
+        if (staff == null) {
+            List<Employee> employees = employeeDAO.getEmployees(null, null, null, 1, 1);
+            if (employees.isEmpty()) {
+                session.setAttribute("error", "Không có nhân viên nào trong hệ thống. Vui lòng tạo nhân viên trước khi thanh toán.");
+                response.sendRedirect("pos");
+                return;
+            }
+            staffId = employees.get(0).getEmployeeId();
+        }
+
+        // Nếu chọn thanh toán chuyển khoản thì chuyển sang VNPAY sandbox
+        if ("TRANSFER".equalsIgnoreCase(paymentMethod)) {
+            // Tính lại tổng tiền và giảm giá tương tự như trong SalesInvoiceDAO
+            double totalAmount = cart.stream()
+                    .mapToDouble(CartItem::getLineTotal)
+                    .sum();
+            if (discountPercent < 0) {
+                discountPercent = 0;
+            }
+            if (discountPercent > 100) {
+                discountPercent = 100;
+            }
+            double discountAmount = totalAmount * discountPercent / 100.0;
+            double finalAmount = totalAmount - discountAmount;
+
+            // Lưu thông tin đơn hàng tạm thời để xử lý sau khi VNPAY callback
+            session.setAttribute("pendingCart", new ArrayList<>(cart));
+            session.setAttribute("pendingNote", note);
+            session.setAttribute("pendingDiscountPercent", discountPercent);
+            session.setAttribute("pendingCustomerId", resolvedCustomerId);
+            session.setAttribute("pendingStaffId", staffId);
+            session.setAttribute("pendingShiftId", DEFAULT_SHIFT_ID);
+
+            // Mã tham chiếu cho VNPAY (không trùng lặp trong ngày)
+            String txnRef = "POS-" + System.currentTimeMillis();
+            String orderInfo = "Thanh toan don hang POS " + txnRef;
+
+            String paymentUrl = VnPayConfig.createPaymentUrl(
+                    request,
+                    finalAmount,
+                    orderInfo,
+                    txnRef
+            );
+
+            response.sendRedirect(paymentUrl);
+            return;
+        }
+
         String invoiceCode = salesInvoiceDAO.createInvoice(
-                customerId,
+                resolvedCustomerId,
                 cart,
-                DEFAULT_STAFF_ID,
+                staffId,
                 DEFAULT_SHIFT_ID,
                 note,
                 discountPercent,
@@ -256,7 +338,12 @@ public class PosController extends HttpServlet {
         );
 
         if (invoiceCode == null) {
-            session.setAttribute("error", "Có lỗi xảy ra khi lưu hóa đơn. Vui lòng thử lại.");
+            String technical = SalesInvoiceDAO.getLastErrorMessage();
+            if (technical != null && !technical.isEmpty()) {
+                session.setAttribute("error", "Có lỗi xảy ra khi lưu hóa đơn: " + technical);
+            } else {
+                session.setAttribute("error", "Có lỗi xảy ra khi lưu hóa đơn. Vui lòng thử lại.");
+            }
             response.sendRedirect("pos");
             return;
         }

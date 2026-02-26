@@ -12,6 +12,16 @@ import java.util.List;
 
 public class SalesInvoiceDAO extends DBContext {
 
+    private static String lastErrorMessage;
+
+    public static String getLastErrorMessage() {
+        return lastErrorMessage;
+    }
+
+    private static void setLastErrorMessage(String message) {
+        lastErrorMessage = message;
+    }
+
     /**
      * Tạo hóa đơn bán hàng và chi tiết từ giỏ hàng.
      *
@@ -26,7 +36,9 @@ public class SalesInvoiceDAO extends DBContext {
      */
     public String createInvoice(String customerId, List<CartItem> cart, int staffId, Integer shiftId,
                                 String note, double discountPercent, String paymentMethod) {
+        setLastErrorMessage(null);
         if (cart == null || cart.isEmpty()) {
+            setLastErrorMessage("Giỏ hàng trống.");
             return null;
         }
         if (paymentMethod == null || paymentMethod.trim().isEmpty()) {
@@ -71,6 +83,7 @@ public class SalesInvoiceDAO extends DBContext {
         try {
             conn = getConnection();
             if (conn == null) {
+                setLastErrorMessage("Không kết nối được tới cơ sở dữ liệu.");
                 return null;
             }
             conn.setAutoCommit(false);
@@ -96,17 +109,30 @@ public class SalesInvoiceDAO extends DBContext {
 
             int affected = invoiceStm.executeUpdate();
             if (affected == 0) {
+                setLastErrorMessage("Không thể chèn bản ghi hóa đơn (0 dòng bị ảnh hưởng).");
                 conn.rollback();
                 return null;
             }
 
             rs = invoiceStm.getGeneratedKeys();
-            long invoiceId;
+            long invoiceId = -1;
             if (rs.next()) {
                 invoiceId = rs.getLong(1);
             } else {
-                conn.rollback();
-                return null;
+                // Fallback: một số driver SQL Server không trả về generated keys
+                try (PreparedStatement findIdStm = conn.prepareStatement(
+                        "SELECT TOP 1 InvoiceID FROM SalesInvoice WHERE InvoiceCode = ?")) {
+                    findIdStm.setString(1, invoiceCode);
+                    try (ResultSet rs2 = findIdStm.executeQuery()) {
+                        if (rs2.next()) {
+                            invoiceId = rs2.getLong(1);
+                        } else {
+                            setLastErrorMessage("Không lấy được InvoiceID sau khi chèn hóa đơn.");
+                            conn.rollback();
+                            return null;
+                        }
+                    }
+                }
             }
 
             detailStm = conn.prepareStatement(insertDetailSql);
@@ -137,6 +163,7 @@ public class SalesInvoiceDAO extends DBContext {
                     // ignore
                 }
             }
+            setLastErrorMessage(ex.getMessage());
             System.out.println("ERR: createInvoice: " + ex.getMessage());
             return null;
         } finally {
