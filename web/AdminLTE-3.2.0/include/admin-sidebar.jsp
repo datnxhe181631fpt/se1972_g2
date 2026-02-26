@@ -53,7 +53,7 @@
 
                 <!-- POS - Bán hàng -->
                 <li class="nav-item">
-                    <a href="#" class="nav-link">
+                    <a href="${pageContext.request.contextPath}/pos" class="nav-link">
                         <i class="nav-icon fas fa-cash-register"></i>
                         <p>Bán hàng (POS)</p>
                     </a>
@@ -76,13 +76,13 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="#" class="nav-link">
+                            <a href="categories" class="nav-link">
                                 <i class="far fa-circle nav-icon"></i>
                                 <p>Danh mục</p>
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="#" class="nav-link">
+                            <a href="brands" class="nav-link">
                                 <i class="far fa-circle nav-icon"></i>
                                 <p>Thương hiệu</p>
                             </a>
