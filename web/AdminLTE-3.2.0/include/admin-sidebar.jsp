@@ -107,7 +107,7 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="#" class="nav-link">
+                            <a href="${pageContext.request.contextPath}/purchaseorder" class="nav-link">
                                 <i class="far fa-circle nav-icon"></i>
                                 <p>Nhập hàng</p>
                             </a>
@@ -144,7 +144,7 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="#" class="nav-link">
+                            <a href="${pageContext.request.contextPath}/supplier" class="nav-link">
                                 <i class="far fa-circle nav-icon"></i>
                                 <p>Nhà cung cấp</p>
                             </a>
@@ -200,7 +200,7 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="#" class="nav-link">
+                            <a href="customer-tiers" class="nav-link">
                                 <i class="far fa-circle nav-icon"></i>
                                 <p>Hạng thành viên</p>
                             </a>
