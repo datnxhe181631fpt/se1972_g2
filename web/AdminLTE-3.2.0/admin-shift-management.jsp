@@ -5,7 +5,8 @@
 <html lang="vi">
     <head>
         <meta charset="UTF-8">
-        <title>Shift Management</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Quản lí ca làm việc</title>
 
         <!-- Google Font -->
         <link rel="stylesheet"
@@ -35,7 +36,7 @@
                 <!-- Content Header -->
                 <section class="content-header">
                     <div class="container-fluid">
-                        <h1><i class="fas fa-calendar-alt"></i> Shift Management</h1>
+                        <h1><i class="fas fa-calendar-alt"></i> Quản lí ca làm việc</h1>
                     </div>
                 </section>
 
@@ -46,20 +47,20 @@
                         <!-- Assign Card -->
                         <div class="card card-primary">
                             <div class="card-header">
-                                <h3 class="card-title">Assign Employee To Shift</h3>
+                                <h3 class="card-title">Phân công nhân viên vào ca làm việc</h3>
                             </div>
 
                             <form method="post" action="shift-management">
                                 <div class="card-body row">
 
                                     <div class="form-group col-md-3">
-                                        <label>Date</label>
+                                        <label>Ngày</label>
                                         <input type="date" name="workDate"
                                                class="form-control" required>
                                     </div>
 
                                     <div class="form-group col-md-3">
-                                        <label>Shift</label>
+                                        <label>Ca</label>
                                         <select name="shiftID" class="form-control">
                                             <c:forEach var="s" items="${shifts}">
                                                 <option value="${s.shiftID}">
@@ -71,7 +72,7 @@
                                     </div>
 
                                     <div class="form-group col-md-4">
-                                        <label>Employee</label>
+                                        <label>Nhân viên</label>
                                         <select name="employeeID" class="form-control">
                                             <c:forEach var="e" items="${employees}">
                                                 <option value="${e.employeeId}">
@@ -83,7 +84,7 @@
 
                                     <div class="form-group col-md-2 align-self-end">
                                         <button class="btn btn-primary btn-block">
-                                            Assign
+                                            Phân công
                                         </button>
                                     </div>
 
@@ -97,7 +98,7 @@
                             <!-- HEADER + DATE FILTER -->
                             <div class="card-header d-flex justify-content-between align-items-center">
                                 <h3 class="card-title">
-                                    Daily Shift Overview
+                                    Tổng quan về ca làm việc hàng ngày
                                 </h3>
 
                                 <form method="get" action="shift-management" class="form-inline">
@@ -106,7 +107,7 @@
                                            class="form-control mr-2"/>
 
                                     <button class="btn btn-sm btn-primary">
-                                        View
+                                        Xem
                                     </button>
                                 </form>
                             </div>
@@ -149,17 +150,17 @@
                                                                         <c:choose>
                                                                             <c:when test="${a.status == 'SWAP'}">
                                                                                 <span class="badge badge-warning">
-                                                                                    Swap
+                                                                                    Đổi ca
                                                                                 </span>
                                                                             </c:when>
                                                                             <c:when test="${a.status == 'LEAVE'}">
                                                                                 <span class="badge badge-danger">
-                                                                                    Leave
+                                                                                    Nghỉ
                                                                                 </span>
                                                                             </c:when>
                                                                             <c:otherwise>
                                                                                 <span class="badge badge-success">
-                                                                                    Assigned
+                                                                                    Đã phân công
                                                                                 </span>
                                                                             </c:otherwise>
                                                                         </c:choose>
@@ -181,7 +182,7 @@
                                                     <c:if test="${!hasEmployee}">
                                                         <div class="text-center text-muted pt-4">
                                                             <i class="fas fa-user-slash fa-2x mb-2"></i>
-                                                            <div>No Employee Assigned</div>
+                                                            <div>Chưa có nhân viên nào được phân công</div>
                                                         </div>
                                                     </c:if>
 
@@ -197,7 +198,7 @@
                         <!-- Employee List -->
                         <div class="card">
                             <div class="card-header">
-                                <h3 class="card-title">Employee List</h3>
+                                <h3 class="card-title">Danh sách nhân viên</h3>
                             </div>
 
                             <div class="card-body table-responsive p-0">
@@ -205,11 +206,11 @@
                                     <thead>
                                         <tr>
                                             <th>ID</th>
-                                            <th>Name</th>
+                                            <th>Họ và tên</th>
                                             <th>Email</th>
-                                            <th>Status</th>
-                                            <th>History</th>
-                                            <th>Swap</th>
+                                            <th>Trạng thái</th>
+                                            <th>Lịch sử làm việc</th>
+                                            <th>Đổi ca</th>
                                         </tr>
                                     </thead>
 
@@ -266,10 +267,6 @@
 
         </div>
 
-        <!-- Scripts -->
-        <script src="${pageContext.request.contextPath}/AdminLTE-3.2.0/plugins/jquery/jquery.min.js"></script>
-        <script src="${pageContext.request.contextPath}/AdminLTE-3.2.0/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
-        <script src="${pageContext.request.contextPath}/AdminLTE-3.2.0/dist/js/adminlte.min.js"></script>
-
+        
     </body>
 </html>

@@ -251,7 +251,8 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="#" class="nav-link">
+                            <a href="${pageContext.request.contextPath}/admin/attendance?action=list"
+                               class="nav-link ${pageContext.request.requestURI.contains('/admin/attendance') ? 'active' : ''}">
                                 <i class="far fa-circle nav-icon"></i>
                                 <p>Chấm công</p>
                             </a>
