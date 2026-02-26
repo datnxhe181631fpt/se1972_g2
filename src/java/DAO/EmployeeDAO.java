@@ -2,17 +2,334 @@ package DAO;
 
 import entity.Employee;
 import entity.Role;
+
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
 public class EmployeeDAO extends DBContext {
 
-    // Get employees with search, filter, paging
-    public List<Employee> getEmployees(String search, Integer roleId, String status,
-            int page, int pageSize) {
+    // ==========================
+    // INSERT EMPLOYEE
+    // ==========================
+    public boolean insertEmployee(Employee e, int performedBy) {
+
+        String insertSql = """
+            INSERT INTO Employees
+            (FullName, Email, Phone, RoleID, HireDate, Status)
+            VALUES (?, ?, ?, ?, ?, ?)
+        """;
+
+        String auditSql = """
+            INSERT INTO HRAuditLogs
+            (EmployeeID, Action, PerformedBy)
+            VALUES (?, 'CREATE', ?)
+        """;
+
+        try (Connection conn = getConnection()) {
+
+            conn.setAutoCommit(false);
+
+            int newId;
+
+            // 1️⃣ Insert employee
+            try (PreparedStatement ps
+                    = conn.prepareStatement(insertSql,
+                            Statement.RETURN_GENERATED_KEYS)) {
+
+                ps.setString(1, e.getFullName());
+                ps.setString(2, e.getEmail());
+                ps.setString(3, e.getPhone());
+                ps.setInt(4, e.getRole().getRoleId());
+
+                if (e.getHireDate() != null) {
+                    ps.setDate(5, e.getHireDate());
+                } else {
+                    ps.setNull(5, Types.DATE);
+                }
+
+                ps.setString(6, "ACTIVE");
+
+                ps.executeUpdate();
+
+                ResultSet rs = ps.getGeneratedKeys();
+                if (!rs.next()) {
+                    conn.rollback();
+                    return false;
+                }
+
+                newId = rs.getInt(1);
+            }
+
+            // 2️⃣ Insert audit log
+            try (PreparedStatement ps = conn.prepareStatement(auditSql)) {
+                ps.setInt(1, newId);
+                ps.setInt(2, performedBy);
+                ps.executeUpdate();
+            }
+
+            conn.commit();
+            return true;
+
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+
+        return false;
+    }
+
+    // ==========================
+    // UPDATE EMPLOYEE
+    // ==========================
+    public boolean updateEmployee(Employee e, int performedBy) {
+
+        String updateSql = """
+            UPDATE Employees
+            SET FullName=?, Email=?, Phone=?,
+                RoleID=?, HireDate=?, Status=?
+            WHERE EmployeeID=?
+        """;
+
+        String auditSql = """
+            INSERT INTO HRAuditLogs
+            (EmployeeID, Action, PerformedBy)
+            VALUES (?, 'UPDATE', ?)
+        """;
+
+        try (Connection conn = getConnection()) {
+
+            conn.setAutoCommit(false);
+
+            try (PreparedStatement ps = conn.prepareStatement(updateSql)) {
+
+                ps.setString(1, e.getFullName());
+                ps.setString(2, e.getEmail());
+                ps.setString(3, e.getPhone());
+                ps.setInt(4, e.getRole().getRoleId());
+
+                if (e.getHireDate() != null) {
+                    ps.setDate(5, e.getHireDate());
+                } else {
+                    ps.setNull(5, Types.DATE);
+                }
+
+                ps.setString(6, e.getStatus());
+                ps.setInt(7, e.getEmployeeId());
+
+                ps.executeUpdate();
+            }
+
+            try (PreparedStatement ps = conn.prepareStatement(auditSql)) {
+                ps.setInt(1, e.getEmployeeId());
+                ps.setInt(2, performedBy);
+                ps.executeUpdate();
+            }
+
+            conn.commit();
+            return true;
+
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+
+        return false;
+    }
+
+    // ==========================
+    // DEACTIVATE
+    // ==========================
+    public boolean deactivateEmployee(int id, int performedBy) {
+
+        String sql = """
+            UPDATE Employees
+            SET Status='INACTIVE'
+            WHERE EmployeeID=?
+        """;
+
+        String auditSql = """
+            INSERT INTO HRAuditLogs
+            (EmployeeID, Action, PerformedBy)
+            VALUES (?, 'DEACTIVATE', ?)
+        """;
+
+        try (Connection conn = getConnection()) {
+
+            conn.setAutoCommit(false);
+
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setInt(1, id);
+                ps.executeUpdate();
+            }
+
+            try (PreparedStatement ps = conn.prepareStatement(auditSql)) {
+                ps.setInt(1, id);
+                ps.setInt(2, performedBy);
+                ps.executeUpdate();
+            }
+
+            conn.commit();
+            return true;
+
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+
+        return false;
+    }
+
+    // ==========================
+// DELETE EMPLOYEE (HARD DELETE)
+// ==========================
+    public boolean deleteEmployee(int id, int performedBy) {
+
+        String sql = """
+        UPDATE Employees
+        SET Status = 'INACTIVE'
+        WHERE EmployeeID = ?
+    """;
+
+        String auditSql = """
+        INSERT INTO HRAuditLogs
+        (EmployeeID, Action, PerformedBy)
+        VALUES (?, 'DELETE', ?)
+    """;
+
+        try (Connection conn = getConnection()) {
+
+            conn.setAutoCommit(false);
+
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setInt(1, id);
+                ps.executeUpdate();
+            }
+
+            try (PreparedStatement ps = conn.prepareStatement(auditSql)) {
+                ps.setInt(1, id);
+                ps.setInt(2, performedBy);
+                ps.executeUpdate();
+            }
+
+            conn.commit();
+            return true;
+
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+
+        return false;
+    }
+
+    // ==========================
+    // TOGGLE STATUS
+    // ==========================
+    public boolean toggleStatus(int id, int performedBy) {
+
+        Employee e = getEmployeeByID(id);
+        if (e == null) {
+            return false;
+        }
+
+        String newStatus
+                = e.getStatus().equalsIgnoreCase("ACTIVE")
+                ? "INACTIVE"
+                : "ACTIVE";
+
+        String updateSql = """
+            UPDATE Employees
+            SET Status=?
+            WHERE EmployeeID=?
+        """;
+
+        String auditSql = """
+            INSERT INTO HRAuditLogs
+            (EmployeeID, Action, PerformedBy)
+            VALUES (?, ?, ?)
+        """;
+
+        try (Connection conn = getConnection()) {
+
+            conn.setAutoCommit(false);
+
+            try (PreparedStatement ps = conn.prepareStatement(updateSql)) {
+                ps.setString(1, newStatus);
+                ps.setInt(2, id);
+                ps.executeUpdate();
+            }
+
+            try (PreparedStatement ps = conn.prepareStatement(auditSql)) {
+                ps.setInt(1, id);
+                ps.setString(2,
+                        newStatus.equals("ACTIVE")
+                        ? "ACTIVATE"
+                        : "DEACTIVATE");
+                ps.setInt(3, performedBy);
+                ps.executeUpdate();
+            }
+
+            conn.commit();
+            return true;
+
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+
+        return false;
+    }
+
+    // ==========================
+    // GET BY ID
+    // ==========================
+    public Employee getEmployeeByID(int id) {
+
+        String sql = """
+            SELECT e.*, r.RoleName
+            FROM Employees e
+            JOIN Roles r ON e.RoleID = r.RoleID
+            WHERE e.EmployeeID = ?
+        """;
+
+        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, id);
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) {
+
+                Employee e = new Employee();
+                e.setEmployeeId(rs.getInt("EmployeeID"));
+                e.setFullName(rs.getString("FullName"));
+                e.setEmail(rs.getString("Email"));
+                e.setPhone(rs.getString("Phone"));
+                e.setHireDate(rs.getDate("HireDate"));
+                e.setStatus(rs.getString("Status"));
+
+                Role r = new Role();
+                r.setRoleId(rs.getInt("RoleID"));
+                r.setRoleName(rs.getString("RoleName"));
+                e.setRole(r);
+
+                return e;
+            }
+
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+
+        return null;
+    }
+
+    // ==========================
+    // LIST WITH FILTER + PAGING
+    // ==========================
+    public List<Employee> getEmployees(
+            String search,
+            Integer roleId,
+            String status,
+            int page,
+            int pageSize) {
 
         List<Employee> list = new ArrayList<>();
+
         StringBuilder sql = new StringBuilder("""
             SELECT e.*, r.RoleName
             FROM Employees e
@@ -20,17 +337,14 @@ public class EmployeeDAO extends DBContext {
             WHERE 1=1
         """);
 
-        // Search
-        if (search != null && !search.trim().isEmpty()) {
+        if (search != null && !search.isEmpty()) {
             sql.append(" AND (e.FullName LIKE ? OR e.Email LIKE ?)");
         }
 
-        // Filter role
-        if (roleId != null && roleId > 0) {
+        if (roleId != null) {
             sql.append(" AND e.RoleID = ?");
         }
 
-        // Filter status
         if (status != null && !status.isEmpty()) {
             sql.append(" AND e.Status = ?");
         }
@@ -38,28 +352,30 @@ public class EmployeeDAO extends DBContext {
         sql.append(" ORDER BY e.EmployeeID DESC ");
         sql.append(" OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
 
-        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+        try (Connection conn = getConnection(); PreparedStatement ps
+                = conn.prepareStatement(sql.toString())) {
 
             int index = 1;
 
-            if (search != null && !search.trim().isEmpty()) {
+            if (search != null && !search.isEmpty()) {
                 String keyword = "%" + search + "%";
                 ps.setString(index++, keyword);
                 ps.setString(index++, keyword);
             }
 
-            if (roleId != null && roleId > 0) {
+            if (roleId != null) {
                 ps.setInt(index++, roleId);
             }
 
-            if (status != null && !status.isEmpty()) {
-                ps.setString(index++, status);
+            if (status != null && !status.trim().isEmpty()) {
+                ps.setString(index++, status.trim());
             }
 
             ps.setInt(index++, (page - 1) * pageSize);
             ps.setInt(index++, pageSize);
 
             ResultSet rs = ps.executeQuery();
+
             while (rs.next()) {
                 Employee e = new Employee();
                 e.setEmployeeId(rs.getInt("EmployeeID"));
@@ -76,44 +392,53 @@ public class EmployeeDAO extends DBContext {
 
                 list.add(e);
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
+
+        } catch (SQLException ex) {
+            ex.printStackTrace();
         }
+        System.out.println("SIZE: " + list.size());
 
         return list;
     }
 
-    // Count employees for pagination
-    public int getTotalEmployees(String search, Integer roleId, String status) {
+    // ==========================
+    // COUNT FOR PAGINATION
+    // ==========================
+    public int getTotalEmployees(
+            String search,
+            Integer roleId,
+            String status) {
+
         StringBuilder sql = new StringBuilder("""
             SELECT COUNT(*)
             FROM Employees
             WHERE 1=1
         """);
 
-        if (search != null && !search.trim().isEmpty()) {
+        if (search != null && !search.isEmpty()) {
             sql.append(" AND (FullName LIKE ? OR Email LIKE ?)");
         }
 
-        if (roleId != null && roleId > 0) {
+        if (roleId != null) {
             sql.append(" AND RoleID = ?");
         }
 
-        if (status != null && !status.isEmpty()) {
+        if (status != null && !status.trim().isEmpty()) {
             sql.append(" AND Status = ?");
         }
 
-        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+        try (Connection conn = getConnection(); PreparedStatement ps
+                = conn.prepareStatement(sql.toString())) {
 
             int index = 1;
 
-            if (search != null && !search.trim().isEmpty()) {
+            if (search != null && !search.isEmpty()) {
                 String keyword = "%" + search + "%";
                 ps.setString(index++, keyword);
                 ps.setString(index++, keyword);
             }
 
-            if (roleId != null && roleId > 0) {
+            if (roleId != null) {
                 ps.setInt(index++, roleId);
             }
 
@@ -126,34 +451,44 @@ public class EmployeeDAO extends DBContext {
                 return rs.getInt(1);
             }
 
-        } catch (SQLException e) {
-            e.printStackTrace();
+        } catch (SQLException ex) {
+            ex.printStackTrace();
         }
+
         return 0;
     }
 
-    // Get employee by ID
-    public Employee getEmployeeByID(int id) {
+    // =====================================================
+    // LOGIN
+    // =====================================================
+    public Employee login(String email, String password) {
+
         String sql = """
             SELECT e.*, r.RoleName
             FROM Employees e
             JOIN Roles r ON e.RoleID = r.RoleID
-            WHERE e.EmployeeID = ?
+            WHERE e.Email = ?
+              AND e.Password = ?
+              AND e.Status = 'ACTIVE'
         """;
 
         try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
 
-            ps.setInt(1, id);
+            ps.setString(1, email);
+            ps.setString(2, password);
+
             ResultSet rs = ps.executeQuery();
 
             if (rs.next()) {
+
                 Employee e = new Employee();
-                e.setEmployeeId(id);
+                e.setEmployeeId(rs.getInt("EmployeeID"));
                 e.setFullName(rs.getString("FullName"));
                 e.setEmail(rs.getString("Email"));
                 e.setPhone(rs.getString("Phone"));
                 e.setHireDate(rs.getDate("HireDate"));
                 e.setStatus(rs.getString("Status"));
+                e.setPassword(rs.getString("Password"));
 
                 Role r = new Role();
                 r.setRoleId(rs.getInt("RoleID"));
@@ -162,77 +497,113 @@ public class EmployeeDAO extends DBContext {
 
                 return e;
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
+
+        } catch (SQLException ex) {
+            ex.printStackTrace();
         }
+
         return null;
     }
 
-    // Insert employee
-    public boolean insertEmployee(Employee e) {
-        String sql = """
-            INSERT INTO Employees
-            (FullName, Email, Phone, RoleID, HireDate, Status)
-            VALUES (?, ?, ?, ?, ?, 'Active')
-        """;
+    // =====================================================
+    // CHECK EMAIL EXISTS
+    // =====================================================
+    public boolean checkEmailExists(String email) {
+
+        String sql = "SELECT 1 FROM Employees WHERE Email = ?";
 
         try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
 
-            ps.setString(1, e.getFullName());
-            ps.setString(2, e.getEmail());
-            ps.setString(3, e.getPhone());
-            ps.setInt(4, e.getRole().getRoleId());
-            // HireDate (nullable)
-            if (e.getHireDate() != null) {
-                ps.setDate(5, e.getHireDate());
-            } else {
-                ps.setNull(5, java.sql.Types.DATE);
-            }
+            ps.setString(1, email);
+            ResultSet rs = ps.executeQuery();
 
-            ps.setString(6, e.getStatus());
+            return rs.next();
 
-            return ps.executeUpdate() > 0;
         } catch (SQLException ex) {
             ex.printStackTrace();
         }
+
         return false;
     }
 
-    // Update employee
-    public boolean updateEmployee(Employee e) {
+    // =====================================================
+    // UPDATE PASSWORD (DÙNG CHO FUTURE FORGOT PASSWORD)
+    // =====================================================
+    public boolean updatePassword(int employeeId, String newPassword) {
+
         String sql = """
             UPDATE Employees
-            SET FullName=?, Email=?, Phone=?, RoleID=?, HireDate=?
-            WHERE EmployeeID=?
+            SET Password = ?
+            WHERE EmployeeID = ?
         """;
 
         try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
 
+            ps.setString(1, newPassword);
+            ps.setInt(2, employeeId);
+
+            return ps.executeUpdate() > 0;
+
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+
+        return false;
+    }
+
+    public Employee checkLogin(String email, String password) {
+
+        String sql = "SELECT * FROM Employees WHERE Email = ? AND Password = ? AND Status = 'ACTIVE'";
+
+        try {
+            DBContext db = new DBContext();
+            Connection conn = db.getConnection();
+
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setString(1, email);
+            ps.setString(2, password);
+
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) {
+                Employee e = new Employee();
+                e.setEmployeeId(rs.getInt("EmployeeID"));
+                e.setFullName(rs.getString("FullName"));
+                e.setEmail(rs.getString("Email"));
+                e.setStatus(rs.getString("Status"));
+                return e;
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+    public boolean register(Employee e) {
+
+        String sql = "INSERT INTO Employees (FullName, Email, Password, Phone, Status) VALUES (?, ?, ?, ?, ?)";
+
+        try {
+            DBContext db = new DBContext();      
+            Connection conn = db.getConnection(); 
+
+            PreparedStatement ps = conn.prepareStatement(sql);
+
             ps.setString(1, e.getFullName());
             ps.setString(2, e.getEmail());
-            ps.setString(3, e.getPhone());
-            ps.setInt(4, e.getRole().getRoleId());
-            ps.setDate(5, e.getHireDate());
-            ps.setInt(6, e.getEmployeeId());
+            ps.setString(3, e.getPassword());
+            ps.setString(4, e.getPhone());
+            ps.setString(5, e.getStatus());
 
             return ps.executeUpdate() > 0;
-        } catch (SQLException ex) {
+
+        } catch (Exception ex) {
             ex.printStackTrace();
         }
+
         return false;
     }
 
-    // Soft delete
-    public boolean deactivateEmployee(int id) {
-        String sql = "UPDATE Employees SET Status = 'Inactive' WHERE EmployeeID = ?";
-
-        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
-
-            ps.setInt(1, id);
-            return ps.executeUpdate() > 0;
-        } catch (SQLException ex) {
-            ex.printStackTrace();
-        }
-        return false;
-    }
 }
