@@ -4,6 +4,7 @@
  */
 package util;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -85,6 +86,42 @@ public class Validation {
     //taxId;
     public Validation taxID(String fieldName, String value) {
         validatePattern(fieldName, value, TAXID_PATTERN, "không đúng định dạng (10 số hoặc 10 số kèm chi nhánh -001).");
+        return this;
+    }
+
+    public Validation validDates(LocalDate orderDate, LocalDate expectedDate) {
+        if (orderDate == null) {
+            errors.add("Ngày tạo không được để trống.");
+        }
+
+        if (orderDate != null && expectedDate != null && orderDate.isAfter(expectedDate)) {
+            errors.add("Ngày tạo không được lớn hơn ngày giao hàng dự kiến.");
+        }
+
+        return this;
+    }
+
+    public Validation validDatesWhenConfirmed(LocalDate orderDate, LocalDate expectedDate) {
+        if (orderDate == null) {
+            errors.add("Ngày tạo không được để trống.");
+        }
+
+        if (expectedDate == null) {
+            errors.add("Ngày giao hàng dự kiến không được để trống khi xác nhận đơn.");
+            return this;
+        }
+
+        if (orderDate.isAfter(expectedDate)) {
+            errors.add("Ngày tạo không được lớn hơn ngày giao hàng dự kiến.");
+        }
+
+        return this;
+    }
+
+    public Validation addError(String msg) {
+        if (msg != null && !msg.trim().isEmpty()) {
+            this.errors.add(msg);
+        }
         return this;
     }
 
