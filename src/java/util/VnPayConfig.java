@@ -17,8 +17,8 @@ import javax.crypto.spec.SecretKeySpec;
 public class VnPayConfig {
 
     // TODO: Thay bằng thông tin sandbox thật của bạn
-    public static final String VNP_TMN_CODE = "YOUR_SANDBOX_TMN_CODE";
-    public static final String VNP_HASH_SECRET = "YOUR_SANDBOX_HASH_SECRET";
+    public static final String VNP_TMN_CODE = "ACYFYON7";
+    public static final String VNP_HASH_SECRET = "M44ZA592DAIEJMPNN2PXQBZUUE4VIIRV";
     public static final String VNP_PAY_URL = "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html";
 
     /**
@@ -58,26 +58,37 @@ public class VnPayConfig {
         StringBuilder hashData = new StringBuilder();
         StringBuilder query = new StringBuilder();
 
+        // Áp dụng đúng mẫu ajaxServlet của VNPAY: encode value trong cả hashData và query
         for (int i = 0; i < fieldNames.size(); i++) {
             String fieldName = fieldNames.get(i);
             String fieldValue = vnp_Params.get(fieldName);
             if (fieldValue != null && !fieldValue.isEmpty()) {
-                hashData.append(fieldName).append("=").append(fieldValue);
                 try {
-                    query.append(URLEncoder.encode(fieldName, StandardCharsets.US_ASCII.name()))
+                    String encodedFieldName = URLEncoder.encode(fieldName, StandardCharsets.US_ASCII.name());
+                    String encodedFieldValue = URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII.name());
+
+                    // Build hash data
+                    hashData.append(encodedFieldName)
                             .append("=")
-                            .append(URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII.name()));
+                            .append(encodedFieldValue);
+
+                    // Build query string
+                    query.append(encodedFieldName)
+                            .append("=")
+                            .append(encodedFieldValue);
+
+                    if (i < fieldNames.size() - 1) {
+                        hashData.append("&");
+                        query.append("&");
+                    }
                 } catch (UnsupportedEncodingException e) {
                     // ignore - US_ASCII luôn khả dụng
-                }
-                if (i < fieldNames.size() - 1) {
-                    hashData.append("&");
-                    query.append("&");
                 }
             }
         }
 
         String vnp_SecureHash = hmacSHA512(VNP_HASH_SECRET, hashData.toString());
+        // Bám sát demo: chỉ gửi vnp_SecureHash
         query.append("&vnp_SecureHash=").append(vnp_SecureHash);
 
         return VNP_PAY_URL + "?" + query;
