@@ -1,70 +1,153 @@
-<%@page contentType="text/html" pageEncoding="UTF-8"%>
-<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+
 <!DOCTYPE html>
-<html>
+<html lang="vi">
     <head>
-        <title>Swap Approval</title>
+        <meta charset="utf-8">
+        <title>Duyệt Đơn Đổi Ca - Admin</title>
 
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+        <link rel="stylesheet"
+              href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
 
-        <style>
-            .card-custom {
-                border-radius: 12px;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            }
-        </style>
+        <link rel="stylesheet"
+              href="${pageContext.request.contextPath}/AdminLTE-3.2.0/plugins/fontawesome-free/css/all.min.css">
+
+        <link rel="stylesheet"
+              href="${pageContext.request.contextPath}/AdminLTE-3.2.0/dist/css/adminlte.min.css">
     </head>
 
-    <body class="bg-light">
-        <div class="container mt-4">
+    <body class="hold-transition sidebar-mini">
+        <div class="wrapper">
 
-            <h2 class="mb-4">Swap Approval (Manager)</h2>
+            <jsp:include page="include/admin-header.jsp"/>
+            <jsp:include page="include/admin-sidebar.jsp"/>
 
-            <div class="card card-custom p-3">
+            <div class="content-wrapper">
 
-                <table class="table table-hover table-bordered text-center align-middle">
+                <!-- HEADER -->
+                <section class="content-header">
+                    <div class="container-fluid">
+                        <div class="row mb-2">
+                            <div class="col-sm-6">
+                                <h1>
+                                    <i class="fas fa-exchange-alt"></i>
+                                    Duyệt Đơn Đổi Ca
+                                </h1>
+                            </div>
+                        </div>
+                    </div>
+                </section>
 
-                    <thead class="table-dark">
-                        <tr>
-                            <th>ID</th>
-                            <th>Employee</th>
-                            <th>Assignment ID</th>
-                            <th>Reason</th>
-                            <th>Status</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
+                <!-- CONTENT -->
+                <section class="content">
+                    <div class="container-fluid">
 
-                    <tbody>
-                        <c:forEach var="s" items="${swapList}">
-                            <tr>
-                                <td>${s.requestId}</td>
-                                <td>${s.employee.fullName}</td>
-                                <td>${s.assignmentId}</td>
-                                <td>${s.reason}</td>
-                                <td>
-                                    <span class="badge ${s.status == 'PENDING' ? 'bg-warning' : 'bg-success'}">
-                                        ${s.status}
-                                    </span>
-                                </td>
+                        <div class="card card-outline card-primary">
 
-                                <td>
-                                    <c:if test="${s.status == 'PENDING'}">
-                                        <a href="swap-approval?action=approve&id=${s.requestId}"
-                                           class="btn btn-success btn-sm">Approve</a>
+                            <div class="card-header">
+                                <h3 class="card-title">
+                                    Danh sách yêu cầu đổi ca
+                                </h3>
+                            </div>
 
-                                        <a href="swap-approval?action=reject&id=${s.requestId}"
-                                           class="btn btn-danger btn-sm">Reject</a>
-                                    </c:if>
-                                </td>
+                            <div class="card-body table-responsive p-0">
 
-                            </tr>
-                        </c:forEach>
-                    </tbody>
+                                <table class="table table-hover text-nowrap">
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Người yêu cầu</th>
+                                            <th>Ca của người yêu cầu</th>
+                                            <th>Người được đổi</th>
+                                            <th>Ca của người được đổi</th>
+                                            <th>Lý do</th>
+                                            <th>Trạng thái</th>
+                                            <th width="150">Hành động</th>
+                                        </tr>
+                                    </thead>
 
-                </table>
+                                    <tbody>
+                                        <c:forEach var="s" items="${requests}">
+                                            <tr>
+                                                <td>#${s.swapRequestID}</td>
+
+                                                <td>${s.fullName}</td>
+                                                <td>${s.shiftName} - ${s.workDate}</td>
+
+                                                <td>${s.toFullName}</td>
+                                                <td>${s.toShiftName} - ${s.toWorkDate}</td>
+
+                                                <td>${s.reason}</td>
+
+                                                <td>
+                                                    <c:choose>
+                                                        <c:when test="${s.status == 'PENDING'}">
+                                                            <span class="badge badge-warning">PENDING</span>
+                                                        </c:when>
+                                                        <c:when test="${s.status == 'APPROVED'}">
+                                                            <span class="badge badge-success">APPROVED</span>
+                                                        </c:when>
+                                                        <c:otherwise>
+                                                            <span class="badge badge-danger">REJECTED</span>
+                                                        </c:otherwise>
+                                                    </c:choose>
+                                                </td>
+
+                                                <td>
+                                                    <c:if test="${s.status == 'PENDING'}">
+
+                                                        <form method="post"
+                                                              action="${pageContext.request.contextPath}/admin/swap-approval"
+                                                              style="display:inline">
+
+                                                            <input type="hidden"
+                                                                   name="requestID"
+                                                                   value="${s.swapRequestID}"/>
+
+                                                            <button name="action"
+                                                                    value="approve"
+                                                                    class="btn btn-sm btn-success"
+                                                                    onclick="return confirm('Chấp nhận đổi ca?')">
+                                                                <i class="fas fa-check"></i>
+                                                            </button>
+
+                                                            <button name="action"
+                                                                    value="reject"
+                                                                    class="btn btn-sm btn-danger"
+                                                                    onclick="return confirm('Từ chối yêu cầu?')">
+                                                                <i class="fas fa-times"></i>
+                                                            </button>
+
+                                                        </form>
+
+                                                    </c:if>
+                                                </td>
+                                            </tr>
+                                        </c:forEach>
+
+                                        <c:if test="${empty requests}">
+                                            <tr>
+                                                <td colspan="7" class="text-center text-muted">
+                                                    Không có yêu cầu đổi ca nào.
+                                                </td>
+                                            </tr>
+                                        </c:if>
+
+                                    </tbody>
+                                </table>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+                </section>
 
             </div>
+
+            <jsp:include page="include/admin-footer.jsp"/>
+
         </div>
     </body>
 </html>
