@@ -1,11 +1,9 @@
-
-
 package DAO;
+
 import entity.ShiftSwapRequest;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
-
 
 public class ShiftSwapDAO extends DBContext {
 
@@ -39,7 +37,7 @@ public class ShiftSwapDAO extends DBContext {
             e.printStackTrace();
         }
     }
-    
+
     public List<ShiftSwapRequest> getPendingRequests() {
         List<ShiftSwapRequest> list = new ArrayList<>();
 
@@ -74,7 +72,7 @@ public class ShiftSwapDAO extends DBContext {
 
         return list;
     }
-    
+
     public void rejectSwap(int requestID, int managerID) {
 
         String sql = "UPDATE ShiftSwapRequests "
@@ -90,7 +88,7 @@ public class ShiftSwapDAO extends DBContext {
             e.printStackTrace();
         }
     }
-    
+
     public String getEmailByRequestID(int requestID) {
 
         String sql = "SELECT e.Email "
@@ -112,5 +110,50 @@ public class ShiftSwapDAO extends DBContext {
         }
 
         return null;
+    }
+
+    public ShiftSwapRequest getRequestById(int requestID) {
+
+        String sql = "SELECT * FROM ShiftSwapRequests WHERE SwapRequestID = ?";
+
+        try {
+            PreparedStatement ps = getConnection().prepareStatement(sql);
+            ps.setInt(1, requestID);
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) {
+                ShiftSwapRequest r = new ShiftSwapRequest();
+                r.setSwapRequestID(rs.getInt("SwapRequestID"));
+                r.setFromEmployeeID(rs.getInt("FromEmployeeID"));
+                r.setFromAssignmentID(rs.getInt("FromAssignmentID"));
+                r.setReason(rs.getString("Reason"));
+                return r;
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public void insertSwapRequest(ShiftSwapRequest swap) {
+
+        String sql = "INSERT INTO ShiftSwapRequests "
+                + "(FromEmployeeID, FromAssignmentID, Reason, Status, "
+                + "ToEmployeeID, ToAssignmentID) "
+                + "VALUES (?, ?, ?, ?, NULL, NULL)";
+
+        try (Connection conn = getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, swap.getFromEmployeeID());
+            ps.setInt(2, swap.getFromAssignmentID());
+            ps.setString(3, swap.getReason());
+            ps.setString(4, swap.getStatus());
+
+            ps.executeUpdate();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

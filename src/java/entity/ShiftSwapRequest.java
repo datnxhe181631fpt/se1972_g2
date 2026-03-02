@@ -15,11 +15,13 @@ public class ShiftSwapRequest {
     private String fullName;
     private String shiftName;
     private Date workDate;
+    private int toEmployeeID; 
+    private int toAssignmentID;
 
     public ShiftSwapRequest() {
     }
 
-    public ShiftSwapRequest(int swapRequestID, int fromEmployeeID, int fromAssignmentID, String reason, String status, String fullName, String shiftName, Date workDate) {
+    public ShiftSwapRequest(int swapRequestID, int fromEmployeeID, int fromAssignmentID, String reason, String status, String fullName, String shiftName, Date workDate, int toEmployeeID, int toAssignmentID) {
         this.swapRequestID = swapRequestID;
         this.fromEmployeeID = fromEmployeeID;
         this.fromAssignmentID = fromAssignmentID;
@@ -28,6 +30,8 @@ public class ShiftSwapRequest {
         this.fullName = fullName;
         this.shiftName = shiftName;
         this.workDate = workDate;
+        this.toEmployeeID = toEmployeeID;
+        this.toAssignmentID = toAssignmentID;
     }
 
     public int getSwapRequestID() {
@@ -93,6 +97,23 @@ public class ShiftSwapRequest {
     public void setWorkDate(Date workDate) {
         this.workDate = workDate;
     }
+
+    public int getToEmployeeID() {
+        return toEmployeeID;
+    }
+
+    public void setToEmployeeID(int toEmployeeID) {
+        this.toEmployeeID = toEmployeeID;
+    }
+
+    public int getToAssignmentID() {
+        return toAssignmentID;
+    }
+
+    public void setToAssignmentID(int toAssignmentID) {
+        this.toAssignmentID = toAssignmentID;
+    }
     
     
+
 }
