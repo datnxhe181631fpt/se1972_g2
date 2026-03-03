@@ -21,10 +21,6 @@ import java.time.LocalDateTime;
 public class GoodsReceiptDAO extends DBContext {
 
     public List<GoodsReceipt> searchGRsWithPaginated(String keyword, String status, LocalDate from, LocalDate to, int page, int pageSize) {
-        PreparedStatement stm;
-        ResultSet rs;
-        Connection connection;
-
         List<GoodsReceipt> list = new ArrayList<>();
         int offset = (page - 1) * pageSize;
 
@@ -53,9 +49,8 @@ public class GoodsReceiptDAO extends DBContext {
         sql.append(" order by gr.ReceiptID desc ");
         sql.append(" OFFSET ? ROWS FETCH NEXT ? ROWS ONLY ");
 
-        try {
-            connection = getConnection();
-            stm = connection.prepareStatement(sql.toString());
+        try (Connection connection = getConnection();
+             PreparedStatement stm = connection.prepareStatement(sql.toString())) {
             int index = 1;
 
             if (keyword != null && !keyword.trim().isEmpty()) {
@@ -77,9 +72,10 @@ public class GoodsReceiptDAO extends DBContext {
             stm.setInt(index++, offset);
             stm.setInt(index++, pageSize);
 
-            rs = stm.executeQuery();
-            while (rs.next()) {
-                list.add(extractGRFromResultSet(rs));
+            try (ResultSet rs = stm.executeQuery()) {
+                while (rs.next()) {
+                    list.add(extractGRFromResultSet(rs));
+                }
             }
         } catch (Exception e) {
             System.out.println("ERR: searchGRsWithPaginated: " + e.getMessage());
@@ -88,10 +84,6 @@ public class GoodsReceiptDAO extends DBContext {
     }
 
     public int countGRs(String keyword, String status, LocalDate from, LocalDate to) {
-        PreparedStatement stm;
-        ResultSet rs;
-        Connection connection;
-
         StringBuilder sql = new StringBuilder();
         sql.append("""
                 select COUNT(*) from GoodsReceipts gr
@@ -113,9 +105,8 @@ public class GoodsReceiptDAO extends DBContext {
             sql.append(" and CAST(gr.ReceiptDate AS DATE) <= ? ");
         }
 
-        try {
-            connection = getConnection();
-            stm = connection.prepareStatement(sql.toString());
+        try (Connection connection = getConnection();
+             PreparedStatement stm = connection.prepareStatement(sql.toString())) {
             int idx = 1;
             if (keyword != null && !keyword.trim().isEmpty()) {
                 String p = "%" + keyword + "%";
@@ -133,9 +124,10 @@ public class GoodsReceiptDAO extends DBContext {
                 stm.setDate(idx++, java.sql.Date.valueOf(to));
             }
 
-            rs = stm.executeQuery();
-            if (rs.next()) {
-                return rs.getInt(1);
+            try (ResultSet rs = stm.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
             }
         } catch (Exception e) {
             System.out.println("ERR: countGRs: " + e.getMessage());
@@ -144,9 +136,6 @@ public class GoodsReceiptDAO extends DBContext {
     }
 
     public GoodsReceipt getGRByNumber(String receiptNumber) {
-        PreparedStatement stm;
-        ResultSet rs;
-        Connection connection;
         String sql = """
                 select gr.*,
                        po.PONumber, s.SupplierName, e.FullName AS ReceivedByName
@@ -156,13 +145,13 @@ public class GoodsReceiptDAO extends DBContext {
                 join Employees e ON gr.ReceivedBy = e.EmployeeID
                 where gr.ReceiptNumber = ?
                 """;
-        try {
-            connection = getConnection();
-            stm = connection.prepareStatement(sql);
+        try (Connection connection = getConnection();
+             PreparedStatement stm = connection.prepareStatement(sql)) {
             stm.setString(1, receiptNumber);
-            rs = stm.executeQuery();
-            if (rs.next()) {
-                return extractGRFromResultSet(rs);
+            try (ResultSet rs = stm.executeQuery()) {
+                if (rs.next()) {
+                    return extractGRFromResultSet(rs);
+                }
             }
         } catch (Exception e) {
             System.out.println("ERR: getGRByNumber: " + e.getMessage());
@@ -171,9 +160,6 @@ public class GoodsReceiptDAO extends DBContext {
     }
 
     public List<GoodsReceiptDetail> getGRDetailsByReceiptId(long receiptId) {
-        PreparedStatement stm;
-        ResultSet rs;
-        Connection connection;
         List<GoodsReceiptDetail> list = new ArrayList<>();
         String sql = """
                      select grd.*, p.ProductName, poi.QuantityOrdered
@@ -183,13 +169,13 @@ public class GoodsReceiptDAO extends DBContext {
                      where grd.ReceiptID = ?
                      order by grd.ReceiptDetailID
                      """;
-        try {
-            connection = getConnection();
-            stm = connection.prepareStatement(sql);
+        try (Connection connection = getConnection();
+             PreparedStatement stm = connection.prepareStatement(sql)) {
             stm.setLong(1, receiptId);
-            rs = stm.executeQuery();
-            while (rs.next()) {
-                list.add(extractGRDetailFromRS(rs));
+            try (ResultSet rs = stm.executeQuery()) {
+                while (rs.next()) {
+                    list.add(extractGRDetailFromRS(rs));
+                }
             }
         } catch (Exception e) {
             System.out.println("ERR: getGRDetailsByReceiptId: " + e.getMessage());
@@ -199,10 +185,6 @@ public class GoodsReceiptDAO extends DBContext {
 
     //get PO List for DropDown 
     public List<PurchaseOrder> getApprovedPOs() {
-        PreparedStatement stm;
-        ResultSet rs;
-        Connection connection;
-
         List<PurchaseOrder> list = new ArrayList<>();
         String sql = """
                      select po.POID, po.PONumber, s.SupplierName, po.Status
@@ -211,10 +193,9 @@ public class GoodsReceiptDAO extends DBContext {
                      where po.Status in ('APPROVED', 'PARTIAL_RECEIVED')
                      order by po.PONumber
                      """;
-        try {
-            connection = getConnection();
-            stm = connection.prepareStatement(sql);
-            rs = stm.executeQuery();
+        try (Connection connection = getConnection();
+             PreparedStatement stm = connection.prepareStatement(sql);
+             ResultSet rs = stm.executeQuery()) {
             while (rs.next()) {
                 PurchaseOrder po = new PurchaseOrder();
                 po.setId(rs.getLong("POID"));
@@ -232,10 +213,6 @@ public class GoodsReceiptDAO extends DBContext {
     //PO items as GoodsReceiptDetail 
     //lay tensp, so luong order, so luong nhan, gia nhap 
     public List<GoodsReceiptDetail> getPoItemsForGR(long poId) {
-        PreparedStatement stm;
-        ResultSet rs;
-        Connection connection;
-
         List<GoodsReceiptDetail> list = new ArrayList<>();
         String sql = """
                      select poi.LineItemID, poi.ProductID, poi.QuantityOrdered, poi.QuantityReceived,
@@ -245,11 +222,10 @@ public class GoodsReceiptDAO extends DBContext {
                      where poi.POID = ?
                      order by poi.LineItemID
                      """;
-        try {
-            connection = getConnection();
-            stm = connection.prepareStatement(sql);
+        try (Connection connection = getConnection();
+             PreparedStatement stm = connection.prepareStatement(sql)) {
             stm.setLong(1, poId);
-            rs = stm.executeQuery();
+            try (ResultSet rs = stm.executeQuery()) {
             while (rs.next()) {
                 GoodsReceiptDetail d = new GoodsReceiptDetail();
                 d.setPoLineItemId(rs.getLong("LineItemID"));
@@ -268,6 +244,7 @@ public class GoodsReceiptDAO extends DBContext {
                     d.setLineTotal(BigDecimal.ZERO);
                 }
                 list.add(d);
+            }
             }
         } catch (Exception e) {
             System.out.println("ERR: getPoItemsForGR: " + e.getMessage());
@@ -347,6 +324,10 @@ public class GoodsReceiptDAO extends DBContext {
                 }
             } catch (Exception ex) {
             }
+        } finally {
+            if (connection != null) {
+                try { connection.close(); } catch (Exception ex) {}
+            }
         }
         return false;
     }
@@ -404,23 +385,22 @@ public class GoodsReceiptDAO extends DBContext {
         } catch (Exception e) {
             System.out.println("ERR: completeGR: " + e.getMessage());
             try {
-                connection.rollback();
+                if (connection != null) connection.rollback();
             } catch (Exception ex) {
+            }
+        } finally {
+            if (connection != null) {
+                try { connection.close(); } catch (Exception ex) {}
             }
         }
         return false;
     }
 
     public String generateNextGRNumber() {
-        PreparedStatement stm;
-        ResultSet rs;
-        Connection connection;
-
         String sql = "select MAX(ReceiptNumber) from GoodsReceipts where ReceiptNumber like 'GR-%'";
-        try {
-            connection = getConnection();
-            stm = connection.prepareStatement(sql);
-            rs = stm.executeQuery();
+        try (Connection connection = getConnection();
+             PreparedStatement stm = connection.prepareStatement(sql);
+             ResultSet rs = stm.executeQuery()) {
             if (rs.next()) {
                 String maxCode = rs.getString(1);
                 if (maxCode != null) {
@@ -435,17 +415,13 @@ public class GoodsReceiptDAO extends DBContext {
     }
 
     public boolean isReceiptNumberExist(String receiptNumber) {
-        PreparedStatement stm;
-        ResultSet rs;
-        Connection connection;
-
         String sql = "select 1 from GoodsReceipts where ReceiptNumber = ? ";
-        try {
-            connection = getConnection();
-            stm = connection.prepareStatement(sql);
+        try (Connection connection = getConnection();
+             PreparedStatement stm = connection.prepareStatement(sql)) {
             stm.setString(1, receiptNumber);
-            rs = stm.executeQuery();
-            return rs.next();
+            try (ResultSet rs = stm.executeQuery()) {
+                return rs.next();
+            }
         } catch (Exception e) {
             System.out.println("ERR: isReceiptNumberExist: " + e.getMessage());
         }
@@ -513,144 +489,138 @@ public class GoodsReceiptDAO extends DBContext {
     }
 
     private GoodsReceipt getGRByNumberInternal(Connection con, String receiptNumber) throws Exception {
-        PreparedStatement stm;
-        ResultSet rs;
-
         String sql = """
                      select * from GoodsReceipts
                      where ReceiptNumber = ? 
                      """;
-        stm = con.prepareStatement(sql);
-        stm.setString(1, receiptNumber);
-        rs = stm.executeQuery();
-        if (rs.next()) {
-            GoodsReceipt gr = new GoodsReceipt();
-            gr.setId(rs.getLong("ReceiptID"));
-            gr.setReceiptNumber(rs.getString("ReceiptNumber"));
-            gr.setPoId(rs.getLong("POID"));
-            gr.setStatus(rs.getString("Status"));
-            gr.setReceiptDate(getLocalDateTime(rs, "ReceiptDate"));
-            return gr;
+        try (PreparedStatement stm = con.prepareStatement(sql)) {
+            stm.setString(1, receiptNumber);
+            try (ResultSet rs = stm.executeQuery()) {
+                if (rs.next()) {
+                    GoodsReceipt gr = new GoodsReceipt();
+                    gr.setId(rs.getLong("ReceiptID"));
+                    gr.setReceiptNumber(rs.getString("ReceiptNumber"));
+                    gr.setPoId(rs.getLong("POID"));
+                    gr.setStatus(rs.getString("Status"));
+                    gr.setReceiptDate(getLocalDateTime(rs, "ReceiptDate"));
+                    return gr;
+                }
+            }
         }
         return null;
     }
 
     private List<GoodsReceiptDetail> getGRDetailsInternal(Connection con, long receiptId) throws Exception {
-        PreparedStatement stm;
-        ResultSet rs;
-
         List<GoodsReceiptDetail> list = new ArrayList<>();
         String sql = """
                      select * from GoodsReceiptDetails
                      where ReceiptID = ?
                      order by ReceiptDetailID
                      """;
-        stm = con.prepareStatement(sql);
-        stm.setLong(1, receiptId);
-        rs = stm.executeQuery();
-        while (rs.next()) {
-            GoodsReceiptDetail d = new GoodsReceiptDetail();
-            d.setId(rs.getLong("ReceiptDetailID"));
-            d.setPoLineItemId(rs.getLong("POLineItemID"));
-            d.setProductId(rs.getInt("ProductID"));
-            d.setQuantityReceived(rs.getInt("QuantityReceived"));
-            d.setUnitCost(rs.getBigDecimal("UnitCost"));
-            d.setLineTotal(rs.getBigDecimal("LineTotal"));
-            d.setNotes(rs.getString("Notes"));
-            list.add(d);
+        try (PreparedStatement stm = con.prepareStatement(sql)) {
+            stm.setLong(1, receiptId);
+            try (ResultSet rs = stm.executeQuery()) {
+                while (rs.next()) {
+                    GoodsReceiptDetail d = new GoodsReceiptDetail();
+                    d.setId(rs.getLong("ReceiptDetailID"));
+                    d.setPoLineItemId(rs.getLong("POLineItemID"));
+                    d.setProductId(rs.getInt("ProductID"));
+                    d.setQuantityReceived(rs.getInt("QuantityReceived"));
+                    d.setUnitCost(rs.getBigDecimal("UnitCost"));
+                    d.setLineTotal(rs.getBigDecimal("LineTotal"));
+                    d.setNotes(rs.getString("Notes"));
+                    list.add(d);
+                }
+            }
         }
         return list;
     }
 
     private int getProductStock(Connection conn, int productId) throws Exception {
-        PreparedStatement stm;
-        ResultSet rs;
-
         String sql = "SELECT Stock FROM Products WHERE ProductID = ?";
-        stm = conn.prepareStatement(sql);
-        stm.setInt(1, productId);
-        rs = stm.executeQuery();
-        if (rs.next()) {
-            return rs.getInt("Stock");
+        try (PreparedStatement stm = conn.prepareStatement(sql)) {
+            stm.setInt(1, productId);
+            try (ResultSet rs = stm.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("Stock");
+                }
+            }
         }
         return 0;
     }
 
     private BigDecimal getProductCostPrice(Connection con, int productId) throws Exception {
-        PreparedStatement stm;
-        ResultSet rs;
-
         String sql = "select CostPrice from Products where ProductId =? ";
-        stm = con.prepareStatement(sql);
-        stm.setInt(1, productId);
-        rs = stm.executeQuery();
-        if (rs.next()) {
-            BigDecimal cost = rs.getBigDecimal("CostPrice");
-            return cost != null ? cost : BigDecimal.ZERO;
+        try (PreparedStatement stm = con.prepareStatement(sql)) {
+            stm.setInt(1, productId);
+            try (ResultSet rs = stm.executeQuery()) {
+                if (rs.next()) {
+                    BigDecimal cost = rs.getBigDecimal("CostPrice");
+                    return cost != null ? cost : BigDecimal.ZERO;
+                }
+            }
         }
         return BigDecimal.ZERO;
     }
 
     private void updateProductStock(Connection con, int productId, int addQty, BigDecimal newAvgCost) throws Exception {
-        PreparedStatement stm;
-
         String sql = "update Products set Stock = Stock + ?, CostPrice = ?, UpdatedDate = GETDATE() where ProductID = ?";
-        stm = con.prepareStatement(sql);
-        stm.setInt(1, addQty);
-        stm.setBigDecimal(2, newAvgCost);
-        stm.setInt(3, productId);
-        stm.executeUpdate();
+        try (PreparedStatement stm = con.prepareStatement(sql)) {
+            stm.setInt(1, addQty);
+            stm.setBigDecimal(2, newAvgCost);
+            stm.setInt(3, productId);
+            stm.executeUpdate();
+        }
     }
 
     private void updatePOItemReceived(Connection con, long lineItemId, int addQty) throws Exception {
-        PreparedStatement stm;
-
         String sql = "update PurchaseOrderItems set QuantityReceived = QuantityReceived + ?  where LineItemID = ? ";
-        stm = con.prepareStatement(sql);
-        stm.setInt(1, addQty);
-        stm.setLong(2, lineItemId);
-        stm.executeUpdate();
+        try (PreparedStatement stm = con.prepareStatement(sql)) {
+            stm.setInt(1, addQty);
+            stm.setLong(2, lineItemId);
+            stm.executeUpdate();
+        }
     }
 
     private void updateGRDetailMAC(Connection con, long detailId, int oldQty, BigDecimal oldCost, BigDecimal newAvgCost) throws Exception {
-        PreparedStatement stm;
-
         String sql = """
                      update GoodsReceiptDetails
                      set OldQty = ?, OldCost = ?, NewAvgCost = ?
                      where ReceiptDetailID = ?
                      """;
-        stm = con.prepareStatement(sql);
-        stm.setInt(1, oldQty);
-        stm.setBigDecimal(2, oldCost != null ? oldCost : BigDecimal.ZERO);
-        stm.setBigDecimal(3, newAvgCost != null ? newAvgCost : BigDecimal.ZERO);
-        stm.setLong(4, detailId);
-        stm.executeUpdate();
+        try (PreparedStatement stm = con.prepareStatement(sql)) {
+            stm.setInt(1, oldQty);
+            stm.setBigDecimal(2, oldCost != null ? oldCost : BigDecimal.ZERO);
+            stm.setBigDecimal(3, newAvgCost != null ? newAvgCost : BigDecimal.ZERO);
+            stm.setLong(4, detailId);
+            stm.executeUpdate();
+        }
     }
 
     private void updatePOStatus(Connection con, long poId) throws Exception {
-        ResultSet rs;
-
         String sqlCheck = """
                      select COUNT(*) as total,
                               SUM(CASE WHEN QuantityReceived >= QuantityOrdered THEN 1 ELSE 0 END) as fullyReceived
                       from PurchaseOrderItems
                       where POID = ? 
                       """;
-        PreparedStatement stmCheck = con.prepareStatement(sqlCheck);
-        stmCheck.setLong(1, poId);
-        rs = stmCheck.executeQuery();
-        if (rs.next()) {
-            int total = rs.getInt("total");
-            int fullyReceived = rs.getInt("fullyReceived");
+        try (PreparedStatement stmCheck = con.prepareStatement(sqlCheck)) {
+            stmCheck.setLong(1, poId);
+            try (ResultSet rs = stmCheck.executeQuery()) {
+                if (rs.next()) {
+                    int total = rs.getInt("total");
+                    int fullyReceived = rs.getInt("fullyReceived");
 
-            String newStatus = (total > 0 && fullyReceived == total) ? PurchaseOrder.STATUS_COMPLETED : PurchaseOrder.STATUS_PARTIAL_RECEIVED;
+                    String newStatus = (total > 0 && fullyReceived == total) ? PurchaseOrder.STATUS_COMPLETED : PurchaseOrder.STATUS_PARTIAL_RECEIVED;
 
-            String sqlUpdatePO = "update PurchaseOrders set Status = ?, UpdatedAt = GETDATE() where POID = ? ";
-            PreparedStatement stmPO = con.prepareStatement(sqlUpdatePO);
-            stmPO.setString(1, newStatus);
-            stmPO.setLong(2, poId);
-            stmPO.executeUpdate();
+                    String sqlUpdatePO = "update PurchaseOrders set Status = ?, UpdatedAt = GETDATE() where POID = ? ";
+                    try (PreparedStatement stmPO = con.prepareStatement(sqlUpdatePO)) {
+                        stmPO.setString(1, newStatus);
+                        stmPO.setLong(2, poId);
+                        stmPO.executeUpdate();
+                    }
+                }
+            }
         }
     }
 }
