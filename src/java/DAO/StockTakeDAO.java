@@ -53,6 +53,21 @@ public class StockTakeDAO extends DBContext {
         return list;
 
     }
+    
+    public int count(String keyword, String status, LocalDate from, LocalDate to) {
+        StringBuilder sql = new StringBuilder("select COUNT(*) from StockTakes st WHERE 1=1");
+        appendFilters(sql, keyword, status, from, to);
+        try (Connection connection = getConnection();PreparedStatement stm = connection.prepareStatement(sql.toString())) {
+            bindFilters(stm, 1, keyword, status, from, to);
+            try (ResultSet rs = stm.executeQuery()) {
+                if (rs.next()) return rs.getInt(1);
+            }
+        } catch (Exception e) {
+            System.out.println("ERR: StockTakeDAO.count: " + e.getMessage());
+        }
+        return 0;
+    }
+    
 
     private void appendFilters(StringBuilder sql, String keyword, String status,
             LocalDate from, LocalDate to) {
