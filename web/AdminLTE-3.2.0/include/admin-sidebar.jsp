@@ -109,6 +109,12 @@
                         <li class="nav-item">
                             <a href="${pageContext.request.contextPath}/purchaseorder" class="nav-link">
                                 <i class="far fa-dot-circle nav-icon"></i>
+                                <p>Đặt hàng</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="${pageContext.request.contextPath}/goodsreceipt" class="nav-link">
+                                <i class="far fa-dot-circle nav-icon"></i>
                                 <p>Nhập hàng</p>
                             </a>
                         </li>
