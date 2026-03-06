@@ -148,7 +148,7 @@ public class StockTakeDAO extends DBContext {
         return list;
     }
 
-    List<Product> getAllActiveProducts() {
+    public List<Product> getAllActiveProducts() {
         List<Product> list = new ArrayList<>();
         String sql = """
                 select ProductID, ProductName, SKU, Stock, CostPrice
@@ -200,7 +200,12 @@ public class StockTakeDAO extends DBContext {
     private void appendFilters(StringBuilder sql, String keyword, String status,
             LocalDate from, LocalDate to) {
         if (keyword != null && !keyword.trim().isEmpty()) {
-            sql.append(" AND (st.StockTakeNumber LIKE ?) ");
+            sql.append("""
+                        AND (
+                           st.StockTakeNumber LIKE ?
+                           OR st.ScopeValue LIKE ?
+                           OR st.Notes LIKE ?
+                       ) """);
         }
         if (status != null && !status.trim().isEmpty()) {
             sql.append(" AND st.Status = ? ");
@@ -216,6 +221,8 @@ public class StockTakeDAO extends DBContext {
     private int bindFilters(PreparedStatement stm, int idx,
             String keyword, String status, LocalDate from, LocalDate to) throws SQLException {
         if (keyword != null && !keyword.trim().isEmpty()) {
+            stm.setString(idx++, "%" + keyword + "%");
+            stm.setString(idx++, "%" + keyword + "%");
             stm.setString(idx++, "%" + keyword + "%");
         }
         if (status != null && !status.trim().isEmpty()) {
