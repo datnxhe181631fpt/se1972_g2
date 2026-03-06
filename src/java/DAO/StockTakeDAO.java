@@ -172,6 +172,31 @@ public class StockTakeDAO extends DBContext {
         return list;
     }
 
+    public String generateNextSTNumber() {
+        int currentYear = java.time.Year.now().getValue();
+        String sql = """
+                     select top 1 StockTakeNumber
+                     from StockTakes
+                     where StockTakeNumber like ?
+                     order by StockTakeNumber desc
+                     """;
+        try (Connection connection = getConnection(); PreparedStatement stm = connection.prepareStatement(sql)) {
+            String yearPrefix = "ST-" + currentYear + '-';
+            stm.setString(1, yearPrefix + "%");
+            try (ResultSet rs = stm.executeQuery()) {
+                if (rs.next()) {
+                    String lastSTNumber = rs.getString("StockTakeNumber");
+                    String numberPart = lastSTNumber.substring(lastSTNumber.lastIndexOf("-") + 1);
+                    int nextNumber = Integer.parseInt(numberPart) + 1;
+                    return String.format("ST-%d-%04d", currentYear, nextNumber);
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("ERR: GenerateNextSTNumber: " + e.getMessage());
+        }
+        return String.format("ST-%d-0001", currentYear);
+    }
+
     private void appendFilters(StringBuilder sql, String keyword, String status,
             LocalDate from, LocalDate to) {
         if (keyword != null && !keyword.trim().isEmpty()) {
