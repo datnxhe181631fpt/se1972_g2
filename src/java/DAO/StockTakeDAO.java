@@ -4,7 +4,9 @@
  */
 package DAO;
 
+import entity.Product;
 import entity.StockTake;
+import entity.StockTakeDetail;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -26,14 +28,14 @@ public class StockTakeDAO extends DBContext {
         StringBuilder sql = new StringBuilder();
         sql.append("""
                     select st.*,
-                                          e1.FullName AS CreatedByName,
-                                          e2.FullName AS ApprovedByName,
-                                          e3.FullName AS RecountByName
-                                   from   StockTakes st
-                                   left join Employees e1 ON st.CreatedBy      = e1.EmployeeID
-                                   left join Employees e2 ON st.ApprovedBy     = e2.EmployeeID
-                                   left join Employees e3 ON st.RecountRequestedBy = e3.EmployeeID
-                                   where 1 = 1
+                                e1.FullName AS CreatedByName,
+                                e2.FullName AS ApprovedByName,
+                                e3.FullName AS RecountByName
+                    from   StockTakes st
+                    left join Employees e1 ON st.CreatedBy = e1.EmployeeID
+                    left join Employees e2 ON st.ApprovedBy = e2.EmployeeID
+                    left join Employees e3 ON st.RecountRequestedBy = e3.EmployeeID
+                    where 1 = 1
                    """);
 
         appendFilters(sql, keyword, status, from, to);
@@ -53,21 +55,122 @@ public class StockTakeDAO extends DBContext {
         return list;
 
     }
-    
+
     public int count(String keyword, String status, LocalDate from, LocalDate to) {
         StringBuilder sql = new StringBuilder("select COUNT(*) from StockTakes st WHERE 1=1");
         appendFilters(sql, keyword, status, from, to);
-        try (Connection connection = getConnection();PreparedStatement stm = connection.prepareStatement(sql.toString())) {
+        try (Connection connection = getConnection(); PreparedStatement stm = connection.prepareStatement(sql.toString())) {
             bindFilters(stm, 1, keyword, status, from, to);
             try (ResultSet rs = stm.executeQuery()) {
-                if (rs.next()) return rs.getInt(1);
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
             }
         } catch (Exception e) {
             System.out.println("ERR: StockTakeDAO.count: " + e.getMessage());
         }
         return 0;
     }
-    
+
+    public StockTake getSTById(long id) {
+        String sql = """
+              select st.*,
+                                                       e1.FullName AS CreatedByName,
+                                                       e2.FullName AS ApprovedByName,
+                                                       e3.FullName AS RecountByName
+                                                from   StockTakes st
+                                                left join Employees e1 ON st.CreatedBy      = e1.EmployeeID
+                                                left join Employees e2 ON st.ApprovedBy     = e2.EmployeeID
+                                                left join Employees e3 ON st.RecountRequestedBy = e3.EmployeeID
+                                                where st.StockTakeID = ? 
+             """;
+        try (Connection connection = getConnection(); PreparedStatement stm = connection.prepareStatement(sql)) {
+            stm.setLong(1, id);
+            try (ResultSet rs = stm.executeQuery()) {
+                if (rs.next()) {
+                    StockTake st = extractSTFromResultSet(rs);
+                    st.setDetails(getSTDetailsById(id));
+                    return st;
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("ERR: getSTById: " + e.getMessage());
+        }
+        return null;
+    }
+
+    public StockTake getSTByNumber(String stNumber) {
+        String sql = """
+              select st.*,
+                        e1.FullName AS CreatedByName,
+                        e2.FullName AS ApprovedByName,
+                        e3.FullName AS RecountByName
+                        from   StockTakes st
+                        left join Employees e1 ON st.CreatedBy      = e1.EmployeeID
+                        left join Employees e2 ON st.ApprovedBy     = e2.EmployeeID
+                        left join Employees e3 ON st.RecountRequestedBy = e3.EmployeeID
+                        where st.StockTakeNumber = ? 
+                """;
+        try (Connection connection = getConnection(); PreparedStatement stm = connection.prepareStatement(sql)) {
+            stm.setString(1, stNumber);
+            try (ResultSet rs = stm.executeQuery()) {
+                if (rs.next()) {
+                    StockTake st = extractSTFromResultSet(rs);
+                    st.setDetails(getSTDetailsById(st.getId()));
+                    return st;
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("ERR: getSTByNumber: " + e.getMessage());
+        }
+        return null;
+    }
+
+    public List<StockTakeDetail> getSTDetailsById(long stId) {
+        List<StockTakeDetail> list = new ArrayList<>();
+        String sql = """
+                select d.*, p.ProductName, p.SKU
+                from StockTakeDetails d
+                join Products p ON d.ProductID = p.ProductID
+                where d.StockTakeID = ?
+                ORDER BY p.ProductName
+                """;
+        try (Connection connection = getConnection(); PreparedStatement stm = connection.prepareStatement(sql)) {
+            stm.setLong(1, stId);
+            try (ResultSet rs = stm.executeQuery()) {
+                while (rs.next()) {
+                    list.add(extractSTDetailsFromResultSet(rs));
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("ERR: getSTDetailsById: " + e.getMessage());
+        }
+        return list;
+    }
+
+    List<Product> getAllActiveProducts() {
+        List<Product> list = new ArrayList<>();
+        String sql = """
+                select ProductID, ProductName, SKU, Stock, CostPrice
+                from Products
+                where  IsActive = 1
+                ORDER BY ProductName
+                """;
+        try (Connection connection = getConnection(); PreparedStatement stm = connection.prepareStatement(sql); ResultSet rs = stm.executeQuery()) {
+            while (rs.next()) {
+                Product p = new Product();
+                p.setId(rs.getInt("ProductID"));
+                p.setProductName(rs.getString("ProductName"));
+                p.setSku(rs.getString("SKU"));
+                p.setStock(rs.getInt("Stock"));
+                p.setCostPrice(rs.getDouble("CostPrice"));
+                list.add(p);
+            }
+        } catch (Exception e) {
+            System.out.println("ERR: getAllActiveProducts: " + e.getMessage());
+        }
+        return list;
+    }
 
     private void appendFilters(StringBuilder sql, String keyword, String status,
             LocalDate from, LocalDate to) {
@@ -150,5 +253,25 @@ public class StockTakeDAO extends DBContext {
     private LocalDateTime getLocalDateTime(ResultSet rs, String columnName) throws SQLException {
         Timestamp ts = rs.getTimestamp(columnName);
         return (ts != null) ? ts.toLocalDateTime() : null;
+    }
+
+    private StockTakeDetail extractSTDetailsFromResultSet(ResultSet rs) throws SQLException {
+        StockTakeDetail d = new StockTakeDetail();
+        d.setId(rs.getLong("StockTakeDetailID"));
+        d.setProductId(rs.getInt("ProductID"));
+        d.setSystemQuantity(rs.getInt("SystemQuantity"));
+        d.setActualQuantity(rs.getInt("ActualQuantity"));
+        d.setUnitCost(rs.getBigDecimal("UnitCost"));
+        d.setVarianceReason(rs.getString("VarianceReason"));
+        d.setNotes(rs.getString("Notes"));
+        try {
+            d.setProductName(rs.getString("ProductName"));
+        } catch (Exception ignored) {
+        }
+        try {
+            d.setProductSku(rs.getString("SKU"));
+        } catch (Exception ignored) {
+        }
+        return d;
     }
 }
