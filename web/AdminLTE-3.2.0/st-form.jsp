@@ -7,6 +7,7 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
 <%@taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt"%>
+<%@taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn"%>
 <!DOCTYPE html>
 <html>
     <head>
@@ -135,6 +136,7 @@
                                             <label>Phạm vi kiểm kê</label>
                                             <select id="scopeType" class="form-control">
                                                 <option value="ALL">Toàn bộ sản phẩm</option>
+                                                <option value="CATEGORY">Theo danh mục</option>
                                                 <option value="SELECTED">Chọn sản phẩm cụ thể</option>
                                             </select>
                                         </div>
@@ -148,7 +150,26 @@
                                 </div>
                             </div>
 
-                            <!--<!-- product selection (only for selected scope) -->
+                            <div class="card" id="category-select-card" style="display:none">
+                                <div class="card-body">
+                                    <div class="form-group mb-1">
+                                        <label>Chọn danh mục <span class="text-danger">*</span></label>
+                                        <select id="categorySelect" class="form-control">
+                                            <option value="">
+                                                -- Chọn danh mục --
+                                            </option>
+                                            <c:forEach var="cat" items="${categoryList}">
+                                                <c:if test="${cat.isActive}">
+                                                    <option value="${cat.categoryID}">${cat.categoryName}</option>
+                                                </c:if>
+                                            </c:forEach>
+                                        </select>
+                                    </div>
+                                    <small id="categoryProductCount" class="text-muted"></small>
+                                </div>
+                            </div>
+
+                          <!-- product selection (only for selected scope) -->
                             <div class="card" id="product-select-card" style="display:none">
                                 <div class="card-header">
                                     <h3 class="card-title"><i class="fas fa-search"></i> Tìm và chọn sản phẩm cần kiểm</h3>   
@@ -198,7 +219,7 @@
                             <div class="card" id="all-scope-info" style="display:none">
                                 <div class="card-body text-info">
                                     <i class="fas fa-info-circle"></i>
-                                    Phiếu kiểm kê sẽ bao gồm tất cả <strong>${productList.size()}</strong> sản phẩm đang hoạt động
+                                    Phiếu kiểm kê sẽ bao gồm tất cả <strong>${fn:length(productList)}</strong> sản phẩm đang hoạt động
                                 </div>
                             </div>
 
@@ -220,6 +241,7 @@
                                 <input type="hidden" name="stNumber" id="f_stNumber">
                                 <input type="hidden" name="stockTakeDate" id="f_stockTakeDate">
                                 <input type="hidden" name="scopeType" id="f_scopeType">
+                                <input type="hidden" name="scopeValue" id="f_scopeValue">
                                 <input type="hidden" name="notes" id="f_notes">
 
                                 <div class="card card-primary card-outline">
@@ -286,7 +308,8 @@
                         name: '${p.productName.replace("'","\\'")}',
                         sku: '${p.sku}',
                         stock: ${p.stock},
-                        cost: ${p.costPrice!=null ? p.costPrice : 0}
+                        cost: ${p.costPrice!=null ? p.costPrice : 0},
+                        categoryId: ${p.categoryId}
                     }
             );
             </c:forEach>
@@ -294,13 +317,21 @@
             var REASON_OPTIONS = ['', 'LOSS', 'DAMAGE', 'THEFT', 'ERROR', 'OTHER'];
             var REASON_LABELS = ['-- Lý do --', 'Mất hàng', 'Hư hỏng', 'Trộm cắp', 'Lỗi nhập liệu', 'Khác'];
             var savedActQtys = {};
-            var savedReasons  = {};
-            var savedNotes    = {};
+            var savedReasons = {};
+            var savedNotes = {};
+            var ALL_CATEGORIES = [];
+            <c:forEach var="cat" items="${categoryList}">
+                <c:if test="${cat.isActive}">
+            ALL_CATEGORIES.push({
+                id:${cat.categoryID},
+                name: '${cat.categoryName.replace("'","\\'")}'
+            });
+                </c:if>
+            </c:forEach>
 
             function showStep(n) {
                 $('#step1-panel').toggle(n === 1);
                 $('#step2-panel').toggle(n === 2);
-
                 if (n === 1) {
                     $('#step1-box').removeClass('done pending').addClass('active');
                     $('#step2-box').removeClass('active done').addClass('pending');
@@ -319,23 +350,42 @@
                 if (sel === 'SELECTED') {
                     $('#product-select-card').show();
                     $('#all-scope-info').hide();
+                    $('#category-select-card').hide();
+                } else if (sel === 'CATEGORY') {
+                    $('#product-select-card').hide();
+                    $('#all-scope-info').hide();
+                    $('#category-select-card').show();
+                    updateCategoryProductCount();
                 } else {
                     $('#product-select-card').hide();
                     $('#all-scope-info').show();
+                    $('#category-select-card').hide();
                 }
             });
+            $('#categorySelect').on('change', function () {
+                updateCategoryProductCount();
+            });
+            function updateCategoryProductCount() {
+                var catId = parseInt($('#categorySelect').val()) || 0;
+                if (!catId) {
+                    $('#categoryProductCount').text('');
+                    return;
+                }
+                var count = ALL_PRODUCTS.filter(function (p) {
+                    return p.categoryId === catId;
+                }).length;
+                $('#categoryProductCount').text('Danh mục này có ' + count + ' sản phẩm đang hoạt động');
+            }
 
             function sortProductTable(kw) {
                 kw = (kw || '').toLowerCase().trim();
                 var tbody = $('#productTable tbody');
                 var checkedMatched = [], uncheckedMatched = [], unmatched = [];
-
                 tbody.find('tr.product-row').each(function () {
                     var isChecked = $(this).find('.product-check').prop('checked');
                     var sku = String($(this).data('sku') || '').toLowerCase();
                     var name = String($(this).data('name') || '').toLowerCase();
                     var matches = !kw || sku.includes(kw) || name.includes(kw);
-
                     if (isChecked && matches) {
                         checkedMatched.push(this);
                     } else if (!isChecked && matches) {
@@ -344,7 +394,6 @@
                         unmatched.push(this);
                     }
                 });
-
                 checkedMatched.forEach(function (row) {
                     tbody.append(row);
                     $(row).show();
@@ -362,38 +411,31 @@
             $('#productSearch').on('input', function () {
                 sortProductTable($(this).val());
             });
-
             $('#productSearch').on('keydown', function (e) {
                 if (e.key !== 'Enter')
                     return;
                 e.preventDefault();
-
                 var firstVisible = $('#productTable tbody tr.product-row:visible').first();
                 if (!firstVisible.length)
                     return;
-
                 var cb = firstVisible.find('.product-check');
                 var nowChecked = !cb.prop('checked');
                 cb.prop('checked', nowChecked);
                 firstVisible.toggleClass('product-row-selected', nowChecked);
                 updateSelectedCount();
-
                 $(this).val('').trigger('input');
             });
-
             //all
             $('#checkAll').on('change', function () {
                 $('.product-check:visible').prop('checked', this.checked);
                 updateSelectedCount();
                 updateRowHighlight();
             });
-
             $(document).on('change', '.product-check', function () {
                 updateSelectedCount();
                 updateRowHighlight();
                 sortProductTable($('#productSearch').val());
             });
-
             function updateSelectedCount() {
                 var n = $('.product-check:checked').length;
                 $('#selectedCount').text(n === 0 ? 'Chưa chọn sản phẩm nào' : 'Đã chọn ' + n + ' sản phẩm');
@@ -409,7 +451,6 @@
             $('#btnToStep2').on('click', function () {
                 var date = $('#stockTakeDate').val();
                 var scope = $('#scopeType').val();
-
                 if (!date) {
                     alert('Vui lòng chọn ngày kiểm kê.');
                     return;
@@ -418,10 +459,26 @@
                 var products = [];
                 if (scope === 'ALL') {
                     products = ALL_PRODUCTS;
+                } else if (scope === 'CATEGORY') {
+                    var catId = parseInt($('#categorySelect').val()) || 0;
+                    if (!catId) {
+                        alert('Vui lòng chọn danh mục');
+                        return;
+                    }
+                    products = ALL_PRODUCTS.filter(function (p) {
+                        return p.categoryId === catId;
+                    });
+                    if (products.length === 0) {
+                        alert('Danh mục này không có sản phẩm nào');
+                        return;
+                    }
+                    $('#f_scopeValue').val(catId);
                 } else {
                     $('.product-check:checked').each(function () {
                         var pid = parseInt(($(this)).val());
-                        var found = ALL_PRODUCTS.find(p => p.id === pid);
+                        var found = ALL_PRODUCTS.find(function (p) {
+                            return p.id === pid;
+                        });
                         if (found)
                             products.push(found);
                     });
@@ -433,25 +490,22 @@
 
                 $('#f_stNumber').val($('#stNumber').val());
                 $('#f_stockTakeDate').val(date);
-                $('#f_scopeType').val(scope === 'ALL' ? 'ALL' : 'SELECTED');
+                $('#f_scopeType').val(scope);
                 $('#f_notes').val($('#st1Notes').val());
                 $('#hdr_stNumber').text($('#stNumber').val());
                 $('#hdr_date').text(date);
-
                 buildCountTable(products);
                 showStep(2);
             });
-
             function buildCountTable(products) {
                 var tbody = $('#countTableBody');
                 tbody.empty();
-
                 products.forEach(function (p, idx) {
 
 
-                    var actVal    = (savedActQtys[p.id] !== undefined) ? savedActQtys[p.id] : p.stock;
+                    var actVal = (savedActQtys[p.id] !== undefined) ? savedActQtys[p.id] : p.stock;
                     var savedReason = savedReasons[p.id] || '';
-                    var savedNote   = savedNotes[p.id]   || '';
+                    var savedNote = savedNotes[p.id] || '';
                     var diff = actVal - p.stock;
                     var varianceHtml = diff === 0 ? '<span class="text-muted">0</span>' : diff > 0
                             ? '<span class="variance-surplus">+' + diff + '</span>'
@@ -488,7 +542,6 @@
                             '</tr>';
                     tbody.append(row);
                 });
-
                 //bind
                 tbody.off('input change').on('input', '.actual-qty', function () {
                     var idx = $(this).data('idx');
@@ -497,11 +550,11 @@
                     var actQty = parseInt($(this).val()) || 0;
                     var diff = actQty - sysQty;
                     var cell = $('#var_' + idx);
-
                     if (diff === 0) {
                         cell.html('<span class="text-muted">0</span>');
                         $('#reason_' + idx).prop('disabled', true).val('');
-                        if (pid) savedReasons[pid] = '';
+                        if (pid)
+                            savedReasons[pid] = '';
                     } else if (diff > 0) {
                         cell.html('<span class="variance-surplus">+' + diff + '</span>');
                         $('#reason_' + idx).prop('disabled', false);
@@ -510,15 +563,17 @@
                         $('#reason_' + idx).prop('disabled', false);
                     }
                     $(this).closest('tr').find('.act-hidden').val(actQty);
-                    if (pid) savedActQtys[pid] = actQty;
+                    if (pid)
+                        savedActQtys[pid] = actQty;
                 }).on('change', '.reason-select', function () {
                     var pid = $(this).data('pid');
-                    if (pid) savedReasons[pid] = $(this).val();
+                    if (pid)
+                        savedReasons[pid] = $(this).val();
                 }).on('input', '.note-input', function () {
                     var pid = $(this).data('pid');
-                    if (pid) savedNotes[pid] = $(this).val();
+                    if (pid)
+                        savedNotes[pid] = $(this).val();
                 });
-
                 $('#st-form').off('submit').on('submit', function () {
                     $('#countTableBody tr').each(function () {
                         var idx = $(this).find('.actual-qty').data('idx');
@@ -526,19 +581,16 @@
                         $(this).find('.note-hidden').val($('#dnote_' + idx).val());
                     });
                 });
-
             }
 
             $('#btnBack').on('click', function () {
                 showStep(1);
             });
-
             // Step 2 live search
             $(document).on('input', '#countSearch', function () {
                 var kw = $(this).val().toLowerCase().trim();
                 var tbody = $('#countTableBody');
                 var matched = [], unmatched = [];
-
                 tbody.find('tr').each(function () {
                     var sku = $(this).find('td:eq(1)').text().toLowerCase();
                     var name = $(this).find('td:eq(2)').text().toLowerCase();
@@ -548,7 +600,6 @@
                         unmatched.push(this);
                     }
                 });
-
                 matched.forEach(function (row) {
                     tbody.append(row);
                     $(row).show();

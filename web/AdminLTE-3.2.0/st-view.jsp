@@ -114,6 +114,7 @@
                                             <div class="col-sm-7">
                                                 <c:choose>
                                                     <c:when test="${st.scopeType == 'ALL'}">Toàn bộ</c:when>
+                                                    <c:when test="${st.scopeType=='CATEGORY'}">Danh mục: ${scopeValue}</c:when>
                                                     <c:otherwise>Chọn lọc</c:otherwise>
                                                 </c:choose>
                                             </div>

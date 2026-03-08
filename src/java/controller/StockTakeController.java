@@ -4,7 +4,9 @@
  */
 package controller;
 
+import DAO.CategoryDAO;
 import DAO.StockTakeDAO;
+import entity.Category;
 import entity.Product;
 import entity.StockTake;
 import entity.StockTakeDetail;
@@ -135,7 +137,8 @@ public class StockTakeController extends HttpServlet {
             response.sendRedirect(request.getContextPath() + "/stocktake?action=list");
             return;
         }
-
+        Category category = new CategoryDAO().getCategoryByID(Integer.parseInt(st.getScopeValue()));
+        request.setAttribute("scopeValue",category.getCategoryName());
         request.setAttribute("st", st);
         resetSessionMsg(request);
         request.getRequestDispatcher("/AdminLTE-3.2.0/st-view.jsp").forward(request, response);
@@ -148,6 +151,7 @@ public class StockTakeController extends HttpServlet {
         String today = LocalDate.now().toString();
 
         request.setAttribute("productList", productList);
+        request.setAttribute("categoryList", new CategoryDAO().getAllCategories());
         request.setAttribute("stNumber", stNumber);
         request.setAttribute("today", today);
 
@@ -204,6 +208,7 @@ public class StockTakeController extends HttpServlet {
 
         StockTake st = new StockTake(stNumber, date, createdBy);
         st.setScopeType(scope != null ? scope : StockTake.SCOPE_ALL);
+        st.setScopeValue(request.getParameter("scopeValue"));
         st.setNotes(notes);
 
         String[] pids = request.getParameterValues("pid[]");
@@ -236,13 +241,12 @@ public class StockTakeController extends HttpServlet {
         }
         st.recalculateSummary();
 
-//        String lockNumber = stDAO.getActiveLockSTNumber();
-//        if (lockNumber != null) {
-//            request.getSession().setAttribute("msg", "Không thể tạo phiếu kiểm kho mới. Phiếu " + lockNumber + " đang hoạt động.");
-//            response.sendRedirect(request.getContextPath() + "/stocktake?action=list");
-//            return;
-//        }
-
+        String lockNumber = stDAO.getActiveLockSTNumber();
+        if (lockNumber != null) {
+            request.getSession().setAttribute("msg", "Không thể tạo phiếu kiểm kho mới. Phiếu " + lockNumber + " đang hoạt động.");
+            response.sendRedirect(request.getContextPath() + "/stocktake?action=list");
+            return;
+        }
         boolean ok = stDAO.createSTWithDetails(st);
         if (ok) {
             request.getSession().setAttribute("msg", "success_save");

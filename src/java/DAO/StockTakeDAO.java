@@ -4,6 +4,7 @@
  */
 package DAO;
 
+import entity.Category;
 import entity.Product;
 import entity.StockTake;
 import entity.StockTakeDetail;
@@ -151,7 +152,7 @@ public class StockTakeDAO extends DBContext {
     public List<Product> getAllActiveProducts() {
         List<Product> list = new ArrayList<>();
         String sql = """
-                select ProductID, ProductName, SKU, Stock, CostPrice
+                select ProductID, ProductName, SKU, Stock, CostPrice, CategoryID
                 from Products
                 where  IsActive = 1
                 ORDER BY ProductName
@@ -164,6 +165,7 @@ public class StockTakeDAO extends DBContext {
                 p.setSku(rs.getString("SKU"));
                 p.setStock(rs.getInt("Stock"));
                 p.setCostPrice(rs.getDouble("CostPrice"));
+                p.setCategoryId(rs.getInt("CategoryID"));
                 list.add(p);
             }
         } catch (Exception e) {
