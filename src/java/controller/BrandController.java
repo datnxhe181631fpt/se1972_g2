@@ -23,12 +23,17 @@ public class BrandController extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        // Check authentication and authorization
+        if (!checkManagerAccess(request, response)) {
+            return;
+        }
+
         String action = request.getParameter("action");
-        
+
         if (action == null) {
             action = "list";
         }
-        
+
         switch (action) {
             case "list":
                 listBrands(request, response);
@@ -54,9 +59,14 @@ public class BrandController extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        // Check authentication and authorization
+        if (!checkManagerAccess(request, response)) {
+            return;
+        }
+
         request.setCharacterEncoding("UTF-8");
         String action = request.getParameter("action");
-        
+
         if ("add".equals(action)) {
             addBrand(request, response);
         } else if ("edit".equals(action)) {
@@ -254,4 +264,28 @@ public class BrandController extends HttpServlet {
             response.sendRedirect(request.getContextPath() + "/admin/brands?msg=toggle_error");
         }
     }
+
+
+    private boolean checkManagerAccess(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        jakarta.servlet.http.HttpSession session = request.getSession(false);
+
+        // Check if user is logged in
+        if (session == null || session.getAttribute("employee") == null) {
+            response.sendRedirect(request.getContextPath() + "/login");
+            return false;
+        }
+
+        // Check if user has manager role (roleId = 2)
+        Integer employeeRoleId = (Integer) session.getAttribute("employeeRoleId");
+        if (employeeRoleId == null || employeeRoleId != 2) {
+            // Logout user if not manager
+            session.invalidate();
+            response.sendRedirect(request.getContextPath() + "/login?error=access_denied");
+            return false;
+        }
+
+        return true;
+    }
+
 }

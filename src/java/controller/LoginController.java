@@ -42,7 +42,7 @@ public class LoginController extends HttpServlet {
             HttpSession session = request.getSession(false);
             if (session != null && session.getAttribute("employee") != null) {
                 // Already logged in, redirect to dashboard
-                response.sendRedirect(request.getContextPath() + "/admin/brands");
+                response.sendRedirect(request.getContextPath() + "/admin/dashboard");
             } else {
                 request.getRequestDispatcher("/login.jsp").forward(request, response);
             }
@@ -80,7 +80,8 @@ public class LoginController extends HttpServlet {
             session.setAttribute("employee", employee);
             session.setAttribute("employeeId", employee.getEmployeeId());
             session.setAttribute("employeeName", employee.getFullName());
-            session.setAttribute("employeeRole", employee.getRole().getRoleName());
+            session.setAttribute("employeeRoleId", employee.getRole().getRoleId());
+            session.setAttribute("employeeRoleName", employee.getRole().getRoleName());
             
             // Set session timeout (30 minutes)
             session.setMaxInactiveInterval(30 * 60);
@@ -97,7 +98,8 @@ public class LoginController extends HttpServlet {
             if (redirectUrl != null && !redirectUrl.isEmpty()) {
                 response.sendRedirect(redirectUrl);
             } else {
-                response.sendRedirect(request.getContextPath() + "/admin/brands");
+                // Redirect to dashboard for all roles
+                response.sendRedirect(request.getContextPath() + "/admin/dashboard");
             }
         } else {
             // Login failed

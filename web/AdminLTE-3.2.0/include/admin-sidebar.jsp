@@ -5,10 +5,11 @@
 --%>
 
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <!-- Main Sidebar Container -->
 <aside class="main-sidebar sidebar-dark-primary elevation-4">
     <!-- Brand Logo -->
-    <a href="${pageContext.request.contextPath}/dashboard" class="brand-link">
+    <a href="${pageContext.request.contextPath}/admin/dashboard" class="brand-link">
         <img src="${pageContext.request.contextPath}/AdminLTE-3.2.0/dist/img/AdminLTELogo.png" 
              alt="Logo" class="brand-image img-dot-circle elevation-3" style="opacity: .8">
         <span class="brand-text font-weight-light">Bookstore POS</span>
@@ -23,7 +24,8 @@
                      class="img-dot-circle elevation-2" alt="User Image">
             </div>
             <div class="info">
-                <a href="#" class="d-block">Admin User</a>
+                <a href="#" class="d-block">${sessionScope.employeeName != null ? sessionScope.employeeName : 'User'}</a>
+                <small class="text-muted">${sessionScope.employeeRoleName != null ? sessionScope.employeeRoleName : ''}</small>
             </div>
         </div>
 
@@ -45,13 +47,13 @@
 
                 <!-- Dashboard -->
                 <li class="nav-item">
-                    <a href="${pageContext.request.contextPath}/dashboard" class="nav-link">
+                    <a href="${pageContext.request.contextPath}/admin/dashboard" class="nav-link">
                         <i class="nav-icon fas fa-tachometer-alt"></i>
                         <p>Dashboard</p>
                     </a>
                 </li>
 
-                <!-- POS - Bán hàng -->
+                <!-- POS - Bán hàng (All roles) -->
                 <li class="nav-item">
                     <a href="${pageContext.request.contextPath}/pos" class="nav-link">
                         <i class="nav-icon fas fa-cash-register"></i>
@@ -59,7 +61,8 @@
                     </a>
                 </li>
 
-                <!-- Quản lý sản phẩm -->
+                <!-- Quản lý sản phẩm (Manager only - roleId = 2) -->
+                <c:if test="${sessionScope.employeeRoleId == 2}">
                 <li class="nav-item">
                     <a href="#" class="nav-link">
                         <i class="nav-icon fas fa-book"></i>
@@ -70,27 +73,29 @@
                     </a>
                     <ul class="nav nav-treeview">
                         <li class="nav-item">
-                            <a href="${pageContext.request.contextPath}/admin/categories" class="nav-link">
+                            <a href="${pageContext.request.contextPath}/admin/products" class="nav-link">
                                 <i class="far fa-circle nav-icon"></i>
                                 <p>Danh sách sản phẩm</p>
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="categories" class="nav-link">
+                            <a href="${pageContext.request.contextPath}/admin/categories" class="nav-link">
                                 <i class="far fa-dot-circle nav-icon"></i>
                                 <p>Danh mục</p>
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="brands" class="nav-link">
+                            <a href="${pageContext.request.contextPath}/admin/brands" class="nav-link">
                                 <i class="far fa-dot-circle nav-icon"></i>
                                 <p>Thương hiệu</p>
                             </a>
                         </li>
                     </ul>
                 </li>
+                </c:if>
 
-                <!-- Quản lý kho -->
+                <!-- Quản lý kho (Manager and Staff - roleId = 2 or 3) -->
+                <c:if test="${sessionScope.employeeRoleId == 2 || sessionScope.employeeRoleId == 3}">
                 <li class="nav-item">
                     <a href="#" class="nav-link">
                         <i class="nav-icon fas fa-warehouse"></i>
@@ -101,7 +106,7 @@
                     </a>
                     <ul class="nav nav-treeview">
                         <li class="nav-item">
-                            <a href="${pageContext.request.contextPath}/admin/employees" class="nav-link">
+                            <a href="${pageContext.request.contextPath}/admin/inventory" class="nav-link">
                                 <i class="far fa-circle nav-icon"></i>
                                 <p>Tồn kho</p>
                             </a>
@@ -126,8 +131,10 @@
                         </li>
                     </ul>
                 </li>
+                </c:if>
 
-                <!-- Đơn mua hàng -->
+                <!-- Đơn mua hàng (Manager only - roleId = 2) -->
+                <c:if test="${sessionScope.employeeRoleId == 2}">
                 <li class="nav-item">
                     <a href="#" class="nav-link">
                         <i class="nav-icon fas fa-shopping-cart"></i>
@@ -151,8 +158,9 @@
                         </li>
                     </ul>
                 </li>
+                </c:if>
 
-                <!-- Hóa đơn bán hàng -->
+                <!-- Hóa đơn bán hàng (All roles) -->
                 <li class="nav-item">
                     <a href="#" class="nav-link">
                         <i class="nav-icon fas fa-file-invoice"></i>
@@ -177,7 +185,8 @@
                     </ul>
                 </li>
 
-                <!-- Khách hàng -->
+                <!-- Khách hàng (Manager and Staff - roleId = 2 or 3) -->
+                <c:if test="${sessionScope.employeeRoleId == 2 || sessionScope.employeeRoleId == 3}">
                 <li class="nav-item">
                     <a href="#" class="nav-link">
                         <i class="nav-icon fas fa-users"></i>
@@ -199,16 +208,20 @@
                                 <p>Điểm tích lũy</p>
                             </a>
                         </li>
+                        <c:if test="${sessionScope.employeeRoleId == 2}">
                         <li class="nav-item">
                             <a href="admin/customer-tiers" class="nav-link">
                                 <i class="far fa-dot-circle nav-icon"></i>
                                 <p>Hạng thành viên</p>
                             </a>
                         </li>
+                        </c:if>
                     </ul>
                 </li>
+                </c:if>
 
-                <!-- Khuyến mãi -->
+                <!-- Khuyến mãi (Manager only - roleId = 2) -->
+                <c:if test="${sessionScope.employeeRoleId == 2}">
                 <li class="nav-item">
                     <a href="#" class="nav-link">
                         <i class="nav-icon fas fa-tags"></i>
@@ -232,8 +245,10 @@
                         </li>
                     </ul>
                 </li>
+                </c:if>
 
-                <!-- Nhân viên -->
+                <!-- Nhân viên (Manager and Admin - roleId = 1 or 2) -->
+                <c:if test="${sessionScope.employeeRoleId == 1 || sessionScope.employeeRoleId == 2}">
                 <li class="nav-item">
                     <a href="#" class="nav-link">
                         <i class="nav-icon fas fa-user-tie"></i>
@@ -263,12 +278,14 @@
                                 <p>Ca làm việc</p>
                             </a>
                         </li>
+                        <c:if test="${sessionScope.employeeRoleId == 2}">
                         <li class="nav-item">
                             <a href="#" class="nav-link">
                                 <i class="far fa-dot-circle nav-icon"></i>
                                 <p>Phân quyền</p>
                             </a>
                         </li>
+                        </c:if>
                         <li class="nav-item">
                             <a href="${pageContext.request.contextPath}/staff/swap"
                                class="nav-link ${pageContext.request.requestURI.contains('/staff/swap') ? 'active' : ''}">
@@ -278,8 +295,10 @@
                         </li>
                     </ul>
                 </li>
+                </c:if>
 
-                <!-- Báo cáo -->
+                <!-- Báo cáo (Manager only - roleId = 2) -->
+                <c:if test="${sessionScope.employeeRoleId == 2}">
                 <li class="nav-item">
                     <a href="#" class="nav-link">
                         <i class="nav-icon fas fa-chart-line"></i>
@@ -309,8 +328,9 @@
                         </li>
                     </ul>
                 </li>
+                </c:if>
 
-                <!-- Thông báo -->
+                <!-- Thông báo (All roles) -->
                 <li class="nav-item">
                     <a href="#" class="nav-link">
                         <i class="nav-icon fas fa-bell"></i>
@@ -321,15 +341,17 @@
                     </a>
                 </li>
 
-                <!-- Cài đặt -->
+                <!-- Cài đặt (Manager and Admin only - roleId = 1 or 2) -->
+                <c:if test="${sessionScope.employeeRoleId == 1 || sessionScope.employeeRoleId == 2}">
                 <li class="nav-item">
                     <a href="#" class="nav-link">
                         <i class="nav-icon fas fa-cog"></i>
                         <p>Cài đặt hệ thống</p>
                     </a>
                 </li>
+                </c:if>
 
-                <!-- Đăng xuất -->
+                <!-- Đăng xuất (All roles) -->
                 <li class="nav-item">
                     <a href="${pageContext.request.contextPath}/logout" class="nav-link" 
                        onclick="return confirm('Bạn có chắc chắn muốn đăng xuất?')">
