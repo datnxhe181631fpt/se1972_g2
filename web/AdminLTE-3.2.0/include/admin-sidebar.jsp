@@ -331,7 +331,8 @@
 
                 <!-- Đăng xuất -->
                 <li class="nav-item">
-                    <a href="#" class="nav-link">
+                    <a href="${pageContext.request.contextPath}/logout" class="nav-link" 
+                       onclick="return confirm('Bạn có chắc chắn muốn đăng xuất?')">
                         <i class="nav-icon fas fa-sign-out-alt"></i>
                         <p>Đăng xuất</p>
                     </a>
