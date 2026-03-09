@@ -55,7 +55,10 @@
                                     <c:when test="${msg == 'success_recount'}">Yêu cầu kiểm kê lại thành công!</c:when>
                                     <c:when test="${msg == 'fail_notfound'}">Không tìm thấy phiếu kiểm kê.</c:when>
                                     <c:when test="${msg == 'fail_self_approve'}">Người tạo không được tự duyệt!</c:when>
-                                    <c:otherwise>Có lỗi xảy ra. Vui lòng thử lại!</c:otherwise>
+                                    <c:when test="${msg == 'fail_date'}">Ngày kiểm kê không hợp lệ. Chỉ được tạo phiếu vào ngày hôm nay.</c:when>
+                                    <c:when test="${msg == 'fail_invalid_qty'}">Số lượng thực tế không hợp lệ (phải >= 0).</c:when>
+                                    <c:when test="${msg == 'fail_save'}">Lưu phiếu kiểm kê thất bại. Vui lòng thử lại.</c:when>
+                                    <c:otherwise>${msg}</c:otherwise>
                                 </c:choose>
                             </div>
                         </c:if>
@@ -142,51 +145,51 @@
                                                         </tr>
                                                     </thead>
                                                     <tbody>
-                                                    <c:forEach var="item" items="${lists}">
-                                                        <tr>
-                                                            <td><strong>${item.stockTakeNumber}</strong></td>
-                                                            <td>${item.stockTakeDate}</td>
-                                                            <td>${item.createdByName}</td>
-                                                            <td>${item.totalItems}</td>
-                                                            <td>
-                                                        <c:choose>
-                                                            <c:when test="${item.totalVarianceQty < 0}">
-                                                                <span class="text-danger font-weight-bold">${item.totalVarianceQty}</span>
-                                                            </c:when>
-                                                            <c:when test="${item.totalVarianceQty > 0}">
-                                                                <span class="text-success font-weight-bold">+${item.totalVarianceQty}</span>
-                                                            </c:when>
-                                                            <c:otherwise>
-                                                                <span class="text-muted">0</span>
-                                                            </c:otherwise>
-                                                        </c:choose>
-                                                        </td>
-                                                        <td>
-                                                        <c:choose>
-                                                            <c:when test="${item.status=='IN_PROGRESS'}">
-                                                                <span class="badge badge-warning">Đang thực hiện</span>
-                                                            </c:when>
+                                                        <c:forEach var="item" items="${lists}">
+                                                            <tr>
+                                                                <td><strong>${item.stockTakeNumber}</strong></td>
+                                                                <td>${item.stockTakeDate}</td>
+                                                                <td>${item.createdByName}</td>
+                                                                <td>${item.totalItems}</td>
+                                                                <td>
+                                                                    <c:choose>
+                                                                        <c:when test="${item.totalVarianceQty < 0}">
+                                                                            <span class="text-danger font-weight-bold">${item.totalVarianceQty}</span>
+                                                                        </c:when>
+                                                                        <c:when test="${item.totalVarianceQty > 0}">
+                                                                            <span class="text-success font-weight-bold">+${item.totalVarianceQty}</span>
+                                                                        </c:when>
+                                                                        <c:otherwise>
+                                                                            <span class="text-muted">0</span>
+                                                                        </c:otherwise>
+                                                                    </c:choose>
+                                                                </td>
+                                                                <td>
+                                                                    <c:choose>
+                                                                        <c:when test="${item.status=='IN_PROGRESS'}">
+                                                                            <span class="badge badge-warning">Đang thực hiện</span>
+                                                                        </c:when>
 
-                                                            <c:when test="${item.status=='PENDING_APPROVAL'}">
-                                                                <span class="badge badge-info">Chờ duyệt</span>
-                                                            </c:when>
+                                                                        <c:when test="${item.status=='PENDING_APPROVAL'}">
+                                                                            <span class="badge badge-info">Chờ duyệt</span>
+                                                                        </c:when>
 
-                                                            <c:when test="${item.status=='COMPLETED'}">
-                                                                <span class="badge badge-success">Đã hoàn thành</span>
-                                                            </c:when>
-                                                            <c:otherwise>
-                                                                <span class="badge badge-secondary">${item.status}</span>
-                                                            </c:otherwise>  
-                                                        </c:choose>
-                                                        </td>
-                                                        <td>
-                                                            <a href="${pageContext.request.contextPath}/stocktake?action=view&number=${item.stockTakeNumber}"
-                                                               class="btn btn-info btn-sm">
-                                                                <i class="fas fa-eye"></i> Xem
-                                                            </a>
-                                                        </td>
-                                                        </tr>
-                                                    </c:forEach>
+                                                                        <c:when test="${item.status=='COMPLETED'}">
+                                                                            <span class="badge badge-success">Đã hoàn thành</span>
+                                                                        </c:when>
+                                                                        <c:otherwise>
+                                                                            <span class="badge badge-secondary">${item.status}</span>
+                                                                        </c:otherwise>  
+                                                                    </c:choose>
+                                                                </td>
+                                                                <td>
+                                                                    <a href="${pageContext.request.contextPath}/stocktake?action=view&number=${item.stockTakeNumber}"
+                                                                       class="btn btn-info btn-sm">
+                                                                        <i class="fas fa-eye"></i> Xem
+                                                                    </a>
+                                                                </td>
+                                                            </tr>
+                                                        </c:forEach>
                                                     </tbody>
                                                 </table>
                                             </c:when>

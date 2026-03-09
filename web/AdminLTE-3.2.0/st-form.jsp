@@ -129,8 +129,11 @@
                                             <input type="text" id="stNumber" class="form-control" readonly value="${stNumber}">
                                         </div>
                                         <div class="col-md-4 form-group">
-                                            <label>Ngày kiểm kê <span class="text-danger">*</span></label>
-                                            <input type="date" id="stockTakeDate" class="form-control" value="${today}" required>
+                                            <label>Ngày kiểm kê</label>
+                                            <input type="hidden" id="stockTakeDate" value="${today}">
+                                            <div class="form-control-plaintext font-weight-bold">
+                                                <i class="fas fa-calendar-day text-primary mr-1"></i>${today}
+                                            </div>
                                         </div>
                                         <div class="col-md-4 form-group">
                                             <label>Phạm vi kiểm kê</label>
@@ -169,7 +172,7 @@
                                 </div>
                             </div>
 
-                          <!-- product selection (only for selected scope) -->
+                            <!-- product selection (only for selected scope) -->
                             <div class="card" id="product-select-card" style="display:none">
                                 <div class="card-header">
                                     <h3 class="card-title"><i class="fas fa-search"></i> Tìm và chọn sản phẩm cần kiểm</h3>   
@@ -451,11 +454,15 @@
             $('#btnToStep2').on('click', function () {
                 var date = $('#stockTakeDate').val();
                 var scope = $('#scopeType').val();
+                var todayVal = '${today}';
                 if (!date) {
                     alert('Vui lòng chọn ngày kiểm kê.');
                     return;
                 }
-
+                if (date !== todayVal) {
+                    alert('Ngày kiểm kê phải là ngày hôm nay (' + todayVal + '). Không được chọn ngày quá khứ hoặc tương lai.');
+                    return;
+                }
                 var products = [];
                 if (scope === 'ALL') {
                     products = ALL_PRODUCTS;
@@ -533,8 +540,6 @@
                             '</td>' +
                             '<td style="display:none">' +
                             '<input type="hidden" name="pid[]" value="' + p.id + '">' +
-                            '<input type="hidden" name="sysQty[]" value="' + p.stock + '">' +
-                            '<input type="hidden" name="cost[]" value="' + p.cost + '">' +
                             '<input type="hidden" class="act-hidden" name="actQty[]" value="' + actVal + '">' +
                             '<input type="hidden" class="reason-hidden" name="reason[]" value="">' +
                             '<input type="hidden" class="note-hidden" name="detailNotes[]" value="">' +
@@ -574,12 +579,28 @@
                     if (pid)
                         savedNotes[pid] = $(this).val();
                 });
-                $('#st-form').off('submit').on('submit', function () {
+                $('#st-form').off('submit').on('submit', function (e) {
+                    var errors = [];
                     $('#countTableBody tr').each(function () {
-                        var idx = $(this).find('.actual-qty').data('idx');
-                        $(this).find('.reason-hidden').val($('#reason_' + idx).val());
-                        $(this).find('.note-hidden').val($('#dnote_' + idx).val());
+                        var $row = $(this);
+                        var idx = $row.find('.actual-qty').data('idx');
+                        var actQty = parseInt($row.find('.actual-qty').val());
+                        var sysQty = parseInt($row.find('.actual-qty').data('sys'));
+                        var name = $row.find('td:eq(2)').text().trim();
+                        if (isNaN(actQty) || actQty < 0) {
+                            errors.push('Số lượng thực tế của "' + name + '" phải >= 0.');
+                        }
+                        var diff = actQty - sysQty;
+                        if (!isNaN(diff) && diff !== 0 && !$('#reason_' + idx).val()) {
+                            errors.push('Vui lòng chọn lý do cho sản phẩm có chênh lệch: "' + name + '".');
+                        }
+                        $row.find('.reason-hidden').val($('#reason_' + idx).val());
+                        $row.find('.note-hidden').val($('#dnote_' + idx).val());
                     });
+                    if (errors.length > 0) {
+                        e.preventDefault();
+                        alert(errors.join('\n'));
+                    }
                 });
             }
 

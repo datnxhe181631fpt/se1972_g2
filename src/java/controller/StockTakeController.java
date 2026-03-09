@@ -20,7 +20,9 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  *
@@ -137,8 +139,16 @@ public class StockTakeController extends HttpServlet {
             response.sendRedirect(request.getContextPath() + "/stocktake?action=list");
             return;
         }
-        Category category = new CategoryDAO().getCategoryByID(Integer.parseInt(st.getScopeValue()));
-        request.setAttribute("scopeValue",category.getCategoryName());
+        String scopeValue = st.getScopeValue();
+        if ("CATEGORY".equals(st.getScopeType()) && scopeValue != null && !scopeValue.isBlank()) {
+            try {
+                Category category = new CategoryDAO().getCategoryByID(Integer.parseInt(scopeValue));
+                if (category != null) {
+                    request.setAttribute("scopeValue", category.getCategoryName());
+                }
+            } catch (NumberFormatException ignored) {
+            }
+        }
         request.setAttribute("st", st);
         resetSessionMsg(request);
         request.getRequestDispatcher("/AdminLTE-3.2.0/st-view.jsp").forward(request, response);
@@ -202,8 +212,16 @@ public class StockTakeController extends HttpServlet {
         String notes = request.getParameter("notes");
 
         LocalDate date = parseLocalDate(dateStr);
-        if (date == null) {
-            date = LocalDate.now();
+        if (date == null || !date.equals(LocalDate.now())) {
+            request.getSession().setAttribute("msg", "fail_date");
+            response.sendRedirect(request.getContextPath() + "/stocktake?action=list");
+            return;
+        }
+
+        List<Product> allProducts = stDAO.getAllActiveProducts();
+        Map<Integer, Product> productMap = new HashMap<>();
+        for (Product p : allProducts) {
+            productMap.put(p.getId(), p);
         }
 
         StockTake st = new StockTake(stNumber, date, createdBy);
@@ -212,7 +230,6 @@ public class StockTakeController extends HttpServlet {
         st.setNotes(notes);
 
         String[] pids = request.getParameterValues("pid[]");
-        String[] sysQtys = request.getParameterValues("sysQty[]");
         String[] actQtys = request.getParameterValues("actQty[]");
         String[] reasons = request.getParameterValues("reason[]");
         String[] detNotes = request.getParameterValues("detailNotes[]");
@@ -220,13 +237,24 @@ public class StockTakeController extends HttpServlet {
         if (pids != null) {
             for (int i = 0; i < pids.length; i++) {
                 int productId = parseIntSafe(pids[i]);
-                int sysQty = parseIntSafe(sysQtys[i]);
-                int actQty = parseIntSafe(actQtys[i]);
-                String reason = reasons[i];
-                String detNote = detNotes[i];
+                Product p = productMap.get(productId);
+                if (p == null) {
+                    continue;
+                }
 
-                String[] costs = request.getParameterValues("cost[]");
-                BigDecimal unitCost = parseBigDecimalSafe(costs[i]);
+                int sysQty = p.getStock();
+                int actQty = parseIntSafe(actQtys[i]);
+
+                if (actQty < 0) {
+                    request.getSession().setAttribute("msg", "fail_invalid_qty");
+                    response.sendRedirect(request.getContextPath() + "/stocktake?action=list");
+                    return;
+                }
+
+                BigDecimal unitCost = (p.getCostPrice() != null) ? BigDecimal.valueOf(p.getCostPrice()) : BigDecimal.ZERO;
+
+                String reason = (reasons != null && i < reasons.length) ? reasons[i] : null;
+                String detNote = (detNotes != null && i < detNotes.length) ? detNotes[i] : null;
 
                 StockTakeDetail d = new StockTakeDetail(productId, sysQty, unitCost);
                 d.setActualQuantity(actQty);
