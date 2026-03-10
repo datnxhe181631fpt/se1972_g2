@@ -67,7 +67,7 @@ public class StockDisposalDAO extends DBContext {
         return 0;
     }
 
-    public StockDisposal getSDByNumber(String number){
+    public StockDisposal getSDByNumber(String number) {
         String sql = """
                 select sd.*, e1.FullName AS CreatedByName,
                      e2.FullName AS ApprovedByName,
@@ -78,8 +78,7 @@ public class StockDisposalDAO extends DBContext {
                 left join Employees e3 ON sd.DisposedBy = e3.EmployeeID
                 where sd.DisposalNumber = ?
                      """;
-         try (Connection con = getConnection();
-             PreparedStatement stm = con.prepareStatement(sql)) {
+        try (Connection con = getConnection(); PreparedStatement stm = con.prepareStatement(sql)) {
             stm.setString(1, number);
             try (ResultSet rs = stm.executeQuery()) {
                 if (rs.next()) {
@@ -93,8 +92,8 @@ public class StockDisposalDAO extends DBContext {
         }
         return null;
     }
-    
-    public StockDisposal getSDById(long id){
+
+    public StockDisposal getSDById(long id) {
         String sql = """
                      select sd.*, e1.FullName AS CreatedByName,
                                   e2.FullName AS ApprovedByName,
@@ -105,8 +104,7 @@ public class StockDisposalDAO extends DBContext {
                      left join Employees e3 ON sd.DisposedBy = e3.EmployeeID
                      where sd.DisposalID = ?
                      """;
-    try (Connection con = getConnection();
-             PreparedStatement stm = con.prepareStatement(sql)) {
+        try (Connection con = getConnection(); PreparedStatement stm = con.prepareStatement(sql)) {
             stm.setLong(1, id);
             try (ResultSet rs = stm.executeQuery()) {
                 if (rs.next()) {
@@ -120,18 +118,17 @@ public class StockDisposalDAO extends DBContext {
         }
         return null;
     }
-    
-     public List<StockDisposalDetail> getSDDetailsById(long sdId) {
-          List<StockDisposalDetail> list = new ArrayList<>();
-           String sql = """
+
+    public List<StockDisposalDetail> getSDDetailsById(long sdId) {
+        List<StockDisposalDetail> list = new ArrayList<>();
+        String sql = """
                 select d.*, p.ProductName, p.SKU, p.Stock AS CurrentStock
                 from StockDisposalDetails d
                 join Products p ON d.ProductID = p.ProductID
                 where d.DisposalID = ?
                 ORDER BY p.ProductName
                 """;
-       try (Connection con = getConnection();
-             PreparedStatement stm = con.prepareStatement(sql)) {
+        try (Connection con = getConnection(); PreparedStatement stm = con.prepareStatement(sql)) {
             stm.setLong(1, sdId);
             try (ResultSet rs = stm.executeQuery()) {
                 while (rs.next()) {
@@ -143,7 +140,32 @@ public class StockDisposalDAO extends DBContext {
         }
         return list;
     }
-     
+
+    public String generateNextSDNumber() {
+        int currentYear = java.time.Year.now().getValue();
+        String sql = """
+                      select top 1 DisposalNumber
+                      from StockDisposals 
+                      where DisposalNumber like ? 
+                      order by DisposalNumber desc 
+                      """;
+        try (Connection con = getConnection(); PreparedStatement stm = con.prepareStatement(sql)) {
+            String yearPrefix = "ST-" + currentYear + '-';
+            stm.setString(1, yearPrefix + "%");
+            try (ResultSet rs = stm.executeQuery()) {
+                if (rs.next()) {
+                    String lastSDNumber = rs.getString("DisposalNumber");
+                    String numberPart = lastSDNumber.substring(lastSDNumber.lastIndexOf("-") + 1);
+                    int nextNumber = Integer.parseInt(numberPart) + 1;
+                    return String.format("ST-%d-%04d", currentYear, nextNumber);
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("ERR: generateNextSDNumber: " + e.getMessage());
+        }
+        return String.format("SD-%d-0001", currentYear);
+    }
+
     private void appendFilters(StringBuilder sql, String keyword, String status, String reason, LocalDate from, LocalDate to) {
         if (keyword != null && !keyword.trim().isEmpty()) {
             sql.append(" AND (sd.DisposalNumber LIKE ? OR sd.Notes LIKE ?)");
@@ -162,7 +184,7 @@ public class StockDisposalDAO extends DBContext {
         }
     }
 
-private int bindFilters(PreparedStatement stm, int idx, String keyword, String status,
+    private int bindFilters(PreparedStatement stm, int idx, String keyword, String status,
             String reason, LocalDate from, LocalDate to) throws SQLException {
         if (keyword != null && !keyword.trim().isEmpty()) {
             stm.setString(idx++, "%" + keyword + "%");
