@@ -67,6 +67,83 @@ public class StockDisposalDAO extends DBContext {
         return 0;
     }
 
+    public StockDisposal getSDByNumber(String number){
+        String sql = """
+                select sd.*, e1.FullName AS CreatedByName,
+                     e2.FullName AS ApprovedByName,
+                     e3.FullName AS DisposedByName,
+                from StockDisposals sd
+                left join Employees e1 ON sd.CreatedBy = e1.EmployeeID
+                left join Employees e2 ON sd.ApprovedBy = e2.EmployeeID
+                left join Employees e3 ON sd.DisposedBy = e3.EmployeeID
+                where sd.DisposalNumber = ?
+                     """;
+         try (Connection con = getConnection();
+             PreparedStatement stm = con.prepareStatement(sql)) {
+            stm.setString(1, number);
+            try (ResultSet rs = stm.executeQuery()) {
+                if (rs.next()) {
+                    StockDisposal sd = extractSDFromRS(rs);
+                    sd.setDetails(getSDDetailsById(sd.getId()));
+                    return sd;
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("ERR: getSDByNumber: " + e.getMessage());
+        }
+        return null;
+    }
+    
+    public StockDisposal getSDById(long id){
+        String sql = """
+                     select sd.*, e1.FullName AS CreatedByName,
+                                  e2.FullName AS ApprovedByName,
+                                  e3.FullName AS DisposedByName,
+                     from StockDisposals sd
+                     left join Employees e1 ON sd.CreatedBy = e1.EmployeeID
+                     left join Employees e2 ON sd.ApprovedBy = e2.EmployeeID
+                     left join Employees e3 ON sd.DisposedBy = e3.EmployeeID
+                     where sd.DisposalID = ?
+                     """;
+    try (Connection con = getConnection();
+             PreparedStatement stm = con.prepareStatement(sql)) {
+            stm.setLong(1, id);
+            try (ResultSet rs = stm.executeQuery()) {
+                if (rs.next()) {
+                    StockDisposal sd = extractSDFromRS(rs);
+                    sd.setDetails(getSDDetailsById(id));
+                    return sd;
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("ERR: getSDById: " + e.getMessage());
+        }
+        return null;
+    }
+    
+     public List<StockDisposalDetail> getSDDetailsById(long sdId) {
+          List<StockDisposalDetail> list = new ArrayList<>();
+           String sql = """
+                select d.*, p.ProductName, p.SKU, p.Stock AS CurrentStock
+                from StockDisposalDetails d
+                join Products p ON d.ProductID = p.ProductID
+                where d.DisposalID = ?
+                ORDER BY p.ProductName
+                """;
+       try (Connection con = getConnection();
+             PreparedStatement stm = con.prepareStatement(sql)) {
+            stm.setLong(1, sdId);
+            try (ResultSet rs = stm.executeQuery()) {
+                while (rs.next()) {
+                    list.add(extractSDDetailFromRS(rs));
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("ERR :getSDDetailsById: " + e.getMessage());
+        }
+        return list;
+    }
+     
     private void appendFilters(StringBuilder sql, String keyword, String status, String reason, LocalDate from, LocalDate to) {
         if (keyword != null && !keyword.trim().isEmpty()) {
             sql.append(" AND (sd.DisposalNumber LIKE ? OR sd.Notes LIKE ?)");
