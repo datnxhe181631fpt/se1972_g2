@@ -239,32 +239,141 @@ public class StockDisposalDAO extends DBContext {
                         set Status = 'APPROVED', ApprovedBy = ?, ApprovedAt = GETDATE()
                         where DisposalID = ? AND Status = 'PENDING_APPROVAL' AND CreatedBy <> ?
                      """;
-        try (Connection connection = getConnection(); 
-                PreparedStatement stm = connection.prepareStatement(sql)) {
+        try (Connection connection = getConnection(); PreparedStatement stm = connection.prepareStatement(sql)) {
             stm.setInt(1, approvedBy);
             stm.setLong(2, id);
             stm.setInt(3, approvedBy);
             return stm.executeUpdate() > 0;
         } catch (Exception e) {
-            System.out.println("ERR: approveDisposal: "+e.getMessage());
+            System.out.println("ERR: approveDisposal: " + e.getMessage());
         }
         return false;
     }
-    
-    public boolean rejectDisposal(long id,int rejectedBy, String reason){
+
+    public boolean rejectDisposal(long id, int rejectedBy, String reason) {
         String sql = """
                         update StockDisposals
                         set Status = 'REJECTED', ApprovedBy = ?, ApprovedAt = GETDATE(), RejectionReason = ?
                         where DisposalID = ? AND Status = 'PENDING_APPROVAL'
                      """;
-        try (Connection connection = getConnection(); 
-                PreparedStatement stm = connection.prepareStatement(sql)) {
+        try (Connection connection = getConnection(); PreparedStatement stm = connection.prepareStatement(sql)) {
             stm.setInt(1, rejectedBy);
             stm.setString(2, reason);
             stm.setLong(3, id);
             return stm.executeUpdate() > 0;
         } catch (Exception e) {
-            System.out.println("ERR: rejectDisposal: "+e.getMessage());
+            System.out.println("ERR: rejectDisposal: " + e.getMessage());
+        }
+        return false;
+    }
+
+    public boolean completeDisposal(long id, int disposedBy) {
+        String sqlGetNumber = "select DisposalNumber from StockDisposals where DisposalID = ?";
+        String sqlComplete = """
+                         update StockDisposals
+                         set Status = 'COMPLETED', PhysicDisposalConfirmed = 1,
+                         DisposedBy =?, DisposedAt = GETDATE()
+                         where DisposalID = ? AND Status = 'APPROVED'
+                         """;
+        String sqlGetDetails = """
+                           select ProductID, Quantity, UnitCost from StockDisposalDetails where DisposalID = ?
+                           """;
+        String sqlUpdateStock = """
+                            update Products
+                            set Stock = Stock - ? 
+                            OUTPUT deleted.Stock AS StockBefore, inserted.Stock AS StockAfter
+                            where ProductID = ? AND Stock >= ? 
+                            """;
+        String sqlInsertTx = """
+                         insert into InventoryTransactions
+                         (ProductID, TransactionType, ReferenceType, ReferenceID, ReferenceCode, 
+                         QuantityChange, StockBefore, StockAfter, UnitCost, Notes, CreatedBy)
+                          values (?, 'OUT', 'DISPOSAL', ?, ?, ?, ?, ?, ?, ?, ?)
+                         """;
+
+        String disposalNumber = null;
+        try (Connection con = getConnection(); PreparedStatement stm = con.prepareStatement(sqlGetNumber)) {
+            stm.setLong(1, id);
+            try (ResultSet rs = stm.executeQuery()) {
+                if (rs.next()) {
+                    disposalNumber = rs.getString(1);
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("ERR : completeDisposal (getNumber): " + e.getMessage());
+            return false;
+        }
+        if (disposalNumber == null) {
+            return false;
+        }
+
+        Connection con = getConnection();
+        try {
+            con.setAutoCommit(false);
+
+            //mark COMPLETED
+            try (PreparedStatement stm = con.prepareStatement(sqlComplete)) {
+                stm.setInt(1, disposedBy);
+                stm.setLong(2, id);
+                if (stm.executeUpdate() == 0) {
+                    con.rollback();
+                    return false;
+                }
+            }
+
+            //reduce stock + insert transaction
+            try (PreparedStatement stmGet = con.prepareStatement(sqlGetDetails)) {
+                stmGet.setLong(1, id);
+                try (ResultSet rs = stmGet.executeQuery()) {
+                    PreparedStatement stmStock = con.prepareStatement(sqlUpdateStock);
+                    PreparedStatement stmTx = con.prepareStatement(sqlInsertTx);
+
+                    while (rs.next()) {
+                        int productId = rs.getInt("ProductID");
+                        int qty = rs.getInt("Quantity");
+                        BigDecimal cost = rs.getBigDecimal("UnitCost");
+
+                        stmStock.setInt(1, qty);
+                        stmStock.setInt(2, productId);
+                        stmStock.setInt(3, qty);
+
+                        int stockBefore, stockAfter;
+                        try (ResultSet out = stmStock.executeQuery()) {
+                            if (!out.next()) {
+                                con.rollback();
+                                return false;
+                            }
+                            stockBefore = out.getInt("StockBefore");
+                            stockAfter = out.getInt("StockAfter");
+                        }
+
+                        stmTx.setInt(1, productId);
+                        stmTx.setLong(2, id);
+                        stmTx.setString(3, disposalNumber);
+                        stmTx.setInt(4, -qty);
+                        stmTx.setInt(5, stockBefore);
+                        stmTx.setInt(6, stockAfter);
+                        stmTx.setBigDecimal(7, cost);
+                        stmTx.setString(8, "Stock disposal: " + disposalNumber);
+                        stmTx.setInt(9, disposedBy);
+                        stmTx.addBatch();
+                    }
+                    stmTx.executeBatch();
+                }
+            }
+            con.commit();
+            return true;
+        } catch (Exception e) {
+            System.out.println("ERR: completeDisposal: " + e.getMessage());
+            try {
+                con.rollback();
+            } catch (Exception ex) {
+            }
+        } finally {
+            try {
+                con.setAutoCommit(true);
+            } catch (Exception ex) {
+            }
         }
         return false;
     }
