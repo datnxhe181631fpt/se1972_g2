@@ -233,6 +233,42 @@ public class StockDisposalDAO extends DBContext {
         return false;
     }
 
+    public boolean approveDisposal(long id, int approvedBy) {
+        String sql = """
+                        update StockDisposals
+                        set Status = 'APPROVED', ApprovedBy = ?, ApprovedAt = GETDATE()
+                        where DisposalID = ? AND Status = 'PENDING_APPROVAL' AND CreatedBy <> ?
+                     """;
+        try (Connection connection = getConnection(); 
+                PreparedStatement stm = connection.prepareStatement(sql)) {
+            stm.setInt(1, approvedBy);
+            stm.setLong(2, id);
+            stm.setInt(3, approvedBy);
+            return stm.executeUpdate() > 0;
+        } catch (Exception e) {
+            System.out.println("ERR: approveDisposal: "+e.getMessage());
+        }
+        return false;
+    }
+    
+    public boolean rejectDisposal(long id,int rejectedBy, String reason){
+        String sql = """
+                        update StockDisposals
+                        set Status = 'REJECTED', ApprovedBy = ?, ApprovedAt = GETDATE(), RejectionReason = ?
+                        where DisposalID = ? AND Status = 'PENDING_APPROVAL'
+                     """;
+        try (Connection connection = getConnection(); 
+                PreparedStatement stm = connection.prepareStatement(sql)) {
+            stm.setInt(1, rejectedBy);
+            stm.setString(2, reason);
+            stm.setLong(3, id);
+            return stm.executeUpdate() > 0;
+        } catch (Exception e) {
+            System.out.println("ERR: rejectDisposal: "+e.getMessage());
+        }
+        return false;
+    }
+
     private void appendFilters(StringBuilder sql, String keyword, String status, String reason, LocalDate from, LocalDate to) {
         if (keyword != null && !keyword.trim().isEmpty()) {
             sql.append(" AND (sd.DisposalNumber LIKE ? OR sd.Notes LIKE ?)");
