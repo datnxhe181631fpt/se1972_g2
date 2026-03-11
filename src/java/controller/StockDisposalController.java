@@ -53,6 +53,12 @@ public class StockDisposalController extends HttpServlet {
             action = "";
         }
         switch (action) {
+            case "approve":
+                approve(request, response);
+                break;
+            case "reject":
+                reject(request, response);
+                break;
             default:
                 response.sendRedirect(request.getContextPath() + "/stockdisposal?action=list");
         }
@@ -103,7 +109,54 @@ public class StockDisposalController extends HttpServlet {
         resetSessionMsg(request);
         request.getRequestDispatcher("/AdminLTE-3.2.0/sd-view.jsp").forward(request, response);
     }
-    
+
+    private void approve(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        String number = request.getParameter("number");
+        int employeeId = getLoggedInEmployeeId(request);
+
+        StockDisposal sd = sdDAO.getSDByNumber(number);
+        if (sd == null) {
+            request.getSession().setAttribute("msg", "fail_notfound");
+            response.sendRedirect(request.getContextPath() + "/stockdisposal?action=list");
+            return;
+        }
+
+        if (sd.getCreatedBy() != null && sd.getCreatedBy() == employeeId) {
+            request.getSession().setAttribute("msg", "fail_self_approve");
+            response.sendRedirect(request.getContextPath() + "/stockdisposal?aciton=view&number=" + number);
+            return;
+        }
+
+        boolean ok = sdDAO.approveDisposal(sd.getId(), employeeId);
+        request.getSession().setAttribute("msg", ok ? "success_approve" : "fail_approve");
+        response.sendRedirect(request.getContextPath() + "/stockdisposal?action=view&number=" + number);
+    }
+
+    private void reject(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        String number = request.getParameter("number");
+        String reason = request.getParameter("rejectionReason");
+        int employeeId = getLoggedInEmployeeId(request);
+
+        if (reason == null || reason.trim().isEmpty()) {
+            request.getSession().setAttribute("msg", "fail_reject_reason");
+            response.sendRedirect(request.getContextPath() + "/stockdisposal?aciton=view&number=" + number);
+            return;
+        }
+
+        StockDisposal sd = sdDAO.getSDByNumber(number);
+        if (sd == null) {
+            request.getSession().setAttribute("msg", "fail_notfound");
+            response.sendRedirect(request.getContextPath() + "/stockdisposal?action=list");
+            return;
+        }
+
+        boolean ok = sdDAO.rejectDisposal(sd.getId(), employeeId, reason.trim());
+        request.getSession().setAttribute("msg", ok ? "success_reject" : "fail_reject");
+        response.sendRedirect(request.getContextPath() + "/stockdisposal?action=view&number=" + number);
+    }
+
     private int getLoggedInEmployeeId(HttpServletRequest request) {
         Object emp = request.getSession().getAttribute("employeeId");
         return (emp instanceof Integer) ? (Integer) emp : 1;    //hard code
