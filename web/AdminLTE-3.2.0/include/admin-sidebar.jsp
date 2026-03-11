@@ -75,6 +75,73 @@
                 </c:if>
 
                 <!-- ======================== MANAGER & STORE MANAGER MENU ======================== -->
+                <!-- Quản lý sản phẩm -->
+                <li class="nav-item">
+                    <a href="#" class="nav-link">
+                        <i class="nav-icon fas fa-book"></i>
+                        <p>
+                            Quản lý sản phẩm
+                            <i class="right fas fa-angle-left"></i>
+                        </p>
+                    </a>
+                    <ul class="nav nav-treeview">
+                        <li class="nav-item">
+                            <a href="${pageContext.request.contextPath}/admin/categories" class="nav-link">
+                                <i class="far fa-circle nav-icon"></i>
+                                <p>Danh sách sản phẩm</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="categories" class="nav-link">
+                                <i class="far fa-dot-circle nav-icon"></i>
+                                <p>Danh mục</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="brands" class="nav-link">
+                                <i class="far fa-dot-circle nav-icon"></i>
+                                <p>Thương hiệu</p>
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+
+                <!-- Quản lý kho -->
+                <li class="nav-item">
+                    <a href="#" class="nav-link">
+                        <i class="nav-icon fas fa-warehouse"></i>
+                        <p>
+                            Quản lý kho
+                            <i class="right fas fa-angle-left"></i>
+                        </p>
+                    </a>
+                    <ul class="nav nav-treeview">
+                        <li class="nav-item">
+                            <a href="${pageContext.request.contextPath}/admin/employees" class="nav-link">
+                                <i class="far fa-circle nav-icon"></i>
+                                <p>Tồn kho</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="${pageContext.request.contextPath}/purchaseorder" class="nav-link">
+                                <i class="far fa-dot-circle nav-icon"></i>
+                                <p>Nhập hàng</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="#" class="nav-link">
+                                <i class="far fa-dot-circle nav-icon"></i>
+                                <p>Kiểm kho</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="#" class="nav-link">
+                                <i class="far fa-dot-circle nav-icon"></i>
+                                <p>Xuất hủy</p>
+                            </a>
+                        </li>
+                    </ul>
+                </li>
 
                 <!-- Quản lý sản phẩm (Manager, Store Manager) -->
                 <c:if test="${sessionScope.roleId == 1 || sessionScope.roleId == 2}">
