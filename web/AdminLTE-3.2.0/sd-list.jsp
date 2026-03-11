@@ -89,19 +89,19 @@
                                                     <select name="status" class="form-control">
                                                         <option value="" ${empty param.status ? 'selected' : ''}>Tất cả</option>
                                                         <option value="PENDING_APPROVAL" ${param.status == 'PENDING_APPROVAL' ? 'selected' : ''}>Chờ duyệt</option>
-                                                        <option value="APPROVED"         ${param.status == 'APPROVED'         ? 'selected' : ''}>Đã duyệt</option>
-                                                        <option value="REJECTED"         ${param.status == 'REJECTED'         ? 'selected' : ''}>Từ chối</option>
-                                                        <option value="COMPLETED"        ${param.status == 'COMPLETED'        ? 'selected' : ''}>Đã hoàn tất</option>
+                                                        <option value="APPROVED" ${param.status == 'APPROVED' ? 'selected' : ''}>Đã duyệt</option>
+                                                        <option value="REJECTED" ${param.status == 'REJECTED' ? 'selected' : ''}>Từ chối</option>
+                                                        <option value="COMPLETED"${param.status == 'COMPLETED'? 'selected' : ''}>Đã hoàn tất</option>
                                                     </select>
                                                 </div>
                                                 <div class="col-md-2 form-group">
                                                     <label>Lý do:</label>
                                                     <select name="reason" class="form-control">
                                                         <option value="" ${empty param.reason ? 'selected' : ''}>Tất cả</option>
-                                                        <option value="DAMAGED"   ${param.reason == 'DAMAGED'   ? 'selected' : ''}>Hỏng hóc</option>
-                                                        <option value="EXPIRED"   ${param.reason == 'EXPIRED'   ? 'selected' : ''}>Hết hạn</option>
+                                                        <option value="DAMAGED" ${param.reason == 'DAMAGED'   ? 'selected' : ''}>Hỏng hóc</option>
+                                                        <option value="EXPIRED" ${param.reason == 'EXPIRED'   ? 'selected' : ''}>Hết hạn</option>
                                                         <option value="DEFECTIVE" ${param.reason == 'DEFECTIVE' ? 'selected' : ''}>Lỗi sản phẩm</option>
-                                                        <option value="OTHER"     ${param.reason == 'OTHER'     ? 'selected' : ''}>Khác</option>
+                                                        <option value="OTHER" ${param.reason == 'OTHER'     ? 'selected' : ''}>Khác</option>
                                                     </select>
                                                 </div>
                                                 <div class="col-md-2 form-group">
@@ -141,7 +141,7 @@
                                     <div class="card-body p-0">
                                         <c:choose>
                                             <c:when test="${not empty lists}">
-                                                <table>
+                                                <table class="table table-bordered table-striped table-hover">
                                                     <thead class="thead-light">
                                                         <tr>
                                                             <th style="width:140px">Mã phiếu</th>
@@ -185,10 +185,11 @@
                                                                             <span class="badge badge-danger"><i class="fas fa-times-circle mr-1"></i>Từ chối</span>
                                                                         </c:when>
                                                                         <c:when test="${item.status== 'COMPLETED'}">
-                                                                            <span class="badge badge-success"><i class="fas fa-success mr-1"></i>Hoàn thành</span>
+                                                                            <span class="badge badge-success"><i class="fas fa-check-double mr-1"></i>Hoàn thành</span>
                                                                         </c:when>
                                                                     </c:choose>
                                                                 </td>
+                                                                <td>${item.createdByName}</td>
                                                                 <td class="text-center">
                                                                     <a href="${pageContext.request.contextPath}/stockdisposal?action=view&number=${item.disposalNumber}"
                                                                        class="btn btn-info btn-sm">
