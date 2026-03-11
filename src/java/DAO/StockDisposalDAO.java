@@ -4,6 +4,7 @@
  */
 package DAO;
 
+import entity.Product;
 import entity.StockDisposal;
 import entity.StockDisposalDetail;
 import java.math.BigDecimal;
@@ -202,7 +203,7 @@ public class StockDisposalDAO extends DBContext {
                 }
             }
             if (sd.getDetails() != null && !sd.getDetails().isEmpty()) {
-                try (PreparedStatement stmD = con.prepareStatement(sqlSD)) {
+                try (PreparedStatement stmD = con.prepareStatement(sqlDetail)) {
                     for (StockDisposalDetail detail : sd.getDetails()) {
                         stmD.setLong(1, sdId);
                         stmD.setInt(2, detail.getProductId());
@@ -376,6 +377,32 @@ public class StockDisposalDAO extends DBContext {
             }
         }
         return false;
+    }
+
+    //product helper
+    public List<Product> getAllActiveProducts() {
+        List<Product> list = new ArrayList<>();
+        String sql = """
+                     select ProductID, ProductName, SKU, Stock, ReservedStock, CostPrice
+                     from Products
+                     where IsActive = 1
+                     ORDER BY ProductName
+                     """;
+        try (Connection con = getConnection(); PreparedStatement stm = con.prepareStatement(sql); ResultSet rs = stm.executeQuery()) {
+            while (rs.next()) {
+                Product p = new Product();
+                p.setId(rs.getInt("ProductID"));
+                p.setProductName(rs.getString("ProductName"));
+                p.setSku(rs.getString("SKU"));
+                p.setStock(rs.getInt("Stock"));
+                p.setReservedStock(rs.getInt("ReservedStock"));
+                p.setCostPrice(rs.getDouble("CostPrice"));
+                list.add(p);
+            }
+        } catch (Exception e) {
+            System.out.println("ERR : getAllActiveProducts: " + e.getMessage());
+        }
+        return list;
     }
 
     private void appendFilters(StringBuilder sql, String keyword, String status, String reason, LocalDate from, LocalDate to) {
