@@ -36,6 +36,9 @@ public class StockDisposalController extends HttpServlet {
             case "search":
                 showList(request, response);
                 break;
+            case "view":
+                showView(request, response);
+                break;
             default:
                 showList(request, response);
         }
@@ -81,19 +84,39 @@ public class StockDisposalController extends HttpServlet {
         resetSessionMsg(request);
         request.getRequestDispatcher("/AdminLTE-3.2.0/sd-list.jsp").forward(request, response);
     }
+
+    private void showView(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        String number = request.getParameter("number");
+        if (number == null || number.trim().isEmpty()) {
+            response.sendRedirect(request.getContextPath() + "/stockdisposal?action=list");
+            return;
+        }
+
+        StockDisposal sd = sdDAO.getSDByNumber(number);
+        if (sd == null) {
+            request.getSession().setAttribute("msg", "fail_notfound");
+            response.sendRedirect(request.getContextPath() + "/stockdisposal?action=list");
+            return;
+        }
+        request.setAttribute("sd", sd);
+        resetSessionMsg(request);
+        request.getRequestDispatcher("/AdminLTE-3.2.0/sd-view.jsp").forward(request, response);
+    }
     
-    private int getLoggedInEmployeeId(HttpServletRequest request){
+    private int getLoggedInEmployeeId(HttpServletRequest request) {
         Object emp = request.getSession().getAttribute("employeeId");
         return (emp instanceof Integer) ? (Integer) emp : 1;    //hard code
     }
-    
-    private void resetSessionMsg(HttpServletRequest request){
+
+    private void resetSessionMsg(HttpServletRequest request) {
         String msg = (String) request.getSession().getAttribute("msg");
-        if(msg!=null){
+        if (msg != null) {
             request.setAttribute("msg", msg);
             request.getSession().removeAttribute("msg");
         }
     }
+
     private LocalDate parseLocalDate(String value) {
         try {
             if (value != null && !value.isBlank()) {
