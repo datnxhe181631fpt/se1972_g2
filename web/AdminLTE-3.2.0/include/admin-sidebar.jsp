@@ -333,11 +333,21 @@
                 <c:if test="${sessionScope.roleId == 3 || sessionScope.roleId == 5}">
                     <li class="nav-item">
                         <a href="${pageContext.request.contextPath}/admin/shift-management" class="nav-link">
-                            <i class="far fa-dot-circle nav-icon"></i>
+                            <i class="far fa-clock nav-icon"></i>
                             <p>Ca làm việc</p>
                         </a>
                     </li>
                 </c:if>
+                <c:if test="${sessionScope.roleId == 3 || sessionScope.roleId == 5}">
+                    <li class="nav-item">
+                        <a href="${pageContext.request.contextPath}/staff/swap"
+                           class="nav-link ${pageContext.request.requestURI.contains('/staff/swap') ? 'active' : ''}">
+                            <i class="far fa-file-alt nav-icon"></i>
+                            <p>Đơn đổi ca</p>
+                        </a>
+                    </li>
+                </c:if>
+
 
                 <!-- Nhân viên (Manager, Store Manager) -->
                 <c:if test="${sessionScope.roleId == 1 || sessionScope.roleId == 2}">
@@ -370,7 +380,7 @@
                                     <p>Ca làm việc</p>
                                 </a>
                             </li>
-                            
+
                             <li class="nav-item">
                                 <a href="${pageContext.request.contextPath}/staff/swap"
                                    class="nav-link ${pageContext.request.requestURI.contains('/staff/swap') ? 'active' : ''}">
