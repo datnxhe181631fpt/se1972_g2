@@ -1,0 +1,310 @@
+/* === MAIN CSS - MODERN DASHBOARD THEME === */
+
+:root {
+    /* Bảng màu chủ đạo */
+    --primary-color: #4e73df;      /* Xanh dương chuyên nghiệp */
+    --secondary-color: #858796;    /* Xám trung tính */
+    --success-color: #1cc88a;      /* Xanh lá thành công */
+    --danger-color: #e74a3b;       /* Đỏ báo lỗi */
+    --warning-color: #f6c23e;      /* Vàng cảnh báo */
+    --info-color: #36b9cc;         /* Xanh nhạt thông tin */
+    
+    /* Màu nền và Sidebar */
+    --sidebar-bg: #2c3e50;         /* Xanh đen đậm cho sidebar */
+    --sidebar-text: #ecf0f1;       /* Chữ trắng mờ trên sidebar */
+    --sidebar-active: #34495e;     /* Màu khi menu được chọn */
+    --main-bg: #f8f9fc;            /* Nền xám nhạt cho vùng nội dung chính */
+    
+    /* Card và Border */
+    --card-border-color: #e3e6f0;
+}
+
+/* --- CẤU TRÚC CHUNG --- */
+body {
+    font-family: 'Nunito', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--main-bg); /* Nền tổng thể màu sáng */
+    margin: 0;
+    padding: 0;
+    color: #5a5c69;
+}
+
+/* Đảm bảo cột chứa sidebar luôn full chiều cao màn hình */
+.sidebar-container {
+    background-color: var(--sidebar-bg);
+    min-height: 100vh;
+    padding: 0 !important; /* Ghi đè padding của col bootrap */
+}
+
+.main-content {
+    padding: 25px; /* Khoảng cách nội dung với lề */
+}
+
+/* Tiêu đề trang */
+.page-title {
+    color: #5a5c69;
+    font-weight: 600;
+    margin-bottom: 20px;
+    font-size: 1.75rem;
+}
+
+/* === SIDEBAR STYLE === */
+.sidebar {
+    padding-top: 20px;
+}
+
+.sidebar-brand {
+    color: white;
+    text-align: center;
+    font-weight: bold;
+    font-size: 1.2rem;
+    padding-bottom: 20px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    text-decoration: none;
+    display: block;
+}
+
+.sidebar-menu {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.menu-item {
+    display: flex;
+    align-items: center;
+    padding: 15px 20px;
+    color: rgba(255,255,255,0.7); /* Màu chữ xám trắng */
+    text-decoration: none;
+    transition: all 0.3s;
+    border-left: 3px solid transparent; /* Viền trái trong suốt */
+    font-weight: 500;
+}
+
+.menu-item i {
+    margin-right: 10px;
+    width: 20px;
+    text-align: center;
+}
+
+/* Hiệu ứng hover và active */
+.menu-item:hover, .menu-item.active {
+    color: white;
+    background-color: var(--sidebar-active);
+    border-left-color: var(--primary-color); /* Hiện viền xanh khi active */
+    text-decoration: none;
+}
+
+/* === CARD VIEW (Hộp chứa nội dung) === */
+/* Sử dụng class .card của Bootstrap nhưng tùy biến thêm */
+.card {
+    border: 1px solid var(--card-border-color) !important;
+    border-radius: 0.35rem !important;
+    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15) !important;
+    margin-bottom: 25px;
+}
+
+.card-header {
+    background-color: #f8f9fc !important;
+    border-bottom: 1px solid var(--card-border-color) !important;
+    font-weight: bold;
+    color: var(--primary-color);
+    padding: 15px 20px !important;
+}
+
+.card-body {
+    padding: 20px !important;
+}
+
+/* === THÔNG BÁO (Alerts) === */
+.msg-container {
+    padding: 15px;
+    border-radius: 4px;
+    margin-bottom: 20px;
+    border-left: 4px solid;
+}
+.msg-success {
+    background-color: #d4edda;
+    color: #155724;
+    border-color: var(--success-color);
+}
+.msg-error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border-color: var(--danger-color);
+}
+
+/* === FORM & SEARCH BOX === */
+.search-form-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    align-items: flex-end;
+}
+
+.form-label {
+    font-weight: 600;
+    color: #5a5c69;
+    margin-bottom: 5px;
+}
+
+.form-control, .form-select {
+    border-radius: 0.35rem;
+    border: 1px solid #d1d3e2;
+    padding: 0.5rem 1rem;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+}
+
+/* Nút tạo mới dạng link */
+.link-create-new {
+    color: var(--primary-color);
+    font-weight: bold;
+    text-decoration: none;
+    padding: 8px 15px;
+    border: 2px dashed var(--primary-color);
+    border-radius: 4px;
+    transition: all 0.3s;
+    display: inline-block;
+}
+.link-create-new:hover {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+
+/* === BẢNG DỮ LIỆU (Table) === */
+.table-data {
+    width: 100%;
+    border-collapse: separate; /* Để dùng được border-radius */
+    border-spacing: 0;
+}
+
+.table-data th {
+    background-color: #eaecf4; /* Header màu xám nhẹ */
+    color: #5a5c69;
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    padding: 15px;
+    border-bottom: 2px solid var(--card-border-color);
+}
+
+.table-data td {
+    padding: 15px;
+    vertical-align: middle;
+    border-bottom: 1px solid var(--card-border-color);
+    color: #5a5c69;
+}
+
+.expandable-row:hover {
+    background-color: #f8f9fc;
+    cursor: pointer;
+}
+
+/* Hàng chi tiết */
+.detail-row {
+    background-color: #f8f9fc;
+}
+
+.detail-container {
+    padding: 20px;
+    border-left: 4px solid var(--primary-color); /* Điểm nhấn cho phần chi tiết */
+    background: white;
+    margin: 10px 0;
+    border-radius: 4px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.section-title {
+    font-weight: bold;
+    font-size: 1rem;
+    color: var(--primary-color);
+    border-bottom: 1px solid var(--card-border-color);
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+    margin-top: 15px;
+}
+
+/* Bảng con */
+.table-nested th {
+    background-color: #f1f3f9;
+    font-size: 0.8rem;
+    padding: 10px;
+}
+.table-nested td {
+    font-size: 0.9rem;
+    padding: 10px;
+}
+
+/* Trạng thái (Badge) */
+.badge-status {
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+.badge-active { background-color: #d4edda; color: var(--success-color); }
+.badge-inactive { background-color: #f8d7da; color: var(--danger-color); }
+
+/* === BUTTONS === */
+.btn {
+    font-weight: 600;
+    padding: 8px 16px;
+    border-radius: 0.35rem;
+    transition: all 0.2s;
+}
+.btn-primary { background-color: var(--primary-color); border-color: var(--primary-color); }
+.btn-primary:hover { background-color: #2e59d9; border-color: #2653d4; }
+
+.btn-success { background-color: var(--success-color); border-color: var(--success-color); }
+.btn-success:hover { background-color: #17a673; border-color: #169b6b; }
+
+.btn-danger { background-color: var(--danger-color); border-color: var(--danger-color); }
+.btn-danger:hover { background-color: #e02d1b; border-color: #d52a1a; }
+
+.btn-sm-action {
+    padding: 5px 10px;
+    font-size: 0.8rem;
+    margin-right: 5px;
+}
+
+/* === PHÂN TRANG (Pagination) === */
+.pagination-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid var(--card-border-color);
+}
+.pagination a {
+    color: var(--primary-color);
+    padding: 8px 14px;
+    text-decoration: none;
+    border: 1px solid var(--card-border-color);
+    margin: 0 2px;
+    border-radius: 4px;
+    background: white;
+}
+.pagination a.active {
+    background-color: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+.pagination a:hover:not(.active) {
+    background-color: #eaecf4;
+}
+
+/* Footer của phần chi tiết */
+.detail-footer {
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}

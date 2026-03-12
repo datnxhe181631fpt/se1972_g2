@@ -9,9 +9,10 @@ public class RoleDAO extends DBContext {
 
     public List<Role> getAllRoles() {
         List<Role> list = new ArrayList<>();
-        String sql = "SELECT * FROM Roles";
+        String sql = "SELECT * FROM Roles ORDER BY RoleName";
 
-        try (PreparedStatement ps = getConnection().prepareStatement(sql);
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
 
             while (rs.next()) {
@@ -19,7 +20,7 @@ public class RoleDAO extends DBContext {
                 r.setRoleId(rs.getInt("RoleID"));
                 r.setRoleName(rs.getString("RoleName"));
                 r.setPermissions(rs.getString("Permissions"));
-                r.setCreatedAt(rs.getDate("CreatedAt"));
+                r.setCreatedAt(rs.getTimestamp("CreatedAt"));
                 list.add(r);
             }
 

@@ -138,11 +138,11 @@ public class SupplierController extends HttpServlet {
                 break;
             case "active":
                 success = supDAO.activeSupplier(code);
-                msg = success ? "sucess_active" : "fail";
+                msg = success ? "success_active" : "fail";
                 break;
             case "deactive":
                 success = supDAO.deactiveSupplier(code);
-                msg = success ? "sucess_deactive" : "fail";
+                msg = success ? "success_deactive" : "fail";
                 break;
             case "save":
                 String name = request.getParameter("name");

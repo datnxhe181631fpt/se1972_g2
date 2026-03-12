@@ -82,11 +82,11 @@
                                           id="employeeForm">
 
                                         <input type="hidden" name="action"
-                                               value="${employee != null ? 'edit' : 'add'}">
+                                               value="${employee != null ? 'update' : 'insert'}">
 
                                         <c:if test="${employee != null}">
-                                            <input type="hidden" name="employeeID"
-                                                   value="${employee.employeeID}">
+                                            <input type="hidden" name="employeeId"
+                                                   value="${employee.employeeId}">
                                         </c:if>
 
                                         <div class="card-body">
@@ -96,7 +96,7 @@
                                                 <label>Họ và tên <span class="text-danger">*</span></label>
                                                 <input type="text" class="form-control"
                                                        name="fullName"
-                                                       value="${employee.fullName}"
+                                                       value="${employee != null ? employee.fullName : ''}"
                                                        placeholder="Nhập họ và tên" required>
                                             </div>
 
@@ -149,7 +149,8 @@
                                                            class="custom-control-input"
                                                            id="status"
                                                            name="status"
-                                                           ${employee == null || employee.status == 'Active' ? 'checked' : ''}>
+                                                           value="ACTIVE"
+                                                           ${employee == null || employee.status == 'ACTIVE' ? 'checked' : ''}>
                                                     <label class="custom-control-label" for="status">
                                                         Kích hoạt nhân viên
                                                     </label>
@@ -200,10 +201,10 @@
                                             </h3>
                                         </div>
                                         <div class="card-body">
-                                            <p><strong>ID:</strong> #${employee.employeeID}</p>
+                                            <p><strong>ID:</strong> #${employee.employeeId}</p>
                                             <p><strong>Trạng thái:</strong>
-                                                <span class="badge ${employee.status ? 'badge-success' : 'badge-danger'}">
-                                                    ${employee.status ? 'Active' : 'Inactive'}
+                                                <span class="badge ${employee.status == 'ACTIVE' ? 'badge-success' : 'badge-danger'}">
+                                                    ${employee.status}
                                                 </span>
                                             </p>
                                         </div>
@@ -218,8 +219,6 @@
 
             <jsp:include page="include/admin-footer.jsp"/>
         </div>
-        <script src="${pageContext.request.contextPath}/AdminLTE-3.2.0/plugins/jquery/jquery.min.js"></script>
-        <script src="${pageContext.request.contextPath}/AdminLTE-3.2.0/dist/js/adminlte.min.js"></script>
-
+        
     </body>
 </html>

@@ -1,9 +1,9 @@
 package entity;
 
-
 import java.lang.*;
 import java.util.*;
 import java.io.*;
+
 /*
 *
 *
@@ -46,5 +46,5 @@ public class PromotionApplicableProduct {
     public void setProductID(int productID) {
         this.productID = productID;
     }
-    
+
 }

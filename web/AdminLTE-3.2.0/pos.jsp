@@ -42,7 +42,6 @@
             .pos-wrapper-full .content-wrapper {
                 margin-left: 0 !important;
             }
-
             .pos-offcanvas-backdrop {
                 position: fixed;
                 inset: 0;
@@ -52,7 +51,6 @@
                 visibility: hidden;
                 transition: opacity 0.3s ease, visibility 0.3s ease;
             }
-
             .pos-sidebar-open .pos-offcanvas-backdrop {
                 opacity: 1;
                 visibility: visible;
@@ -414,22 +412,20 @@
                         <div class="row">
                             <!-- Left column: search & product list -->
                             <div class="col-lg-8 mb-3">
-
                                 <!-- Messages -->
                                 <c:if test="${not empty msg}">
                                     <div class="alert alert-success alert-dismissible fade show">
                                         <i class="fas fa-check-circle"></i> ${msg}
-                                        <button type="button" class="close" data-dismiss="alert">
-                                            <span>&times;</span>
+                                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                            <span aria-hidden="true">&times;</span>
                                         </button>
                                     </div>
                                 </c:if>
-
                                 <c:if test="${not empty error}">
                                     <div class="alert alert-danger alert-dismissible fade show">
                                         <i class="fas fa-exclamation-triangle"></i> ${error}
-                                        <button type="button" class="close" data-dismiss="alert">
-                                            <span>&times;</span>
+                                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                            <span aria-hidden="true">&times;</span>
                                         </button>
                                     </div>
                                 </c:if>
@@ -622,9 +618,6 @@
                                 </c:if>
 
                             </div>
-
-
-
                             <!-- Right column: cart & payment -->
                             <div class="col-lg-4">
                                 <div class="pos-order-panel">

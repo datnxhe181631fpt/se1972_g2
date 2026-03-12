@@ -303,4 +303,3 @@ public class SalesInvoiceDAO extends DBContext {
         return list;
     }
 }
-
