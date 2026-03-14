@@ -155,198 +155,198 @@
                     </div>
                 </section>
             </div>
-  </div>
+            <jsp:include page="include/admin-footer.jsp"/>
 
-        <script src="${pageContext.request.contextPath}/AdminLTE-3.2.0/plugins/jquery/jquery.min.js"></script>
-        <script src="${pageContext.request.contextPath}/AdminLTE-3.2.0/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+        </div>
 
-            <script>
-                var products = [
-                <c:forEach var="p" items="${productList}" varStatus="s">
-                {id: ${p.id},
-                        name: "<c:out value='${p.productName}'/>",
-                        sku: "<c:out value='${p.sku}'/>",
-                        stock: ${p.stock},
-                        reservedStock: ${p.reservedStock},
-                        availableStock: ${p.stock - p.reservedStock}
-                }<c:if test="${!s.last}">,</c:if>
-                </c:forEach>
-                ];
-                $(function () {
+        <script>
+            var products = [
+            <c:forEach var="p" items="${productList}" varStatus="s">
+              {id: ${p.id},
+                      name: "<c:out value='${p.productName}'/>",
+                      sku: "<c:out value='${p.sku}'/>",
+                      stock: ${p.stock},
+                      reservedStock: ${p.reservedStock},
+                      availableStock: ${p.stock - p.reservedStock}
+              }<c:if test="${!s.last}">,</c:if>
+            </c:forEach>
+            ];
+            $(function () {
 
-                    var $search = $("#productSearchInput");
-                    var $dropdown = $("#productDropdown");
-                    var $table = $("#detailBody");
-                    var $total = $("#totalQtyDisplay");
-                    
-                    $search.on("input", function () {
+                var $search = $("#productSearchInput");
+                var $dropdown = $("#productDropdown");
+                var $table = $("#detailBody");
+                var $total = $("#totalQtyDisplay");
 
-                        var query = $(this).val().toLowerCase().trim();
-                        $dropdown.empty().hide();
+                $search.on("input", function () {
 
-                        if (query.length < 1)
-                            return;
+                    var query = $(this).val().toLowerCase().trim();
+                    $dropdown.empty().hide();
 
-                        var filtered = products.filter(function (p) {
-                            return p.name.toLowerCase().includes(query) ||
-                                    p.sku.toLowerCase().includes(query);
-                        }).slice(0, 8);
+                    if (query.length < 1)
+                        return;
 
-                        if (filtered.length === 0) {
-                            $dropdown.html(
-                                    '<div class="list-group-item text-muted">Không tìm thấy sản phẩm</div>'
-                                    ).show();
-                            return;
-                        }
+                    var filtered = products.filter(function (p) {
+                        return p.name.toLowerCase().includes(query) ||
+                                p.sku.toLowerCase().includes(query);
+                    }).slice(0, 8);
 
-                        var html = "";
-
-                        filtered.forEach(function (p) {
-
-                            html += '<a href="#" class="list-group-item list-group-item-action product-item"' +
-                                    ' data-id="' + p.id + '"' +
-                                    ' data-name="' + p.name + '"' +
-                                    ' data-stock="' + p.stock + '"' +
-                                    ' data-available="' + p.availableStock + '">' +
-                                    '<strong>' + p.name + '</strong>' +
-                                    '<div class="small text-muted">Khả dụng: ' + p.availableStock + ' / Tồn: ' + p.stock + '</div>' +
-                                    '</a>';
-                        });
-
-                        $dropdown.html(html).show();
-
-                    });
-
-                    $dropdown.on("click", ".product-item", function (e) {
-
-                        e.preventDefault();
-
-                        var id = $(this).data("id");
-                        var name = $(this).data("name");
-                        var stock = $(this).data("stock");
-                        var available = $(this).data("available");
-
-                        addProduct(id, name, stock, available);
-
-                        $search.val("").focus();
-                        $dropdown.hide();
-
-                    });
-
-                    function addProduct(id, name, stock, available) {
-
-                        var found = false;
-
-                        $table.find("tr").each(function () {
-
-                            var pid = $(this).find("input[name='pid[]']").val();
-
-                            if (pid == id) {
-
-                                var $qty = $(this).find(".qty-input");
-
-                                $qty.val(parseInt($qty.val()) + 1);
-
-                                highlightRow($(this));
-
-                                found = true;
-
-                            }
-                        });
-
-                        if (found) {
-                            updateTotal();
-                            return;
-                        }
-
-                        $("#emptyRow").remove();
-
-                        var index = $table.find("tr").length + 1;
-
-                        var row = '<tr>' +
-                                '<td class="text-center">' + index + '</td>' +
-                                '<td><strong>' + name + '</strong>' +
-                                '<input type="hidden" name="pid[]" value="' + id + '"></td>' +
-                                '<td class="text-center">' + available + ' / ' + stock + '</td>' +
-                                '<td><input type="number" class="form-control qty-input" name="dispQty[]" value="1" min="1"></td>' +
-                                '<td><input type="text" class="form-control" name="specificReason[]" placeholder="Lý do..."></td>' +
-                                '<td class="text-center"><button type="button" class="btn btn-danger btn-sm btn-remove"><i class="fas fa-trash"></i></button></td>' +
-                                '</tr>';
-
-                        var $row = $(row).appendTo($table);
-
-                        highlightRow($row);
-
-                        updateTotal();
+                    if (filtered.length === 0) {
+                        $dropdown.html(
+                                '<div class="list-group-item text-muted">Không tìm thấy sản phẩm</div>'
+                                ).show();
+                        return;
                     }
 
-                    $table.on("click", ".btn-remove", function () {
+                    var html = "";
 
-                        $(this).closest("tr").remove();
+                    filtered.forEach(function (p) {
 
-                        updateRowNumbers();
-                        updateTotal();
-
+                        html += '<a href="#" class="list-group-item list-group-item-action product-item"' +
+                                ' data-id="' + p.id + '"' +
+                                ' data-name="' + p.name + '"' +
+                                ' data-stock="' + p.stock + '"' +
+                                ' data-available="' + p.availableStock + '">' +
+                                '<strong>' + p.name + '</strong>' +
+                                '<div class="small text-muted">Khả dụng: ' + p.availableStock + ' / Tồn: ' + p.stock + '</div>' +
+                                '</a>';
                     });
 
-                    function updateRowNumbers() {
-
-                        $table.find("tr").each(function (i) {
-
-                            $(this).find("td:first").text(i + 1);
-
-                        });
-
-                    }
-
-                    $table.on("input", ".qty-input", updateTotal);
-
-                    function updateTotal() {
-
-                        var total = 0;
-
-                        $(".qty-input").each(function () {
-
-                            total += parseInt($(this).val()) || 0;
-
-                        });
-
-                        $total.text(total);
-                    }
-
-                    function highlightRow($row) {
-
-                        $row.addClass("highlight-row");
-
-                        setTimeout(function () {
-                            $row.removeClass("highlight-row");
-                        }, 700);
-
-                        $row[0].scrollIntoView({
-                            behavior: "smooth",
-                            block: "center"
-                        });
-
-                    }
-
-                    $(document).click(function (e) {
-
-                        if (!$(e.target).closest("#productSearchInput,#productDropdown").length) {
-
-                            $dropdown.hide();
-
-                        }
-
-                    });
-
-                    $("#disposalForm").on("keydown", function (e) {
-                        if (e.key === "Enter") {
-                            e.preventDefault();
-                        }
-
-                    });
+                    $dropdown.html(html).show();
 
                 });
-            </script>
-      
-   <jsp:include page="include/admin-footer.jsp"/>
+
+                $dropdown.on("click", ".product-item", function (e) {
+
+                    e.preventDefault();
+
+                    var id = $(this).data("id");
+                    var name = $(this).data("name");
+                    var stock = $(this).data("stock");
+                    var available = $(this).data("available");
+
+                    addProduct(id, name, stock, available);
+
+                    $search.val("").focus();
+                    $dropdown.hide();
+
+                });
+
+                function addProduct(id, name, stock, available) {
+
+                    var found = false;
+
+                    $table.find("tr").each(function () {
+
+                        var pid = $(this).find("input[name='pid[]']").val();
+
+                        if (pid == id) {
+
+                            var $qty = $(this).find(".qty-input");
+
+                            $qty.val(parseInt($qty.val()) + 1);
+
+                            highlightRow($(this));
+
+                            found = true;
+
+                        }
+                    });
+
+                    if (found) {
+                        updateTotal();
+                        return;
+                    }
+
+                    $("#emptyRow").remove();
+
+                    var index = $table.find("tr").length + 1;
+
+                    var row = '<tr>' +
+                            '<td class="text-center">' + index + '</td>' +
+                            '<td><strong>' + name + '</strong>' +
+                            '<input type="hidden" name="pid[]" value="' + id + '"></td>' +
+                            '<td class="text-center">' + available + ' / ' + stock + '</td>' +
+                            '<td><input type="number" class="form-control qty-input" name="dispQty[]" value="1" min="1"></td>' +
+                            '<td><input type="text" class="form-control" name="specificReason[]" placeholder="Lý do..."></td>' +
+                            '<td class="text-center"><button type="button" class="btn btn-danger btn-sm btn-remove"><i class="fas fa-trash"></i></button></td>' +
+                            '</tr>';
+
+                    var $row = $(row).appendTo($table);
+
+                    highlightRow($row);
+
+                    updateTotal();
+                }
+
+                $table.on("click", ".btn-remove", function () {
+
+                    $(this).closest("tr").remove();
+
+                    updateRowNumbers();
+                    updateTotal();
+
+                });
+
+                function updateRowNumbers() {
+
+                    $table.find("tr").each(function (i) {
+
+                        $(this).find("td:first").text(i + 1);
+
+                    });
+
+                }
+
+                $table.on("input", ".qty-input", updateTotal);
+
+                function updateTotal() {
+
+                    var total = 0;
+
+                    $(".qty-input").each(function () {
+
+                        total += parseInt($(this).val()) || 0;
+
+                    });
+
+                    $total.text(total);
+                }
+
+                function highlightRow($row) {
+
+                    $row.addClass("highlight-row");
+
+                    setTimeout(function () {
+                        $row.removeClass("highlight-row");
+                    }, 700);
+
+                    $row[0].scrollIntoView({
+                        behavior: "smooth",
+                        block: "center"
+                    });
+
+                }
+
+                $(document).click(function (e) {
+
+                    if (!$(e.target).closest("#productSearchInput,#productDropdown").length) {
+
+                        $dropdown.hide();
+
+                    }
+
+                });
+
+                $("#disposalForm").on("keydown", function (e) {
+                    if (e.key === "Enter") {
+                        e.preventDefault();
+                    }
+
+                });
+
+            });
+        </script>
+
+    </body>
+</html>

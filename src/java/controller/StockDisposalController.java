@@ -42,6 +42,7 @@ public class StockDisposalController extends HttpServlet {
                 break;
             case "create":
                 showCreateForm(request, response);
+                break;
             default:
                 showList(request, response);
         }
