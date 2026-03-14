@@ -97,7 +97,7 @@
                                             <div class="input-group">
                                                 <input type="text" class="form-control" placeholder="Gõ tên hoặc SKU sản phẩm..." id="productSearchInput" >
                                                 <div class="input-group-append">
-                                                    <button type="button" class="btn btn-primary"><i class="fas fa-plus"></i>Thêm</button>
+                                                    <button type="button" class="btn btn-primary" id="btnAddProduct"><i class="fas fa-plus"></i>Thêm</button>
                                                 </div>
                                             </div>
                                             <div id="productDropdown" class="list-group shadow"
@@ -162,13 +162,13 @@
         <script>
             var products = [
             <c:forEach var="p" items="${productList}" varStatus="s">
-              {id: ${p.id},
-                      name: "<c:out value='${p.productName}'/>",
-                      sku: "<c:out value='${p.sku}'/>",
-                      stock: ${p.stock},
-                      reservedStock: ${p.reservedStock},
-                      availableStock: ${p.stock - p.reservedStock}
-              }<c:if test="${!s.last}">,</c:if>
+            {id: ${p.id},
+                    name: "<c:out value='${p.productName}'/>",
+                    sku: "<c:out value='${p.sku}'/>",
+                    stock: ${p.stock},
+                    reservedStock: ${p.reservedStock},
+                    availableStock: ${p.stock - p.reservedStock}
+            }<c:if test="${!s.last}">,</c:if>
             </c:forEach>
             ];
             $(function () {
@@ -177,19 +177,23 @@
                 var $dropdown = $("#productDropdown");
                 var $table = $("#detailBody");
                 var $total = $("#totalQtyDisplay");
+                var $btnAdd = $("#btnAddProduct");
+                var lastFiltered = [];
 
                 $search.on("input", function () {
 
                     var query = $(this).val().toLowerCase().trim();
                     $dropdown.empty().hide();
 
-                    if (query.length < 1)
+                    if (query.length < 1) {
+                        lastFiltered = [];
                         return;
-
+                    }
                     var filtered = products.filter(function (p) {
                         return p.name.toLowerCase().includes(query) ||
                                 p.sku.toLowerCase().includes(query);
                     }).slice(0, 8);
+                    lastFiltered = filtered;
 
                     if (filtered.length === 0) {
                         $dropdown.html(
@@ -216,6 +220,19 @@
 
                 });
 
+                function addTopMatchedProduct() {
+                    if (!lastFiltered.length) {
+                        return false;
+                    }
+                    var p = lastFiltered[0];
+                    addProduct(p.id, p.name, p.stock, p.availableStock);
+                    $search.val("").focus();
+//                    $search.focus();
+                    $dropdown.hide();
+                    lastFiltered = [];
+                    return true;
+                }
+
                 $dropdown.on("click", ".product-item", function (e) {
 
                     e.preventDefault();
@@ -229,11 +246,36 @@
 
                     $search.val("").focus();
                     $dropdown.hide();
+                    lastFiltered = [];
+                });
 
+                $search.on("keydown", function (e) {
+                    if (e.key != "Enter") {
+                        return;
+                    }
+                    e.preventDefault();
+
+                    if (!addTopMatchedProduct()) {
+                        $search.trigger("input");
+                        addTopMatchedProduct();
+                    }
+                });
+
+                $btnAdd.on("click", function () {
+                    if (!addTopMatchedProduct()) {
+                        $search.trigger("input");
+                        if (!addTopMatchedProduct()) {
+                            $search.focus();
+                        }
+                    }
                 });
 
                 function addProduct(id, name, stock, available) {
-
+                    var maxAvailable = parseInt(available, 10) || 0;
+                    if (maxAvailable <= 0) {
+                        alert("Sản phẩm này không còn số lượng khả dụng để xuất hủy.");
+                        return;
+                    }
                     var found = false;
 
                     $table.find("tr").each(function () {
@@ -241,15 +283,17 @@
                         var pid = $(this).find("input[name='pid[]']").val();
 
                         if (pid == id) {
-
-                            var $qty = $(this).find(".qty-input");
-
-                            $qty.val(parseInt($qty.val()) + 1);
-
-                            highlightRow($(this));
-
+                            var $qty = $(this).find("input[name='dispQty[]']");
+                            var currentQty = parseInt($qty.val(), 10) || 0;
+                            var maxQty = parseInt($qty.attr("max"), 10) || 0;
+                            if (currentQty < maxQty) {
+                                $qty.val(currentQty + 1);
+                                highlightRow($(this));
+                            } else {
+                                alert("Sản phẩm này đã đạt số lượng tối đa có thể xuất hủy.");
+                            }
                             found = true;
-
+                            return false;
                         }
                     });
 
@@ -267,22 +311,18 @@
                             '<td><strong>' + name + '</strong>' +
                             '<input type="hidden" name="pid[]" value="' + id + '"></td>' +
                             '<td class="text-center">' + available + ' / ' + stock + '</td>' +
-                            '<td><input type="number" class="form-control qty-input" name="dispQty[]" value="1" min="1"></td>' +
+                            '<td><input type="number" class="form-control qty-input" name="dispQty[]" value="1" min="1" max="' + maxAvailable + '"></td>' +
                             '<td><input type="text" class="form-control" name="specificReason[]" placeholder="Lý do..."></td>' +
                             '<td class="text-center"><button type="button" class="btn btn-danger btn-sm btn-remove"><i class="fas fa-trash"></i></button></td>' +
                             '</tr>';
 
                     var $row = $(row).appendTo($table);
-
                     highlightRow($row);
-
                     updateTotal();
                 }
 
                 $table.on("click", ".btn-remove", function () {
-
                     $(this).closest("tr").remove();
-
                     updateRowNumbers();
                     updateTotal();
 
@@ -291,20 +331,34 @@
                 function updateRowNumbers() {
 
                     $table.find("tr").each(function (i) {
-
                         $(this).find("td:first").text(i + 1);
 
                     });
 
                 }
 
-                $table.on("input", ".qty-input", updateTotal);
+
+                $table.on("input", ".qty-input", function () {
+                    var maxQty = parseInt($(this).attr("max"), 10) || 0;
+                    var val = parseInt($(this).val(), 10);
+                    if (isNaN(val) || val < 1) {
+                        $(this).val(1);
+                        updateTotal();
+                        return;
+                    }
+                    if (val > maxQty) {
+                        $(this).val(maxQty);
+                    }
+                    var $btnAdd = $("#btnAddProduct");
+                    var lastFiltered = [];
+                    updateTotal();
+                });
 
                 function updateTotal() {
 
                     var total = 0;
 
-                    $(".qty-input").each(function () {
+                    $table.find("input[name='dispQty[]']").each(function () {
 
                         total += parseInt($(this).val()) || 0;
 
@@ -339,6 +393,9 @@
                 });
 
                 $("#disposalForm").on("keydown", function (e) {
+                    if (e.target && e.target.id === "productSearchInput") {
+                        return;
+                    }
                     if (e.key === "Enter") {
                         e.preventDefault();
                     }
