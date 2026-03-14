@@ -7,14 +7,19 @@ package controller;
 import DAO.StockDisposalDAO;
 import entity.Product;
 import entity.StockDisposal;
+import entity.StockDisposalDetail;
 import java.io.IOException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  *
@@ -57,6 +62,9 @@ public class StockDisposalController extends HttpServlet {
             action = "";
         }
         switch (action) {
+            case "save":
+                saveDisposal(request, response);
+                break;
             case "approve":
                 approve(request, response);
                 break;
@@ -200,6 +208,92 @@ public class StockDisposalController extends HttpServlet {
         request.getSession().setAttribute("msg", ok ? "success_complete" : "fail_complete");
         response.sendRedirect(request.getContextPath() + "/stockdisposal?action=view&number=" + number);
     }
+
+     private void saveDisposal(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        int createdBy       = getLoggedInEmployeeId(request);
+        String sdNumber     = request.getParameter("sdNumber");
+        String disposalReason = request.getParameter("disposalReason");
+        String notes        = request.getParameter("notes");
+
+        if (disposalReason == null || disposalReason.isBlank()) {
+            request.getSession().setAttribute("msg", "fail_noreason");
+            response.sendRedirect(request.getContextPath() + "/stockdisposal?action=create");
+            return;
+        }
+
+        List<Product> allProducts = sdDAO.getAllActiveProducts();
+        Map<Integer, Product> productMap = new HashMap<>();
+        for (Product p : allProducts) {
+            productMap.put(p.getId(), p);
+        }
+
+        String[] pids          = request.getParameterValues("pid[]");
+        String[] dispQtys      = request.getParameterValues("dispQty[]");
+        String[] specificReasons = request.getParameterValues("specificReason[]");
+
+        if (pids == null || pids.length == 0) {
+            request.getSession().setAttribute("msg", "fail_noproduct");
+            response.sendRedirect(request.getContextPath() + "/stockdisposal?action=create");
+            return;
+        }
+
+        StockDisposal sd = new StockDisposal(sdNumber, disposalReason, createdBy);
+        sd.setDisposalDate(LocalDateTime.now());
+        sd.setNotes((notes != null && !notes.isBlank()) ? notes : null);
+
+        for (int i = 0; i < pids.length; i++) {
+            int productId = parseIntSafe(pids[i]);
+            Product p = productMap.get(productId);
+            if (p == null) {
+                continue; 
+            }
+
+            int qty = parseIntSafe(dispQtys != null && i < dispQtys.length ? dispQtys[i] : "0");
+            if (qty <= 0) {
+                request.getSession().setAttribute("msg", "fail_invalid_qty");
+                response.sendRedirect(request.getContextPath() + "/stockdisposal?action=create");
+                return;
+            }
+            int availableStock = p.getAvailableStock();
+            if (qty > availableStock) {
+                request.getSession().setAttribute("msg", "fail_exceed_stock:" + p.getProductName());
+                response.sendRedirect(request.getContextPath() + "/stockdisposal?action=create");
+                return;
+            }
+
+            BigDecimal unitCost = p.getCostPrice() != null
+                    ? BigDecimal.valueOf(p.getCostPrice()) : BigDecimal.ZERO;
+
+            StockDisposalDetail detail = new StockDisposalDetail(productId, qty, unitCost);
+            detail.calculateLineTotal();
+
+            String specReason = (specificReasons != null && i < specificReasons.length)
+                    ? specificReasons[i] : null;
+            if (specReason != null && !specReason.isBlank()) {
+                detail.setSpecificReason(specReason.trim());
+            }
+            sd.addDetail(detail);
+        }
+
+        if (sd.getDetails().isEmpty()) {
+            request.getSession().setAttribute("msg", "fail_noproduct");
+            response.sendRedirect(request.getContextPath() + "/stockdisposal?action=create");
+            return;
+        }
+
+        sd.recalculateTotals();
+
+        boolean ok = sdDAO.createDisposalWithDetails(sd);
+        if (ok) {
+            request.getSession().setAttribute("msg", "success_save");
+            response.sendRedirect(request.getContextPath() + "/stockdisposal?action=view&number=" + sdNumber);
+        } else {
+            request.getSession().setAttribute("msg", "fail_save");
+            response.sendRedirect(request.getContextPath() + "/stockdisposal?action=create");
+        }
+    }
+
 
     private int getLoggedInEmployeeId(HttpServletRequest request) {
         Object emp = request.getSession().getAttribute("employeeId");
