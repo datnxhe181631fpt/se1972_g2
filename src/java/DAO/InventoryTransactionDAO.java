@@ -75,7 +75,6 @@ public class InventoryTransactionDAO extends DBContext {
         return 0;
     }
 
-    
     public InventoryTransaction getTransactionById(long id) {
         String sql = """
                 select t.*, 
@@ -86,9 +85,8 @@ public class InventoryTransactionDAO extends DBContext {
                 left join Employees e on t.CreatedBy = e.EmployeeID
                 where t.TransactionID = ?
                 """;
-                
-        try (Connection con = getConnection();
-             PreparedStatement stm = con.prepareStatement(sql)) {
+
+        try (Connection con = getConnection(); PreparedStatement stm = con.prepareStatement(sql)) {
             stm.setLong(1, id);
             try (ResultSet rs = stm.executeQuery()) {
                 if (rs.next()) {
@@ -100,7 +98,44 @@ public class InventoryTransactionDAO extends DBContext {
         }
         return null;
     }
-    
+
+    public boolean insertTransaction(InventoryTransaction tx) {
+        String sql = """
+                insert into InventoryTransactions
+                (ProductID, TransactionType, ReferenceType, ReferenceID, ReferenceCode,
+                 QuantityChange, StockBefore, StockAfter, UnitCost, Notes, CreatedBy, TransactionDate)
+                values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """;
+        try (Connection con = getConnection(); PreparedStatement stm = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            stm.setInt(1, tx.getProductId());
+            stm.setString(2, tx.getTransactionType());
+            stm.setString(3, tx.getReferenceType());
+            stm.setObject(4, tx.getReferenceId());
+            stm.setString(5, tx.getReferenceCode());
+            stm.setInt(6, tx.getQuantityChange());
+            stm.setInt(7, tx.getStockBefore());
+            stm.setInt(8, tx.getStockAfter());
+            stm.setBigDecimal(9, tx.getUnitCost());
+            stm.setString(10, tx.getNotes());
+            stm.setInt(11, tx.getCreatedBy());
+            stm.setTimestamp(12, Timestamp.valueOf(
+                    tx.getTransactionDate() != null ? tx.getTransactionDate() : LocalDateTime.now()));
+
+            int affectedRows = stm.executeUpdate();
+            if(affectedRows>0){
+                try(ResultSet keys = stm.getGeneratedKeys()){
+                    if(keys.next()){
+                        tx.setTransactionId(keys.getLong(1));
+                    }
+                }
+                return true;
+            }
+        } catch (Exception e) {
+            System.out.println("ERR: insertTransaction: " + e.getMessage());
+        }
+        return false;
+    }
+
     private void appendFilters(StringBuilder sql, String keyword, String transactionType, Integer productId,
             LocalDate from, LocalDate to) {
         if (keyword != null && !keyword.trim().isEmpty()) {
