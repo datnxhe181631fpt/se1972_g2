@@ -23,7 +23,7 @@ public class InventoryTransaction {
     public static final String REF_STOCK_TAKE = "STOCK_TAKE";
     public static final String REF_MANUAL = "MANUAL";
 
-    private Long id;
+    private Long transactionId;
     private Integer productId;
     private String transactionType;
     private String referenceType;
@@ -37,6 +37,10 @@ public class InventoryTransaction {
     private Integer createdBy;
     private LocalDateTime transactionDate;
 
+    private String productName;
+    private String productSku;
+    private String createdByName;
+    
     public InventoryTransaction() {
         this.transactionDate = LocalDateTime.now();
     }
@@ -56,12 +60,12 @@ public class InventoryTransaction {
         this.createdBy = createdBy;
     }
 
-    public Long getId() {
-        return id;
+    public Long getTransactionId() {
+        return transactionId;
     }
 
-    public void setId(Long id) {
-        this.id = id;
+    public void setTransactionId(Long transactionId) {
+        this.transactionId = transactionId;
     }
 
     public Integer getProductId() {
@@ -160,6 +164,30 @@ public class InventoryTransaction {
         this.transactionDate = transactionDate;
     }
 
+        public String getProductName() {
+        return productName;
+    }
+
+    public void setProductName(String productName) {
+        this.productName = productName;
+    }
+
+    public String getProductSku() {
+        return productSku;
+    }
+
+    public void setProductSku(String productSku) {
+        this.productSku = productSku;
+    }
+
+    public String getCreatedByName() {
+        return createdByName;
+    }
+
+    public void setCreatedByName(String createdByName) {
+        this.createdByName = createdByName;
+    }
+    
     public boolean isInBound() {
         return TYPE_IN.equals(transactionType);
     }
@@ -179,8 +207,11 @@ public class InventoryTransaction {
         return unitCost.multiply(BigDecimal.valueOf(Math.abs(quantityChange)));
     }
 
-    public static InventoryTransaction createGoodsReceiptTransaction(Integer productId, Integer quantity, Integer stockBefore, BigDecimal unitCost, Long receiptId, String receiptCode, Integer createdBy) {
-        InventoryTransaction tx = new InventoryTransaction(productId, TYPE_IN, REF_GOODS_RECEIPT, receiptId, receiptCode, quantity, stockBefore, createdBy);
+    public static InventoryTransaction createGoodsReceiptTransaction(Integer productId,
+            Integer quantity, Integer stockBefore, BigDecimal unitCost, Long receiptId, 
+            String receiptCode, Integer createdBy) {
+        InventoryTransaction tx = new InventoryTransaction(productId, TYPE_IN, REF_GOODS_RECEIPT, receiptId, 
+                receiptCode, quantity, stockBefore, createdBy);
         tx.setUnitCost(unitCost);
         return tx;
     }
@@ -191,7 +222,7 @@ public class InventoryTransaction {
 
         InventoryTransaction tx = new InventoryTransaction(
                 productId, TYPE_OUT, REF_SALE,
-                invoiceId, invoiceCode, -quantity, stockBefore, createdBy);  // Negative
+                invoiceId, invoiceCode, -quantity, stockBefore, createdBy); 
         tx.setUnitCost(unitCost);
         return tx;
     }
@@ -202,7 +233,7 @@ public class InventoryTransaction {
 
         InventoryTransaction tx = new InventoryTransaction(
                 productId, TYPE_OUT, REF_DISPOSAL,
-                disposalId, disposalCode, -quantity, stockBefore, createdBy);  // Negative
+                disposalId, disposalCode, -quantity, stockBefore, createdBy);  
         tx.setUnitCost(unitCost);
         return tx;
     }
@@ -223,7 +254,7 @@ public class InventoryTransaction {
     @Override
     public String toString() {
         return "InventoryTransaction{"
-                + "id=" + id
+                + "transactionId=" + transactionId
                 + ", productId=" + productId
                 + ", transactionType='" + transactionType + '\''
                 + ", quantityChange=" + quantityChange
