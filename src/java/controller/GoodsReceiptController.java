@@ -48,7 +48,7 @@ public class GoodsReceiptController extends HttpServlet {
             case "getPoItems":
                 loadPoItemsJson(request, response);
                 break;
-            case "detail":
+            case "view":
                 showDetail(request, response);
                 break;
             default:
@@ -215,10 +215,10 @@ public class GoodsReceiptController extends HttpServlet {
         boolean success = grDAO.completeGR(receiptNumber);
         if (success) {
             request.getSession().setAttribute("msg", "success_complete");
-            response.sendRedirect(request.getContextPath() + "/admin/goodsreceipt?action=detail&receiptNumber=" + receiptNumber);
+            response.sendRedirect(request.getContextPath() + "/admin/goodsreceipt?action=view&receiptNumber=" + receiptNumber);
         } else {
             request.getSession().setAttribute("error", "Không thể hoàn tất phiếu nhập. Phiếu có thể đã hoàn tất hoặc không tồn tại.");
-            response.sendRedirect(request.getContextPath() + "/admin/goodsreceipt?action=detail&receiptNumber=" + receiptNumber);
+            response.sendRedirect(request.getContextPath() + "/admin/goodsreceipt?action=view&receiptNumber=" + receiptNumber);
         }
     }
 
@@ -337,7 +337,7 @@ public class GoodsReceiptController extends HttpServlet {
 
         if (success) {
             request.getSession().setAttribute("msg", "success_create");
-            response.sendRedirect(request.getContextPath() + "/admin/goodsreceipt?action=detail&receiptNumber=" + gr.getReceiptNumber());
+            response.sendRedirect(request.getContextPath() + "/admin/goodsreceipt?action=view&receiptNumber=" + gr.getReceiptNumber());
         } else {
             request.getSession().setAttribute("error", "Lỗi khi tạo phiếu nhập kho. Vui lòng thử lại.");
             response.sendRedirect(request.getContextPath() + "/admin/goodsreceipt?action=create&poId=" + poIdParam);

@@ -161,7 +161,7 @@
                                                                     </c:choose>
                                                                 </td>
                                                                 <td>
-                                                                    <a href="${pageContext.request.contextPath}/admin/goodsreceipt?action=detail&receiptNumber=${item.receiptNumber}"
+                                                                    <a href="${pageContext.request.contextPath}/admin/goodsreceipt?action=view&receiptNumber=${item.receiptNumber}"
                                                                        class="btn btn-sm btn-outline-primary">
                                                                         <i class="fas fa-eye"></i> Xem chi tiết
                                                                     </a>
