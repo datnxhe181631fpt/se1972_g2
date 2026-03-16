@@ -226,7 +226,7 @@ public class PurchaseOrderController extends HttpServlet {
 
         if ("approve".equals(action) || "reject".equals(action) || "cancel".equals(action)) {
             String roleName = (String) request.getSession().getAttribute("roleName");
-            if (!"Manager".equals(roleName) && !"Admin".equals(roleName)) {
+            if (!("Manager".equals(roleName) || "Store Manager".equals(roleName)) && !"Admin".equals(roleName)) {
                 request.getSession().setAttribute("error", "Bạn không có quyền thực hiện hành động này.");
                 response.sendRedirect(request.getContextPath() + "/admin/purchaseorder?action=list");
                 return;
