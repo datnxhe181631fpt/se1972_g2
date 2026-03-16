@@ -425,7 +425,7 @@ public class GoodsReceiptDAO extends DBContext {
                         txNote = gr.getNotes();
                     }
                     if (txNote == null || txNote.trim().isEmpty()) {
-                        txNote = "Nhập kho theo ĐĐH " + gr.getPoNumber();
+                        txNote = "Nhập kho theo ĐĐH " + (gr.getPoNumber() != null ? gr.getPoNumber() : "");
                     }
 
                     stmTx.setString(8, txNote);
@@ -601,8 +601,10 @@ public class GoodsReceiptDAO extends DBContext {
 
     private GoodsReceipt getGRByNumberInternal(Connection con, String receiptNumber) throws Exception {
         String sql = """
-                     select * from GoodsReceipts
-                     where ReceiptNumber = ? 
+                    select gr.*, po.PONumber 
+                     from GoodsReceipts gr
+                     left join PurchaseOrders po on gr.POID = po.POID
+                     where gr.ReceiptNumber = ?
                      """;
         try (PreparedStatement stm = con.prepareStatement(sql)) {
             stm.setString(1, receiptNumber);
@@ -615,6 +617,8 @@ public class GoodsReceiptDAO extends DBContext {
                     gr.setStatus(rs.getString("Status"));
                     gr.setReceiptDate(getLocalDateTime(rs, "ReceiptDate"));
                     gr.setReceivedBy(rs.getInt("ReceivedBy"));
+                    gr.setNotes(rs.getString("Notes"));
+                    gr.setPoNumber(rs.getString("PONumber"));
                     return gr;
                 }
             }

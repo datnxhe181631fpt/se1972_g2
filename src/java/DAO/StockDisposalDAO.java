@@ -320,8 +320,7 @@ public class StockDisposalDAO extends DBContext {
                          DisposedBy =?, DisposedAt = GETDATE()
                          where DisposalID = ? AND Status = 'APPROVED'
                          """;
-        String sqlGetDetails = "select ProductID, Quantity, UnitCost, Notes from StockDisposalDetails where DisposalID = ?";
-
+        String sqlGetDetails = "select ProductID, Quantity, UnitCost, SpecificReason, Notes from StockDisposalDetails where DisposalID = ?";
         String sqlUpdateStock = """
              update Products
              set Stock = Stock - ? , ReservedStock = ReservedStock - ?
@@ -379,7 +378,8 @@ public class StockDisposalDAO extends DBContext {
                         int productId = rs.getInt("ProductID");
                         int qty = rs.getInt("Quantity");
                         BigDecimal cost = rs.getBigDecimal("UnitCost");
-                        String detailNotes = rs.getString("Notes");
+                        String detNote = rs.getString("Notes");
+                        String specReason = rs.getString("SpecificReason");
 
                         stmStock.setInt(1, qty);
                         stmStock.setInt(2, qty);
@@ -404,9 +404,12 @@ public class StockDisposalDAO extends DBContext {
                         stmTx.setInt(5, stockBefore);
                         stmTx.setInt(6, stockAfter);
                         stmTx.setBigDecimal(7, cost);
-                        String txNote = detailNotes;
-                        if (txNote == null || txNote.trim().isEmpty()) {
-                            txNote = disposalNotes;
+                        String txNote = "";
+                        if (specReason != null && !specReason.trim().isEmpty()) {
+                            txNote += "[" + specReason + "] ";
+                        }
+                        if (detNote != null && !detNote.trim().isEmpty()) {
+                            txNote += detNote;
                         }
                         if (txNote == null || txNote.trim().isEmpty()) {
                             txNote = "Xuất hủy theo phiếu " + disposalNumber;
