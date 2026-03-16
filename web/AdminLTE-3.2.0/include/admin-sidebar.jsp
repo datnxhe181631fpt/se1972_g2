@@ -142,20 +142,26 @@
                     <ul class="nav nav-treeview">
                         <li class="nav-item">
                             <a href="${pageContext.request.contextPath}/admin/purchaseorder" class="nav-link">
-                                <i class="far fa-dot-circle nav-icon"></i>
+                                <i class="fas fa-file-import nav-icon"></i>
                                 <p>Nhập hàng</p>
                             </a>
                         </li>
                         <li class="nav-item">
+                            <a href="${pageContext.request.contextPath}/admin/goodsreceipt" class="nav-link">
+                                <i class="fas fa-truck-loading nav-icon"></i>                  
+                                <p>Nhận hàng</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
                             <a href="${pageContext.request.contextPath}/admin/stocktake" class="nav-link">
-                                <i class="fa-solid fa-list-check nav-icon"></i>
+                                <i class="fas fa-list-check nav-icon"></i>           
                                 <p>Kiểm kho</p>
                             </a>
                         </li>
 
                         <li class="nav-item">
                             <a href="${pageContext.request.contextPath}/admin/stockdisposal" class="nav-link">
-                                <i class="fa-solid fa-trash-can nav-icon"></i>
+                                <i class="fas fa-trash-can nav-icon"></i>
                                 <p>Xuất hủy</p>
                             </a>
                         </li>
