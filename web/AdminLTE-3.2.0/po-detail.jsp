@@ -69,13 +69,13 @@
                                     </div>
                                     <div class="col-md-4">
                                         <p><strong>Nhà cung cấp:</strong> ${not empty po.supplierName ? po.supplierName : po.supplierId}</p>
-                                        <p><strong>Ngày tạo:</strong> ${po.createdAt}</p>
+                                        <p><strong>Ngày tạo:</strong> ${po.createdAtFormatted}</p>
                                     </div>
                                     <div class="col-md-4">
                                         <p><strong>Ngày giao dự kiến:</strong> 
                                             <c:choose>
                                                 <c:when test="${not empty po.expectedDate}">
-                                                    ${po.expectedDate}
+                                                    ${po.expectedDateFormatted}
                                                 </c:when>
                                                 <c:otherwise>
                                                     <span class="text-muted">(Chưa xác định)</span>
@@ -148,7 +148,7 @@
                                         Người duyệt:
                                         <c:choose>
                                             <c:when test="${not empty po.approvedBy}">
-                                                <strong>${not empty po.approvedByName ? po.approvedByName : po.approvedBy}</strong> - ${po.approvedAt}
+                                                <strong>${not empty po.approvedByName ? po.approvedByName : po.approvedBy}</strong> - ${po.approvedAtFormatted}
                                             </c:when>
                                             <c:otherwise>
                                                 <span class="text-muted">(Chưa duyệt)</span>

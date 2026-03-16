@@ -244,24 +244,23 @@
                                                         </table>
                                                 </div>
                                             </div>
-
-                                            <div class="card-footer">
-                                                <div class="row">
-                                                    <div class="col-md-6">
-                                                        <h5><i class="fas fa-calculator"></i> Tổng số lượng: <span class="badge badge-primary badge-lg" id="totalQuantity">0</span></h5>
-                                                    </div>
-                                                    <div class="col-md-6 text-right">
-                                                        <h4><strong>Tổng tiền:</strong> <span class="text-danger" id="totalAmount">0đ</span></h4>
-                                                    </div>
+                                            <!-- Notes -->
+                                            <div class="form-group mt-3">
+                                                <label for="notes"><i class="fas fa-sticky-note"></i> Ghi chú:</label>
+                                                <textarea class="form-control" id="notes" name="notes" rows="3" placeholder="Nhập ghi chú cho đơn đặt hàng...">${notes}</textarea>
+                                            </div>
+                                        </div>
+                                        <div class="card-footer">
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <h5><i class="fas fa-calculator"></i> Tổng số lượng: <span class="badge badge-primary badge-lg" id="totalQuantity">0</span></h5>
+                                                </div>
+                                                <div class="col-md-6 text-right">
+                                                    <h4><strong>Tổng tiền:</strong> <span class="text-danger" id="totalAmount">0đ</span></h4>
                                                 </div>
                                             </div>
                                         </div>
 
-                                        <!-- Notes -->
-                                        <div class="form-group mt-3">
-                                            <label for="notes"><i class="fas fa-sticky-note"></i> Ghi chú:</label>
-                                            <textarea class="form-control" id="notes" name="notes" rows="3" placeholder="Nhập ghi chú cho đơn đặt hàng...">${notes}</textarea>
-                                        </div><!-- ./them chi tiet san pham -->
 
                                 </div><!-- ./card-body -->
                                 <div class="card-footer">
@@ -272,17 +271,19 @@
                                         <i class="fas fa-save"></i> Gửi duyệt
                                     </button>
                                 </div>
-                                </form><!-- ./form -->
-                            </div><!-- /.card -->
-                        </div><!-- ./col-12 -->
-                    </div><!-- ./row -->
-            </div><!-- ./container-fluid -->
-        </section><!-- ./content -->
 
-    </div><!-- ./content-wrapper -->
+                            </div><!-- ./card-body -->
+                            </form><!-- ./form -->
+                        </div><!-- /.card -->
+                    </div><!-- ./col-12 -->
+            </div><!-- ./row -->
+        </div><!-- ./container-fluid -->
+    </section><!-- ./content -->
 
-    <!-- Footer -->
-    <jsp:include page="include/admin-footer.jsp" />
+</div><!-- ./content-wrapper -->
+
+<!-- Footer -->
+<jsp:include page="include/admin-footer.jsp" />
 </div><!-- ./wrapper -->
 
 <!-- Add product modal -->
@@ -716,47 +717,47 @@
                         return value.toLocaleString('vi-VN', {style: 'currency', currency: 'VND'}).replace('₫', 'đ');
                     }
 </script>
-<script src="${pageContext.request.contextPath}/AdminLTE-3.2.0/plugins/jquery/jquery.min.js"></script>
+<!--<script src="${pageContext.request.contextPath}/AdminLTE-3.2.0/plugins/jquery/jquery.min.js"></script>
 <script src="${pageContext.request.contextPath}/AdminLTE-3.2.0/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
-<!--<script src="${pageContext.request.contextPath}/AdminLTE-3.2.0/dist/js/adminlte.min.js"></script>-->
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="${pageContext.request.contextPath}/AdminLTE-3.2.0/dist/js/adminlte.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>-->
 <script>
-                    $(document).ready(function () {
-                        $('#supplierId').select2({
-                            theme: 'bootstrap4',
-                            placeholder: '-- Chọn nhà cung cấp --'
-                        });
-                        $('#productSelect').select2({
-                            theme: 'bootstrap4',
-                            placeholder: '-- Chọn sản phẩm --',
-                            dropdownParent: $('#addProductModal')
-                        });
+    $(document).ready(function () {
+        $('#supplierId').select2({
+            theme: 'bootstrap4',
+            placeholder: '-- Chọn nhà cung cấp --'
+        });
+        $('#productSelect').select2({
+            theme: 'bootstrap4',
+            placeholder: '-- Chọn sản phẩm --',
+            dropdownParent: $('#addProductModal')
+        });
 
-                        $('#addProductModal').on('hidden.bs.modal', function () {
-                            if ($('.modal-backdrop').length > 0) {
-                                $('.modal-backdrop').remove();
-                                $('body').removeClass('modal-open').css('padding-right', '');
-                            }
-                        });
+        $('#addProductModal').on('hidden.bs.modal', function () {
+            if ($('.modal-backdrop').length > 0) {
+                $('.modal-backdrop').remove();
+                $('body').removeClass('modal-open').css('padding-right', '');
+            }
+        });
 
-                        //handle discount type change in modal
-                        $('#productDiscountType').on('change', function () {
-                            var discountInput = $('#productDiscount');
-                            var discountType = $(this).val();
+        //handle discount type change in modal
+        $('#productDiscountType').on('change', function () {
+            var discountInput = $('#productDiscount');
+            var discountType = $(this).val();
 
-                            if (discountType === 'PERCENT') {
-                                discountInput.attr('max', '100');
-                                discountInput.attr('step', '0.01');
-                                if (parseFloat(discountInput.val()) > 100) {
-                                    discountInput.val('100');
-                                }
-                            } else {
-                                discountInput.removeAttr('max');
-                                discountInput.attr('step', '1000');
-                            }
-                        });
+            if (discountType === 'PERCENT') {
+                discountInput.attr('max', '100');
+                discountInput.attr('step', '0.01');
+                if (parseFloat(discountInput.val()) > 100) {
+                    discountInput.val('100');
+                }
+            } else {
+                discountInput.removeAttr('max');
+                discountInput.attr('step', '1000');
+            }
+        });
 
-                    });
+    });
 
 </script>
 

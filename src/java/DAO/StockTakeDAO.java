@@ -299,8 +299,8 @@ public class StockTakeDAO extends DBContext {
                 where  StockTakeID = ? AND Status = 'PENDING_APPROVAL' AND  CreatedBy <> ?
                 """;
         String sqlGetDetails = """
-                               select ProductID, ActualQuantity,UnitCost
-                               from  StockTakeDetails 
+                                 select ProductID, ActualQuantity, UnitCost, Notes
+                                  from  StockTakeDetails
                                where  StockTakeID = ? AND ActualQuantity <> SystemQuantity
                                """;
         String sqlUpdateStock = """
@@ -317,12 +317,15 @@ public class StockTakeDAO extends DBContext {
                               """;
 
         String stockTakeNumber = null;
+        String stockTakeNotes = null;
+
         try (Connection connection = getConnection(); PreparedStatement stm = connection.prepareStatement(
-                "select StockTakeNumber FROM StockTakes WHERE StockTakeID = ?")) {
+                "select StockTakeNumber, Notes  FROM StockTakes WHERE StockTakeID = ?")) {
             stm.setLong(1, id);
             try (ResultSet rs = stm.executeQuery()) {
                 if (rs.next()) {
-                    stockTakeNumber = rs.getString(1);
+                    stockTakeNumber = rs.getString("StockTakeNumber");
+                    stockTakeNotes = rs.getString("Notes");
                 }
             }
         } catch (Exception e) {
@@ -358,6 +361,7 @@ public class StockTakeDAO extends DBContext {
                             int productId = rs.getInt("ProductID");
                             int actQty = rs.getInt("ActualQuantity");
                             BigDecimal cost = rs.getBigDecimal("UnitCost");
+                            String detailNotes = rs.getString("Notes");
 
                             stmStock.setInt(1, actQty);
                             stmStock.setInt(2, productId);
@@ -377,7 +381,16 @@ public class StockTakeDAO extends DBContext {
                             stmTx.setInt(5, stockBefore);
                             stmTx.setInt(6, stockAfter);
                             stmTx.setBigDecimal(7, cost);
-                            stmTx.setString(8, "Stock take adjustment");
+
+                            String txNote = detailNotes;
+                            if (txNote == null || txNote.trim().isEmpty()) {
+                                txNote = stockTakeNotes;
+                            }
+                            if (txNote == null || txNote.trim().isEmpty()) {
+                                txNote = "Điều chỉnh kiểm kê theo phiếu " + stockTakeNumber;
+                            }
+
+                            stmTx.setString(8, txNote);
                             stmTx.setInt(9, approvedBy);
                             stmTx.addBatch();
                         }
@@ -519,6 +532,26 @@ public class StockTakeDAO extends DBContext {
                 } catch (Exception ex) {
                 }
             }
+        }
+        return false;
+    }
+    
+    
+   public boolean cancelST(long id, int cancelledBy) {
+        String sql = """
+                update StockTakes
+                set Status = 'CANCELLED',
+                    Notes = CASE
+                        WHEN Notes IS NULL OR Notes = '' THEN '(Đã bị hủy)'
+                        ELSE CONCAT(Notes, ' (Đã bị hủy)')
+                    END
+                where StockTakeID = ? AND Status IN ('IN_PROGRESS', 'PENDING_APPROVAL')
+                """;
+        try (Connection connection = getConnection(); PreparedStatement stm = connection.prepareStatement(sql)) {
+            stm.setLong(1, id);
+            return stm.executeUpdate() > 0;
+        } catch (Exception e) {
+            System.out.println("ERR: cancelST: " + e.getMessage());
         }
         return false;
     }

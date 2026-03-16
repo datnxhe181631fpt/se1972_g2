@@ -171,6 +171,12 @@
                                 <p>Lịch sử giao dịch</p>
                             </a>
                         </li>
+                        <li class="nav-item">
+                            <a href="${pageContext.request.contextPath}/admin/supplier" class="nav-link">
+                                <i class="fas fa-truck nav-icon"></i>
+                                <p>Nhà cung cấp</p>
+                            </a>
+                        </li>
                     </ul>
                 </li>
 
