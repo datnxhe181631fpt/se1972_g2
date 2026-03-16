@@ -98,6 +98,80 @@
                         </a>
                     </li>
                 </c:if>
+                <!-- ======================== MANAGER & STORE MANAGER MENU ======================== -->
+                <!-- Quản lý sản phẩm -->
+                <li class="nav-item">
+                    <a href="#" class="nav-link">
+                        <i class="nav-icon fas fa-book"></i>
+                        <p>
+                            Quản lý sản phẩm
+                            <i class="right fas fa-angle-left"></i>
+                        </p>
+                    </a>
+                    <ul class="nav nav-treeview">
+                        <li class="nav-item">
+                            <a href="${pageContext.request.contextPath}/admin/products" class="nav-link">
+                                <i class="far fa-circle nav-icon"></i>
+                                <p>Danh sách sản phẩm</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="categories" class="nav-link">
+                                <i class="far fa-dot-circle nav-icon"></i>
+                                <p>Danh mục</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="brands" class="nav-link">
+                                <i class="far fa-dot-circle nav-icon"></i>
+                                <p>Thương hiệu</p>
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+
+                <!-- Quản lý kho -->
+                <li class="nav-item">
+                    <a href="#" class="nav-link">
+                        <i class="nav-icon fas fa-warehouse"></i>
+                        <p>
+                            Quản lý kho
+                            <i class="right fas fa-angle-left"></i>
+                        </p>
+                    </a>
+                    <ul class="nav nav-treeview">
+                        <li class="nav-item">
+                            <a href="${pageContext.request.contextPath}/admin/employees" class="nav-link">
+                                <i class="far fa-circle nav-icon"></i>
+                                <p>Tồn kho</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="${pageContext.request.contextPath}/admin/purchaseorder" class="nav-link">
+                                <i class="far fa-dot-circle nav-icon"></i>
+                                <p>Nhập hàng</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="${pageContext.request.contextPath}/admin/stocktake" class="nav-link">
+                                <i class="fa-solid fa-list-check nav-icon"></i>
+                                <p>Kiểm kho</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="#" class="nav-link">
+                                <i class="far fa-dot-circle nav-icon"></i>
+                                <p>Xuất hủy</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="${pageContext.request.contextPath}/admin/inventorytransaction" class="nav-link">
+                                <i class="fas fa-history nav-icon"></i>
+                                <p>Lịch sử giao dịch</p>
+                            </a>
+                        </li>
+                    </ul>
+                </li>
 
                 <%-- ===== KHÁCH HÀNG – Saler (xem KH, điểm tích lũy, hạng thành viên) ===== --%>
                 <c:if test="${sessionScope.roleId == 5}">
