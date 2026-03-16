@@ -32,9 +32,10 @@
                             <div class="col-sm-6">
                                 <h1>Quản lý đơn đặt hàng</h1>
                             </div>
-                            <div>
+                            <div class="col-sm-6">
                                 <ol class="breadcrumb float-sm-right">
-                                    <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/dashboard">Home</a>
+                                    <li class="breadcrumb-item">
+                                        <a href="${pageContext.request.contextPath}/dashboard">Home</a>
                                     </li>
                                     <li class="breadcrumb-item active">Đơn đặt hàng</li>
                                 </ol>
@@ -72,13 +73,13 @@
                                         <h3 class="card-title">
                                             <i class="fas fa-search"></i> Tìm kiếm & Lọc
                                         </h3>
-                                        <a href="${pageContext.request.contextPath}/purchaseorder?action=add"
+                                        <a href="${pageContext.request.contextPath}/admin/purchaseorder?action=add"
                                            class="btn btn-success mb-2" style="margin-left: 80%;">
                                             <i class="fas fa-plus"></i> Tạo đơn đặt hàng mới
                                         </a>
                                     </div>
                                     <div class="card-body">
-                                        <form action="${pageContext.request.contextPath}/purchaseorder" method="get"
+                                        <form action="${pageContext.request.contextPath}/admin/purchaseorder" method="get"
                                               class="form-inline">
                                             <input type="hidden" name="action" value="list">
                                             <div class="form-group mr-3 mb-2">
@@ -112,7 +113,7 @@
                                             <button type="submit" class="btn btn-primary mb-2 mr-2">
                                                 <i class="fas fa-search"></i> Tìm kiếm
                                             </button>
-                                            <a href="${pageContext.request.contextPath}/purchaseorder?action=list"
+                                            <a href="${pageContext.request.contextPath}/admin/purchaseorder?action=list"
                                                class="btn btn-default mb-2 mr-2">
                                                 <i class="fas fa-redo"></i> Đặt lại
                                             </a>
@@ -133,19 +134,20 @@
                                                 <thead>
                                                     <tr>
                                                         <th style="width: 10%">Mã</th>
-                                                        <th style="width: 30%">Ngày tạo</th>
+                                                        <th style="width: 15%">Ngày tạo</th>
                                                         <th style="width: 20%">Nhà cung cấp</th>
-                                                        <th style="width: 20%">Tổng tiền</th>
-                                                        <th style="width: 10%">Trạng thái</th>
-                                                        <th style="width: 10%">Người tạo</th>
+                                                        <th style="width: 15%">Tổng tiền</th>
+                                                        <th style="width: 15%">Trạng thái</th>
+                                                        <th style="width: 15%">Người tạo</th>
+                                                        <th style="width: 10%" class="text-center">Thao tác</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
                                                     <c:forEach var="item" items="${lists}">
-                                                        <tr class="clickable-row" data-href="${pageContext.request.contextPath}/purchaseorder?action=detail&poNumber=${item.poNumber}"
+                                                        <tr class="clickable-row" data-href="${pageContext.request.contextPath}/admin/purchaseorder?action=detail&poNumber=${item.poNumber}"
                                                             style="cursor: pointer">
-                                                            <td>${item.poNumber}</td>
-                                                            <td>${item.createdAtFormatted}</td>
+                                                            <td> <a href="${pageContext.request.contextPath}/admin/purchaseorder?action=detail&poNumber=${item.poNumber}">${item.poNumber}</a></td>
+                                                            <td>${item.createdAt}</td>
                                                             <td>${item.supplierName}</td>
                                                             <td>${item.totalAmount}</td>
                                                             <td>
@@ -174,6 +176,20 @@
                                                                 </c:choose>
                                                             </td>
                                                             <td>${item.createdByName}</td>
+                                                            <td class="text-center">
+                                                                <div class="btn-group">
+                                                                    <a href="${pageContext.request.contextPath}/admin/purchaseorder?action=detail&poNumber=${item.poNumber}" 
+                                                                       class="btn btn-sm btn-info" title="Xem chi tiết">
+                                                                        <i class="fas fa-eye"></i>
+                                                                    </a>
+                                                                    <c:if test="${item.status == 'PENDING_APPROVAL'}">
+                                                                        <a href="${pageContext.request.contextPath}/admin/purchaseorder?action=edit&poNumber=${item.poNumber}" 
+                                                                           class="btn btn-sm btn-warning" title="Chỉnh sửa">
+                                                                            <i class="fas fa-edit"></i>
+                                                                        </a>
+                                                                    </c:if>
+                                                                </div>
+                                                            </td>
                                                         </tr>
 
                                                     </c:forEach>
@@ -201,11 +217,11 @@
                                                 <c:if test="${currentPage > 1}">
                                                     <li class="page-item">
                                                         <a class="page-link"
-                                                           href="purchaseorder?action=list&page=1&key=${param.key}&status=${param.status}&from=${param.from}&to=${param.to}">First</a>
+                                                           href="${pageContext.request.contextPath}/admin/purchaseorder?action=list&page=1&key=${param.key}&status=${param.status}&from=${param.from}&to=${param.to}">First</a>
                                                     </li>
                                                     <li class="page-item">
                                                         <a class="page-link"
-                                                           href="purchaseorder?action=list&page=${currentPage - 1}&key=${param.key}&status=${param.status}&from=${param.from}&to=${param.to}">«</a>
+                                                           href="${pageContext.request.contextPath}/admin/purchaseorder?action=list&page=${currentPage - 1}&key=${param.key}&status=${param.status}&from=${param.from}&to=${param.to}">«</a>
                                                     </li>
                                                 </c:if>
 
@@ -213,7 +229,7 @@
                                                     <c:if test="${i == currentPage || i == currentPage - 1 || i == currentPage + 1}">
                                                         <li class="page-item ${i == currentPage ? 'active' : ''}">
                                                             <a class="page-link"
-                                                               href="purchaseorder?action=list&page=${i}&key=${param.key}&status=${param.status}&from=${param.from}&to=${param.to}">${i}</a>
+                                                               href="${pageContext.request.contextPath}/admin/purchaseorder?action=list&page=${i}&key=${param.key}&status=${param.status}&from=${param.from}&to=${param.to}">${i}</a>
                                                         </li>
                                                     </c:if>
                                                 </c:forEach>
@@ -221,11 +237,11 @@
                                                 <c:if test="${currentPage < totalPages}">
                                                     <li class="page-item">
                                                         <a class="page-link"
-                                                           href="purchaseorder?action=list&page=${currentPage + 1}&key=${param.key}&status=${param.status}&from=${param.from}&to=${param.to}">»</a>
+                                                           href="${pageContext.request.contextPath}/admin/purchaseorder?action=list&page=${currentPage + 1}&key=${param.key}&status=${param.status}&from=${param.from}&to=${param.to}">»</a>
                                                     </li>
                                                     <li class="page-item">
                                                         <a class="page-link"
-                                                           href="purchaseorder?action=list&page=${totalPages}&key=${param.key}&status=${param.status}&from=${param.from}&to=${param.to}">Last</a>
+                                                           href="${pageContext.request.contextPath}/admin/purchaseorder?action=list&page=${totalPages}&key=${param.key}&status=${param.status}&from=${param.from}&to=${param.to}">Last</a>
                                                     </li>
                                                 </c:if>
                                             </ul>
@@ -245,19 +261,16 @@
         </div>
         <!-- ./wrapper -->
 
-<!--         jQuery 
-        <script src="${pageContext.request.contextPath}/assets/AdminLTE-3.2.0/plugins/jquery/jquery.min.js"></script>
-         Bootstrap 4 
-        <script src="${pageContext.request.contextPath}/assets/AdminLTE-3.2.0/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
-         AdminLTE App 
-        <script src="${pageContext.request.contextPath}/assets/AdminLTE-3.2.0/dist/js/adminlte.min.js"></script>-->
-
         <script>
             document.addEventListener("DOMContentLoaded", function () {
                 var rows = document.querySelectorAll(".clickable-row");
 
                 rows.forEach(function (row) {
                     row.addEventListener("click", function () {
+                        if (e.target.closest('.btn') || e.target.tagName === 'A') {
+                            return;
+                        }
+
                         var url = this.getAttribute("data-href");
                         if (url) {
                             window.location.href = url;
