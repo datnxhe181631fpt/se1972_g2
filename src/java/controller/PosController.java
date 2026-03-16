@@ -22,7 +22,9 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @WebServlet(name = "PosController", urlPatterns = {"/pos"})
 public class PosController extends HttpServlet {
@@ -91,11 +93,15 @@ public class PosController extends HttpServlet {
                 .mapToDouble(CartItem::getLineTotal)
                 .sum();
 
-        request.setAttribute("cart", cart);
-        request.setAttribute("totalAmount", totalAmount);
-
         // Danh mục từ DB (bảng Categories) - chỉ hiển thị filter nếu có dữ liệu
         List<Category> categories = categoryDAO.getAllActiveCategories();
+
+        // Tính thuế VAT theo loại sách
+        double vatAmount = calculateVatAmount(cart, categories);
+
+        request.setAttribute("cart", cart);
+        request.setAttribute("totalAmount", totalAmount);
+        request.setAttribute("vatAmount", vatAmount);
         request.setAttribute("categories", categories);
 
         // Sản phẩm luôn lấy từ DB: lọc theo key (tên/SKU) và categoryId (Categories.CategoryID)
@@ -127,6 +133,62 @@ public class PosController extends HttpServlet {
         }
 
         request.getRequestDispatcher("/AdminLTE-3.2.0/pos.jsp").forward(request, response);
+    }
+
+    /**
+     * Tính tổng tiền thuế VAT cho giỏ hàng dựa trên loại sách.
+     * Các nhóm sách sau được áp dụng 0% VAT:
+     * - Sách giáo khoa
+     * - Sách chính trị
+     * - Sách pháp luật
+     * - Sách khoa học kỹ thuật
+     * Các loại sách thông thường khác áp dụng 5% VAT.
+     */
+    private double calculateVatAmount(List<CartItem> cart, List<Category> categories) {
+        if (cart == null || cart.isEmpty()) {
+            return 0;
+        }
+        Map<Integer, Category> categoryMap = new HashMap<>();
+        if (categories != null) {
+            for (Category c : categories) {
+                categoryMap.put(c.getCategoryID(), c);
+            }
+        }
+        double vat = 0;
+        for (CartItem item : cart) {
+            Product p = item.getProduct();
+            if (p == null) {
+                continue;
+            }
+            int catId = p.getCategoryID();
+            Category cat = categoryMap.get(catId);
+            String name = cat != null ? cat.getCategoryName() : null;
+            double rate = getVatRateFromCategoryName(name);
+            vat += item.getLineTotal() * rate;
+        }
+        return vat;
+    }
+
+    private double getVatRateFromCategoryName(String categoryName) {
+        if (categoryName == null) {
+            return 0.05; // mặc định 5% cho sách thông thường
+        }
+        String name = categoryName.trim().toLowerCase();
+
+        // 0% VAT cho:
+        // - "Sách giáo khoa"
+        // - "Sách khoa học" (coi như sách khoa học kỹ thuật)
+        if (name.equals("sách giáo khoa")
+                || name.equals("sach giao khoa")
+                || name.equals("sách khoa học")
+                || name.equals("sach khoa hoc")) {
+            return 0.0;
+        }
+
+        // Các loại còn lại trong hệ thống hiện tại:
+        // Văn học Việt Nam, Văn học nước ngoài, Sách thiếu nhi,
+        // Sách kỹ năng, Sách kinh tế, Văn phòng phẩm -> 5% VAT
+        return 0.05;
     }
 
     private void addItemToCart(HttpServletRequest request, HttpServletResponse response)
@@ -252,20 +314,21 @@ public class PosController extends HttpServlet {
             paymentMethod = "CASH";
         }
 
-        // Resolve customer: nhập mã KH (KH001...) hoặc email; nếu email mới chưa có thì tự tạo khách hàng
+        // Resolve customer: nhập mã KH (KH001...) hoặc số điện thoại; nếu SĐT mới chưa có thì tự tạo khách hàng
         String resolvedCustomerId = null;
         if (customerInput != null && !customerInput.trim().isEmpty()) {
             String trimmed = customerInput.trim();
             Customer customer = customerDAO.getById(trimmed);
             if (customer == null) {
-                customer = customerDAO.getByEmail(trimmed);
+                customer = customerDAO.getByPhone(trimmed);
             }
             if (customer == null) {
-                // Email/mã mới chưa có trong hệ thống -> tự động tạo khách hàng (coi input là email)
+                // Mã KH/SĐT mới chưa có trong hệ thống -> tự động tạo khách hàng (coi input là SĐT)
                 Customer newCustomer = new Customer();
                 newCustomer.setCustomerID(customerDAO.getNextCustomerId());
                 newCustomer.setFullName("");
-                newCustomer.setEmail(trimmed);
+                newCustomer.setEmail(null);
+                newCustomer.setPhoneNumber(trimmed);
                 newCustomer.setBirthday(java.time.LocalDate.of(1990, 1, 1));
                 newCustomer.setStatus("ACTIVE");
                 newCustomer.setNote(null);
@@ -302,7 +365,8 @@ public class PosController extends HttpServlet {
                 discountPercent = 100;
             }
             double discountAmount = totalAmount * discountPercent / 100.0;
-            double finalAmount = totalAmount - discountAmount;
+            double vatAmount = calculateVatAmount(cart, categoryDAO.getAllActiveCategories());
+            double finalAmount = totalAmount - discountAmount + vatAmount;
 
             // Lưu thông tin đơn hàng tạm thời để xử lý sau khi VNPAY callback
             session.setAttribute("pendingCart", new ArrayList<>(cart));

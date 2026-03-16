@@ -4,6 +4,7 @@
 package DAO;
 
 import entity.CartItem;
+import entity.Product;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -56,7 +57,8 @@ public class SalesInvoiceDAO extends DBContext {
         if (discountPercent < 0) discountPercent = 0;
         if (discountPercent > 100) discountPercent = 100;
         double discountAmount = totalAmount * discountPercent / 100.0;
-        double finalAmount = totalAmount - discountAmount;
+        double vatAmount = calculateVatAmount(cart);
+        double finalAmount = totalAmount - discountAmount + vatAmount;
 
         String insertInvoiceSql = """
                 INSERT INTO SalesInvoice
@@ -207,6 +209,54 @@ public class SalesInvoiceDAO extends DBContext {
                 }
             }
         }
+    }
+
+    /**
+     * Tính tổng tiền thuế VAT cho giỏ hàng dựa trên loại sách.
+     * Các nhóm sách sau được áp dụng 0% VAT:
+     * - Sách giáo khoa
+     * - Sách chính trị
+     * - Sách pháp luật
+     * - Sách khoa học kỹ thuật
+     * Các loại sách thông thường khác áp dụng 5% VAT.
+     */
+    private double calculateVatAmount(List<CartItem> cart) {
+        if (cart == null || cart.isEmpty()) {
+            return 0;
+        }
+        double vat = 0;
+        for (CartItem item : cart) {
+            Product p = item.getProduct();
+            if (p == null) {
+                continue;
+            }
+            String name = null;
+            double rate = getVatRateFromCategoryName(name);
+            vat += item.getLineTotal() * rate;
+        }
+        return vat;
+    }
+
+    private double getVatRateFromCategoryName(String categoryName) {
+        if (categoryName == null) {
+            return 0.05; // mặc định 5% cho sách thông thường
+        }
+        String name = categoryName.trim().toLowerCase();
+
+        // 0% VAT cho:
+        // - "Sách giáo khoa"
+        // - "Sách khoa học" (coi như sách khoa học kỹ thuật)
+        if (name.equals("sách giáo khoa")
+                || name.equals("sach giao khoa")
+                || name.equals("sách khoa học")
+                || name.equals("sach khoa hoc")) {
+            return 0.0;
+        }
+
+        // Các loại còn lại trong hệ thống hiện tại:
+        // Văn học Việt Nam, Văn học nước ngoài, Sách thiếu nhi,
+        // Sách kỹ năng, Sách kinh tế, Văn phòng phẩm -> 5% VAT
+        return 0.05;
     }
 
     /**

@@ -40,8 +40,8 @@ public class CustomerDAO extends DBContext {
     // CREATE
     public void insert(Customer c) {
         String sql = """
-            INSERT INTO Customers(CustomerID, FullName, Email, Birthday, Status, Note)
-            VALUES (?, ?, ?, ?, ?, ?)
+            INSERT INTO Customers(CustomerID, FullName, Email, PhoneNumber, Birthday, Status, Note)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
         """;
         try (Connection con = getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
@@ -49,13 +49,14 @@ public class CustomerDAO extends DBContext {
             ps.setString(1, c.getCustomerID());
             ps.setString(2, c.getFullName());
             ps.setString(3, c.getEmail());
+            ps.setString(4, c.getPhoneNumber());
             if (c.getBirthday() != null) {
-                ps.setDate(4, Date.valueOf(c.getBirthday()));
+                ps.setDate(5, Date.valueOf(c.getBirthday()));
             } else {
-                ps.setNull(4, java.sql.Types.DATE);
+                ps.setNull(5, java.sql.Types.DATE);
             }
-            ps.setString(5, c.getStatus());
-            ps.setString(6, c.getNote());
+            ps.setString(6, c.getStatus());
+            ps.setString(7, c.getNote());
             ps.executeUpdate();
 
         } catch (SQLException e) {
@@ -97,6 +98,23 @@ public class CustomerDAO extends DBContext {
         return null;
     }
 
+    // READ by PhoneNumber
+    public Customer getByPhone(String phoneNumber) {
+        String sql = "SELECT * FROM Customers WHERE PhoneNumber = ?";
+        try (Connection con = getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setString(1, phoneNumber);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return map(rs);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
     // READ ALL
     public List<Customer> getAll() {
         List<Customer> list = new ArrayList<>();
@@ -118,7 +136,7 @@ public class CustomerDAO extends DBContext {
     public void update(Customer c) {
         String sql = """
             UPDATE Customers
-            SET FullName=?, Email=?, Birthday=?, Status=?, Note=?
+            SET FullName=?, Email=?, PhoneNumber=?, Birthday=?, Status=?, Note=?
             WHERE CustomerID=?
         """;
         try (Connection con = getConnection();
@@ -126,10 +144,15 @@ public class CustomerDAO extends DBContext {
 
             ps.setString(1, c.getFullName());
             ps.setString(2, c.getEmail());
-            ps.setDate(3, Date.valueOf(c.getBirthday()));
-            ps.setString(4, c.getStatus());
-            ps.setString(5, c.getNote());
-            ps.setString(6, c.getCustomerID());
+            ps.setString(3, c.getPhoneNumber());
+            if (c.getBirthday() != null) {
+                ps.setDate(4, Date.valueOf(c.getBirthday()));
+            } else {
+                ps.setNull(4, java.sql.Types.DATE);
+            }
+            ps.setString(5, c.getStatus());
+            ps.setString(6, c.getNote());
+            ps.setString(7, c.getCustomerID());
             ps.executeUpdate();
 
         } catch (SQLException e) {
@@ -156,8 +179,15 @@ public class CustomerDAO extends DBContext {
         c.setCustomerID(rs.getString("CustomerID"));
         c.setFullName(rs.getString("FullName"));
         c.setEmail(rs.getString("Email"));
-        c.setBirthday(rs.getDate("Birthday").toLocalDate());
-        c.setRegisterDate(rs.getTimestamp("RegisterDate").toLocalDateTime());
+        c.setPhoneNumber(rs.getString("PhoneNumber"));
+        Date birthday = rs.getDate("Birthday");
+        if (birthday != null) {
+            c.setBirthday(birthday.toLocalDate());
+        }
+        Timestamp registerTs = rs.getTimestamp("RegisterDate");
+        if (registerTs != null) {
+            c.setRegisterDate(registerTs.toLocalDateTime());
+        }
         c.setStatus(rs.getString("Status"));
         c.setNote(rs.getString("Note"));
         return c;

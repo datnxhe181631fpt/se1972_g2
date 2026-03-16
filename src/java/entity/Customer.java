@@ -15,6 +15,7 @@ public class Customer {
     private String customerID;
     private String fullName;
     private String email;
+    private String phoneNumber;
     private LocalDate birthday;
     private LocalDateTime registerDate;
     private String status;
@@ -23,10 +24,11 @@ public class Customer {
     public Customer() {
     }
 
-    public Customer(String customerID, String fullName, String email, LocalDate birthday, LocalDateTime registerDate, String status, String note) {
+    public Customer(String customerID, String fullName, String email, String phoneNumber, LocalDate birthday, LocalDateTime registerDate, String status, String note) {
         this.customerID = customerID;
         this.fullName = fullName;
         this.email = email;
+        this.phoneNumber = phoneNumber;
         this.birthday = birthday;
         this.registerDate = registerDate;
         this.status = status;
@@ -55,6 +57,14 @@ public class Customer {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public String getPhoneNumber() {
+        return phoneNumber;
+    }
+
+    public void setPhoneNumber(String phoneNumber) {
+        this.phoneNumber = phoneNumber;
     }
 
     public LocalDate getBirthday() {

@@ -702,7 +702,9 @@
                                             </div>
                                             <div class="pos-order-summary-row">
                                                 <span>Thuế</span>
-                                                <span>0 đ</span>
+                                                <span id="pos-tax-amount">
+                                                    <fmt:formatNumber value="${vatAmount}" type="number" maxFractionDigits="0"/> đ
+                                                </span>
                                             </div>
                                             <hr style="border-color:#111827; margin: 6px 0;">
                                             <div class="d-flex justify-content-between align-items-center">
@@ -716,6 +718,19 @@
                                             <label for="pos-discount" class="mb-1"><small>Giảm giá (%)</small></label>
                                             <input form="checkout-form" type="number" id="pos-discount" name="discountPercent" min="0" max="100" step="0.5" value="0"
                                                    class="form-control form-control-sm pos-note" placeholder="0">
+                                        </div>
+                                        <div class="mb-2">
+                                            <label for="pos-cash" class="mb-1"><small>Tiền khách đưa</small></label>
+                                            <input type="number"
+                                                   id="pos-cash"
+                                                   min="0"
+                                                   step="1000"
+                                                   class="form-control form-control-sm pos-note"
+                                                   placeholder="Nhập số tiền khách trả">
+                                        </div>
+                                        <div class="mb-2 d-flex justify-content-between align-items-center">
+                                            <span class="text-sm text-muted">Tiền thừa</span>
+                                            <span id="pos-change-amount" class="font-weight-bold">0 đ</span>
                                         </div>
                                         <div class="mb-2">
                                             <label class="mb-1"><small>Phương thức thanh toán</small></label>
@@ -733,9 +748,9 @@
                                             </div>
                                         </div>
                                         <div class="mb-2">
-                                            <label for="customerId" class="mb-1"><small>Email khách hàng (tùy chọn)</small></label>
-                                            <input form="checkout-form" type="email" id="customerId" name="customerId" class="form-control form-control-sm"
-                                                   placeholder="VD: khachhang@example.com">
+                                            <label for="customerId" class="mb-1"><small>Số điện thoại khách hàng (tùy chọn)</small></label>
+                                            <input form="checkout-form" type="text" id="customerId" name="customerId" class="form-control form-control-sm"
+                                                   placeholder="VD: 0912345678">
                                         </div>
                                         <div class="mb-2">
                                             <label class="mb-1"><small>Ghi chú hóa đơn</small></label>
@@ -773,6 +788,7 @@
         <script src="${pageContext.request.contextPath}/AdminLTE-3.2.0/dist/js/adminlte.min.js"></script>
         <script>
                                                                             var posSubtotal = ${totalAmount};
+                                                                            var posVat = ${vatAmount != null ? vatAmount : 0};
                                                                             function posUpdateSummary() {
                                                                                 var pct = parseFloat($('#pos-discount').val()) || 0;
                                                                                 if (pct < 0)
@@ -780,16 +796,27 @@
                                                                                 if (pct > 100)
                                                                                     pct = 100;
                                                                                 var discount = posSubtotal * pct / 100;
-                                                                                var finalAmount = posSubtotal - discount;
+                                                                                var finalAmount = posSubtotal - discount + posVat;
+                                                                                if (finalAmount < 0) {
+                                                                                    finalAmount = 0;
+                                                                                }
                                                                                 $('#pos-discount-pct').text(pct);
                                                                                 $('#pos-discount-amount').text(discount.toLocaleString('vi-VN', {maximumFractionDigits: 0}) + ' đ');
+                                                                                $('#pos-tax-amount').text(posVat.toLocaleString('vi-VN', {maximumFractionDigits: 0}) + ' đ');
+                                                                                var cash = parseFloat($('#pos-cash').val()) || 0;
+                                                                                var change = cash - finalAmount;
+                                                                                if (change < 0) {
+                                                                                    change = 0;
+                                                                                }
                                                                                 $('#pos-final-amount').text(finalAmount.toLocaleString('vi-VN', {maximumFractionDigits: 0}) + ' đ');
+                                                                                $('#pos-change-amount').text(change.toLocaleString('vi-VN', {maximumFractionDigits: 0}) + ' đ');
                                                                             }
                                                                             $(function () {
                                                                                 $('#pos-category').on('change', function () {
                                                                                     $('#pos-category-form').submit();
                                                                                 });
                                                                                 $('#pos-discount').on('input change', posUpdateSummary);
+                                                                                $('#pos-cash').on('input change', posUpdateSummary);
                                                                                 $('input[name="paymentMethod"]').on('change', function () {
                                                                                     $('.pos-payment-option').removeClass('active');
                                                                                     $(this).closest('.pos-payment-option').addClass('active');
@@ -819,7 +846,7 @@
                                                                                     }, 100);
 
                                                                                 });
-
+                                                                                posUpdateSummary();
                                                                             });
         </script>
     </body>
