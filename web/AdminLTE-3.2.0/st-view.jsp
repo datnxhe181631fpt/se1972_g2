@@ -241,7 +241,8 @@
                                     </div>
 
                                     <div class="card-body">
-                                        <c:if test="${st.status == 'IN_PROGRESS' && (sessionScope.employeeId == st.createdBy || sessionScope.roleName == 'Manager' || sessionScope.roleName == 'Store Manager' || sessionScope.roleName == 'Admin')}">                                            <form action="${pageContext.request.contextPath}/admin/stocktake" method="post">
+                                        <c:if test="${st.status == 'IN_PROGRESS' && (sessionScope.employeeId == st.createdBy || sessionScope.roleName == 'Manager' || sessionScope.roleName == 'Store Manager' || sessionScope.roleName == 'Admin')}">                                           
+                                            <form action="${pageContext.request.contextPath}/admin/stocktake" method="post">
                                                 <input type="hidden" name="action" value="submit">
                                                 <input type="hidden" name="number" value="${st.stockTakeNumber}">
                                                 <button type="submit" class="btn btn-primary btn-block mb-2"
@@ -249,6 +250,11 @@
                                                     <i class="fas fa-paper-plane"></i> Gửi duyệt
                                                 </button>
                                             </form>
+                                                
+                                            <a href="${pageContext.request.contextPath}/admin/stocktake?action=step2&stNumber=${st.stockTakeNumber}" 
+                                               class="btn btn-info btn-block mb-2">
+                                                <i class="fas fa-edit"></i> Thực hiện kiểm kê lại
+                                            </a>
                                         </c:if> 
 
                                         <c:if test="${st.status == 'PENDING_APPROVAL' && (sessionScope.roleName == 'Manager' || sessionScope.roleName == 'Store Manager' || sessionScope.roleName == 'Admin')}">

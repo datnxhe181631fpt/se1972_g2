@@ -130,9 +130,11 @@
                                         </div>
                                         <div class="col-md-4 form-group">
                                             <label>Ngày kiểm kê</label>
-                                            <input type="hidden" id="stockTakeDate" value="${today}">
+                                            <c:set var="displayDate" value="${not empty st.stockTakeDate ? st.stockTakeDate : today}" />
+
+                                            <input type="hidden" id="stockTakeDate" value="${displayDate}">
                                             <div class="form-control-plaintext font-weight-bold">
-                                                <i class="fas fa-calendar-day text-primary mr-1"></i>${today}
+                                                <i class="fas fa-calendar-day text-primary mr-1"></i>${displayDate}
                                             </div>
                                         </div>
                                         <div class="col-md-4 form-group">
@@ -454,7 +456,7 @@
             $('#btnToStep2').on('click', function () {
                 var date = $('#stockTakeDate').val();
                 var scope = $('#scopeType').val();
-                var todayVal = '${today}';
+                var todayVal = '${not empty st.stockTakeDate ? st.stockTakeDate : today}';
                 if (!date) {
                     alert('Vui lòng chọn ngày kiểm kê.');
                     return;
@@ -635,11 +637,48 @@
             }
 
             $(function () {
+            <c:if test="${not empty st && st.status == 'IN_PROGRESS'}">
+                $('#scopeType').val('${st.scopeType}').trigger('change');
+                <c:if test="${st.scopeType == 'CATEGORY'}">
+                $('#categorySelect').val('${st.scopeValue}').trigger('change');
+                </c:if>
+                $('#st1Notes').val('${st.notes != null ? st.notes : ""}');
+
+                <c:forEach var="detail" items="${st.details}">
+                savedActQtys[${detail.productId}] = ${detail.actualQuantity};
+                savedReasons[${detail.productId}] = '${detail.varianceReason != null ? detail.varianceReason : ""}';
+                savedNotes[${detail.productId}] = '${detail.notes != null ? detail.notes : ""}';
+                </c:forEach>
+
+                var editProducts = [];
+                <c:forEach var="detail" items="${st.details}">
+                editProducts.push({
+                    id: ${detail.productId},
+                    name: '${detail.productName.replace("'", "\\'")}',
+                    sku: '${detail.productSku}',
+                    stock: ${detail.systemQuantity}
+                });
+                </c:forEach>
+
+                $('#f_stNumber').val('${st.stockTakeNumber}');
+                $('#f_stockTakeDate').val('${st.stockTakeDate}');
+                $('#f_scopeType').val('${st.scopeType}');
+                $('#f_notes').val('${st.notes != null ? st.notes : ""}');
+                $('#hdr_stNumber').text('${st.stockTakeNumber}');
+                $('#hdr_date').text('${st.stockTakeDate}');
+
+                buildCountTable(editProducts);
+                showStep(2);
+            </c:if>
+            });
+            $(function () {
+            <c:if test="${empty st}">
                 showStep(1);
                 var initialScope = $('#scopeType').val();
                 if (initialScope === 'ALL') {
                     $('#all-scope-info').show();
                 }
+            </c:if>
             });
         </script>
     </body>

@@ -451,23 +451,45 @@ public class StockTakeDAO extends DBContext {
         return false;
     }
 
-    public boolean updateSTDetails(long stId, List<StockTakeDetail> details) {
-        String sqlDel = "delete from StockTakeDetails where StockTakeID = ? ";
+    public boolean updateSTDetails(StockTake st) {
+        String sqlUpdateMaster = """
+            UPDATE StockTakes 
+            SET ScopeType = ?, ScopeValue = ?, Notes = ?, 
+                TotalItems = ?, TotalVarianceQty = ?, TotalVarianceValue = ?
+            WHERE StockTakeID = ?
+            """;
+
+        String sqlDel = "DELETE FROM StockTakeDetails WHERE StockTakeID = ?";
+
         String sqlIns = """
-                        insert into StockTakeDetails
-                          (StockTakeID, ProductID, SystemQuantity, ActualQuantity, UnitCost, VarianceReason, Notes)
-                            values (?,?,?,?,?,?,?)
-                        """;
+            INSERT INTO StockTakeDetails 
+              (StockTakeID, ProductID, SystemQuantity, ActualQuantity, UnitCost, VarianceReason, Notes) 
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            """;
+
         Connection connection = getConnection();
         try {
             connection.setAutoCommit(false);
+
+            try (PreparedStatement stmUpdate = connection.prepareStatement(sqlUpdateMaster)) {
+                stmUpdate.setString(1, st.getScopeType());
+                stmUpdate.setString(2, st.getScopeValue());
+                stmUpdate.setString(3, st.getNotes());
+                stmUpdate.setInt(4, st.getTotalItems());
+                stmUpdate.setInt(5, st.getTotalVarianceQty());
+                stmUpdate.setBigDecimal(6, st.getTotalVarianceValue());
+                stmUpdate.setLong(7, st.getId());
+                stmUpdate.executeUpdate();
+            }
+
             try (PreparedStatement stmDel = connection.prepareStatement(sqlDel)) {
-                stmDel.setLong(1, stId);
+                stmDel.setLong(1, st.getId());
                 stmDel.executeUpdate();
             }
+
             try (PreparedStatement stmIns = connection.prepareStatement(sqlIns)) {
-                for (StockTakeDetail detail : details) {
-                    stmIns.setLong(1, stId);
+                for (StockTakeDetail detail : st.getDetails()) {
+                    stmIns.setLong(1, st.getId());
                     stmIns.setInt(2, detail.getProductId());
                     stmIns.setInt(3, detail.getSystemQuantity());
                     stmIns.setInt(4, detail.getActualQuantity());
@@ -478,18 +500,24 @@ public class StockTakeDAO extends DBContext {
                 }
                 stmIns.executeBatch();
             }
+
             connection.commit();
             return true;
+
         } catch (Exception e) {
             System.out.println("ERR: updateSTDetails: " + e.getMessage());
-            try {
-                connection.rollback();
-            } catch (Exception ex) {
+            if (connection != null) {
+                try {
+                    connection.rollback();
+                } catch (Exception ex) {
+                }
             }
         } finally {
-            try {
-                connection.setAutoCommit(true);
-            } catch (Exception ex) {
+            if (connection != null) {
+                try {
+                    connection.setAutoCommit(true);
+                } catch (Exception ex) {
+                }
             }
         }
         return false;
