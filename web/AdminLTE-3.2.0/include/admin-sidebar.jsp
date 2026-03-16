@@ -123,14 +123,14 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="${pageContext.request.contextPath}/purchaseorder" class="nav-link">
+                            <a href="${pageContext.request.contextPath}/admin/purchaseorder" class="nav-link">
                                 <i class="far fa-dot-circle nav-icon"></i>
                                 <p>Nhập hàng</p>
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="#" class="nav-link">
-                                <i class="far fa-dot-circle nav-icon"></i>
+                            <a href="${pageContext.request.contextPath}/admin/stocktake" class="nav-link">
+                                <i class="fa-solid fa-list-check nav-icon"></i>
                                 <p>Kiểm kho</p>
                             </a>
                         </li>
@@ -138,6 +138,12 @@
                             <a href="#" class="nav-link">
                                 <i class="far fa-dot-circle nav-icon"></i>
                                 <p>Xuất hủy</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="${pageContext.request.contextPath}/admin/inventorytransaction" class="nav-link">
+                                <i class="fas fa-history nav-icon"></i>
+                                <p>Lịch sử giao dịch</p>
                             </a>
                         </li>
                     </ul>
