@@ -19,7 +19,7 @@ import util.Validation;
  *
  * @author qp
  */
-@WebServlet(name = "SupplierController", urlPatterns = {"/supplier"})
+@WebServlet(name = "SupplierController", urlPatterns = {"/admin/supplier"})
 public class SupplierController extends HttpServlet {
 
     private SupplierDAO supDAO = new SupplierDAO();
@@ -185,6 +185,6 @@ public class SupplierController extends HttpServlet {
         }
 
         request.getSession().setAttribute("msg", msg);
-        response.sendRedirect("supplier?action=list");
+        response.sendRedirect(request.getContextPath() + "/admin/supplier?action=list");
     }
 }

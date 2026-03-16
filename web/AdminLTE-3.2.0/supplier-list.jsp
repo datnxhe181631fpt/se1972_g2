@@ -67,7 +67,7 @@
                                         </h3>
                                     </div>
                                     <div class="card-body">
-                                        <form action="${pageContext.request.contextPath}/supplier" method="get" class="form-inline">
+                                        <form action="${pageContext.request.contextPath}/admin/supplier" method="get" class="form-inline">
                                             <input type="hidden" name="action" value="search">
                                             <div class="form-group mr-3 mb-2">
                                                 <label for="key" class="mr-2">Tìm kiếm:</label>
@@ -86,10 +86,10 @@
                                             <button type="submit" class="btn btn-primary mb-2 mr-2">
                                                 <i class="fas fa-search"></i> Tìm kiếm
                                             </button>
-                                            <a href="${pageContext.request.contextPath}/supplier?action=list" class="btn btn-default mb-2 mr-2">
+                                            <a href="${pageContext.request.contextPath}/admin/supplier?action=list" class="btn btn-default mb-2 mr-2">
                                                 <i class="fas fa-redo"></i> Đặt lại
                                             </a>
-                                            <a href="${pageContext.request.contextPath}/supplier?action=add" class="btn btn-success mb-2">
+                                            <a href="${pageContext.request.contextPath}/admin/supplier?action=add" class="btn btn-success mb-2">
                                                 <i class="fas fa-plus"></i> Tạo NCC mới
                                             </a>
                                         </form>
@@ -197,11 +197,11 @@
                                                                             <div class="d-flex justify-content-between align-items-center">
                                                                                 <span class="text-muted"><small><i class="far fa-calendar-alt"></i> Ngày tạo: 10/12/2025</small></span>
                                                                                 <div>
-                                                                                    <a href="${pageContext.request.contextPath}/supplier?action=edit&code=${item.supplierCode}" class="btn btn-warning btn-sm">
+                                                                                    <a href="${pageContext.request.contextPath}/admin/supplier?action=edit&code=${item.supplierCode}" class="btn btn-warning btn-sm">
                                                                                         <i class="fas fa-edit"></i> Sửa
                                                                                     </a>
                                                                                     <c:if test="${item.isActive}">
-                                                                                        <form action="${pageContext.request.contextPath}/supplier" method="post" style="display: inline-block;">
+                                                                                        <form action="${pageContext.request.contextPath}/admin/supplier" method="post" style="display: inline-block;">
                                                                                             <input type="hidden" name="code" value="${item.supplierCode}">
                                                                                             <button type="submit" name="action" value="deactive" class="btn btn-secondary btn-sm" onclick="return confirm('Bạn chắc chắn muốn hủy kích hoạt?');">
                                                                                                 <i class="fas fa-ban"></i> Hủy kích hoạt
@@ -209,14 +209,14 @@
                                                                                         </form>
                                                                                     </c:if>
                                                                                     <c:if test="${!item.isActive}">
-                                                                                        <form action="${pageContext.request.contextPath}/supplier" method="post" style="display: inline-block;">
+                                                                                        <form action="${pageContext.request.contextPath}/admin/supplier" method="post" style="display: inline-block;">
                                                                                             <input type="hidden" name="code" value="${item.supplierCode}">
                                                                                             <button type="submit" name="action" value="active" class="btn btn-success btn-sm">
                                                                                                 <i class="fas fa-check"></i> Kích hoạt
                                                                                             </button>
                                                                                         </form>
                                                                                     </c:if>
-                                                                                    <form action="${pageContext.request.contextPath}/supplier" method="post" style="display: inline-block;">
+                                                                                    <form action="${pageContext.request.contextPath}/admin/supplier" method="post" style="display: inline-block;">
                                                                                         <input type="hidden" name="code" value="${item.supplierCode}">
                                                                                         <button type="submit" name="action" value="delete" class="btn btn-danger btn-sm" onclick="return confirm('Bạn chắc chắn muốn xóa nhà cung cấp này?');">
                                                                                             <i class="fas fa-trash"></i> Xóa
