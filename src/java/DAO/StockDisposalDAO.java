@@ -313,16 +313,15 @@ public class StockDisposalDAO extends DBContext {
     }
 
     public boolean completeDisposal(long id, int disposedBy) {
-        String sqlGetNumber = "select DisposalNumber from StockDisposals where DisposalID = ?";
+        String sqlGetNumber = "select DisposalNumber, Notes from StockDisposals where DisposalID = ?";
         String sqlComplete = """
                          update StockDisposals
                          set Status = 'COMPLETED', PhysicalDisposalConfirmed = 1,
                          DisposedBy =?, DisposedAt = GETDATE()
                          where DisposalID = ? AND Status = 'APPROVED'
                          """;
-        String sqlGetDetails = """
-                           select ProductID, Quantity, UnitCost from StockDisposalDetails where DisposalID = ?
-                           """;
+        String sqlGetDetails = "select ProductID, Quantity, UnitCost, Notes from StockDisposalDetails where DisposalID = ?";
+
         String sqlUpdateStock = """
              update Products
              set Stock = Stock - ? , ReservedStock = ReservedStock - ?
@@ -337,11 +336,14 @@ public class StockDisposalDAO extends DBContext {
                          """;
 
         String disposalNumber = null;
+        String disposalNotes = null;
+
         try (Connection con = getConnection(); PreparedStatement stm = con.prepareStatement(sqlGetNumber)) {
             stm.setLong(1, id);
             try (ResultSet rs = stm.executeQuery()) {
                 if (rs.next()) {
-                    disposalNumber = rs.getString(1);
+                    disposalNumber = rs.getString("DisposalNumber");
+                    disposalNotes = rs.getString("Notes");
                 }
             }
         } catch (Exception e) {
@@ -377,6 +379,7 @@ public class StockDisposalDAO extends DBContext {
                         int productId = rs.getInt("ProductID");
                         int qty = rs.getInt("Quantity");
                         BigDecimal cost = rs.getBigDecimal("UnitCost");
+                        String detailNotes = rs.getString("Notes");
 
                         stmStock.setInt(1, qty);
                         stmStock.setInt(2, qty);
@@ -401,7 +404,14 @@ public class StockDisposalDAO extends DBContext {
                         stmTx.setInt(5, stockBefore);
                         stmTx.setInt(6, stockAfter);
                         stmTx.setBigDecimal(7, cost);
-                        stmTx.setString(8, "Stock disposal: " + disposalNumber);
+                        String txNote = detailNotes;
+                        if (txNote == null || txNote.trim().isEmpty()) {
+                            txNote = disposalNotes;
+                        }
+                        if (txNote == null || txNote.trim().isEmpty()) {
+                            txNote = "Xuất hủy theo phiếu " + disposalNumber;
+                        }
+                        stmTx.setString(8, txNote);
                         stmTx.setInt(9, disposedBy);
                         stmTx.addBatch();
                     }

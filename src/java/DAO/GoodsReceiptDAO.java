@@ -420,7 +420,15 @@ public class GoodsReceiptDAO extends DBContext {
                     stmTx.setInt(5, stockBefore);
                     stmTx.setInt(6, stockAfter);
                     stmTx.setBigDecimal(7, detail.getUnitCost());
-                    stmTx.setString(8, "Goods receipt: " + receiptNumber);
+                    String txNote = detail.getNotes();
+                    if (txNote == null || txNote.trim().isEmpty()) {
+                        txNote = gr.getNotes();
+                    }
+                    if (txNote == null || txNote.trim().isEmpty()) {
+                        txNote = "Nhập kho theo ĐĐH " + gr.getPoNumber();
+                    }
+
+                    stmTx.setString(8, txNote);
                     stmTx.setInt(9, gr.getReceivedBy());
                     stmTx.addBatch();
 
