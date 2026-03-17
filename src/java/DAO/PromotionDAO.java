@@ -139,6 +139,7 @@ public class PromotionDAO extends DBContext {
     public void update(Promotion p) {
         String sql = """
                     UPDATE Promotions SET
+                        PromotionCode = ?,
                         PromotionName = ?,
                         PromotionType = ?,
                         StartDate     = ?,
@@ -150,14 +151,15 @@ public class PromotionDAO extends DBContext {
                 """;
         try (Connection con = getConnection();
                 PreparedStatement ps = con.prepareStatement(sql)) {
-            ps.setString(1, p.getPromotionName());
-            ps.setString(2, p.getPromotionType());
-            ps.setDate(3, java.sql.Date.valueOf(p.getStartDate()));
-            ps.setDate(4, java.sql.Date.valueOf(p.getEndDate()));
-            ps.setInt(5, p.getPriority());
-            ps.setString(6, p.getStatus());
-            ps.setInt(7, p.getIsStackable() ? 1 : 0);
-            ps.setInt(8, p.getPromotionID());
+            ps.setString(1, p.getPromotionCode());
+            ps.setString(2, p.getPromotionName());
+            ps.setString(3, p.getPromotionType());
+            ps.setDate(4, java.sql.Date.valueOf(p.getStartDate()));
+            ps.setDate(5, java.sql.Date.valueOf(p.getEndDate()));
+            ps.setInt(6, p.getPriority());
+            ps.setString(7, p.getStatus());
+            ps.setInt(8, p.getIsStackable() ? 1 : 0);
+            ps.setInt(9, p.getPromotionID());
             ps.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
