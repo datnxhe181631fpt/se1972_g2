@@ -263,8 +263,8 @@
                                         <ol class="breadcrumb float-sm-right">
                                             <li class="breadcrumb-item"><a href="#">Home</a></li>
                                             <li class="breadcrumb-item">
-                                                <a href="<%= request.getContextPath() %>/admin/promotions">Promotion
-                                                    &amp; Campaigns</a>
+                                                <a href="<%= request.getContextPath() %>/admin/promotions">Chiến Dịch
+                                                    Khuyến Mãi</a>
                                             </li>
                                             <li class="breadcrumb-item active">Tạo Mới</li>
                                         </ol>
@@ -373,13 +373,11 @@
                                                         <select class="form-control promo-select" id="categorySelect"
                                                             name="bookCategory" style="width: 160px;">
                                                             <option value="ALL">Tất Cả Loại Sách</option>
-                                                            <option value="1">Sách Truyện Tranh</option>
-                                                            <option value="2">Tiểu Thuyết</option>
-                                                            <option value="3">Khoa Học</option>
-                                                            <option value="4">Giáo Dục</option>
-                                                            <option value="5">Manga</option>
-                                                            <option value="6">Lịch Sử</option>
-                                                            <option value="7">Khác</option>
+                                                            <c:forEach items="${categories}" var="category">
+                                                                <option value="${category.categoryID}">
+                                                                    ${category.categoryName}
+                                                                </option>
+                                                            </c:forEach>
                                                         </select>
                                                     </div>
 
