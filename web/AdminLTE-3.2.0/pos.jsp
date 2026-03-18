@@ -602,6 +602,34 @@
                                     </div>
 
                                 </c:if>
+                                
+                                <!-- Pagination (4 x 3 products per page) -->
+                                <c:if test="${totalPages > 1}">
+                                    <nav aria-label="POS product pagination" class="mt-3">
+                                        <ul class="pagination pagination-sm justify-content-center mb-0">
+                                            <li class="page-item ${currentPage <= 1 ? 'disabled' : ''}">
+                                                <a class="page-link"
+                                                   href="${pageContext.request.contextPath}/pos?page=${currentPage - 1}&key=${searchKey}&categoryId=${selectedCategoryId}">
+                                                    Trước
+                                                </a>
+                                            </li>
+                                            <c:forEach begin="1" end="${totalPages}" var="pNo">
+                                                <li class="page-item ${pNo == currentPage ? 'active' : ''}">
+                                                    <a class="page-link"
+                                                       href="${pageContext.request.contextPath}/pos?page=${pNo}&key=${searchKey}&categoryId=${selectedCategoryId}">
+                                                        ${pNo}
+                                                    </a>
+                                                </li>
+                                            </c:forEach>
+                                            <li class="page-item ${currentPage >= totalPages ? 'disabled' : ''}">
+                                                <a class="page-link"
+                                                   href="${pageContext.request.contextPath}/pos?page=${currentPage + 1}&key=${searchKey}&categoryId=${selectedCategoryId}">
+                                                    Sau
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </nav>
+                                </c:if>
 
 
                                 <!-- Empty State -->
@@ -755,6 +783,11 @@
                                                    placeholder="VD: 0912345678">
                                         </div>
                                         <div class="mb-2">
+                                            <label for="customerName" class="mb-1"><small>Tên khách hàng (chỉ cần khi khách mới)</small></label>
+                                            <input form="checkout-form" type="text" id="customerName" name="customerName" class="form-control form-control-sm"
+                                                   placeholder="VD: Nguyễn Văn A">
+                                        </div>
+                                        <div class="mb-2">
                                             <label class="mb-1"><small>Ghi chú hóa đơn</small></label>
                                             <textarea form="checkout-form" name="note" rows="2" class="form-control pos-note"
                                                       placeholder="VD: Khách lấy sách làm quà, giao tận nơi..."></textarea>
@@ -843,11 +876,13 @@
 
                                                                                 // Khi submit form thêm sản phẩm
                                                                                 $('form').on('submit', function () {
-
-                                                                                    setTimeout(function () {
-                                                                                        $('#sku').focus();
-                                                                                        $('#sku').select(); // chọn lại text để scan tiếp
-                                                                                    }, 100);
+                                                                                    var action = $(this).find('input[name="action"]').val();
+                                                                                    if (action === 'addItem') {
+                                                                                        setTimeout(function () {
+                                                                                            $('#sku').focus();
+                                                                                            $('#sku').select(); // chọn lại text để scan tiếp
+                                                                                        }, 100);
+                                                                                    }
 
                                                                                 });
                                                                                 posUpdateSummary();

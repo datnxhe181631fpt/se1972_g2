@@ -80,10 +80,18 @@ public class SalesInvoiceDAO extends DBContext {
                 VALUES (?, ?, ?, GETDATE(), 'COMPLETED')
                 """;
 
+        String updateStockSql = """
+                UPDATE Products
+                SET Stock = Stock - ?
+                WHERE ProductID = ?
+                  AND Stock >= ?
+                """;
+
         Connection conn = null;
         PreparedStatement invoiceStm = null;
         PreparedStatement detailStm = null;
         PreparedStatement paymentStm = null;
+        PreparedStatement stockStm = null;
         ResultSet rs = null;
 
         try {
@@ -152,6 +160,22 @@ public class SalesInvoiceDAO extends DBContext {
             }
             detailStm.executeBatch();
 
+            // Trừ tồn kho
+            stockStm = conn.prepareStatement(updateStockSql);
+            for (CartItem item : cart) {
+                int qty = item.getQuantity();
+                int productId = item.getProduct().getProductID();
+                stockStm.setInt(1, qty);
+                stockStm.setInt(2, productId);
+                stockStm.setInt(3, qty);
+                int updated = stockStm.executeUpdate();
+                if (updated == 0) {
+                    setLastErrorMessage("Tồn kho không đủ cho sản phẩm ID=" + productId + " (cần " + qty + ").");
+                    conn.rollback();
+                    return null;
+                }
+            }
+
             paymentStm = conn.prepareStatement(insertPaymentSql);
             paymentStm.setLong(1, invoiceId);
             paymentStm.setString(2, paymentMethod.trim().toUpperCase());
@@ -192,6 +216,12 @@ public class SalesInvoiceDAO extends DBContext {
             if (paymentStm != null) {
                 try {
                     paymentStm.close();
+                } catch (SQLException ignored) {
+                }
+            }
+            if (stockStm != null) {
+                try {
+                    stockStm.close();
                 } catch (SQLException ignored) {
                 }
             }

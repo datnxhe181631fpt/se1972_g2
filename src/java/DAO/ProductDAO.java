@@ -102,6 +102,88 @@ public class ProductDAO extends DBContext {
         return list;
     }
 
+    // Used by POS (product grid paging)
+    public List<Product> getProductsForPos(String keyword, Integer categoryId, int page, int pageSize) {
+        if (page <= 0) {
+            page = 1;
+        }
+        if (pageSize <= 0) {
+            pageSize = 12;
+        }
+
+        List<Product> list = new ArrayList<>();
+        StringBuilder sql = new StringBuilder();
+        sql.append("SELECT * FROM Products WHERE IsActive = 1 ");
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            sql.append("AND (ProductName LIKE ? OR SKU LIKE ?) ");
+        }
+        if (categoryId != null) {
+            sql.append("AND CategoryID = ? ");
+        }
+        sql.append("ORDER BY ProductID DESC OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
+
+        int offset = (page - 1) * pageSize;
+        try (Connection conn = getConnection()) {
+            if (conn == null) {
+                return list;
+            }
+            stm = conn.prepareStatement(sql.toString());
+            int idx = 1;
+            if (keyword != null && !keyword.trim().isEmpty()) {
+                String pattern = "%" + keyword.trim() + "%";
+                stm.setString(idx++, pattern);
+                stm.setString(idx++, pattern);
+            }
+            if (categoryId != null) {
+                stm.setInt(idx++, categoryId);
+            }
+            stm.setInt(idx++, offset);
+            stm.setInt(idx, pageSize);
+
+            rs = stm.executeQuery();
+            while (rs.next()) {
+                list.add(extractProductFromResultSet(rs));
+            }
+        } catch (Exception e) {
+            System.out.println("ERR: getProductsForPos: " + e.getMessage());
+        }
+        return list;
+    }
+
+    public int countProductsForPos(String keyword, Integer categoryId) {
+        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM Products WHERE IsActive = 1 ");
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            sql.append("AND (ProductName LIKE ? OR SKU LIKE ?) ");
+        }
+        if (categoryId != null) {
+            sql.append("AND CategoryID = ? ");
+        }
+
+        try (Connection conn = getConnection()) {
+            if (conn == null) {
+                return 0;
+            }
+            PreparedStatement ps = conn.prepareStatement(sql.toString());
+            int idx = 1;
+            if (keyword != null && !keyword.trim().isEmpty()) {
+                String pattern = "%" + keyword.trim() + "%";
+                ps.setString(idx++, pattern);
+                ps.setString(idx++, pattern);
+            }
+            if (categoryId != null) {
+                ps.setInt(idx, categoryId);
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("ERR: countProductsForPos: " + e.getMessage());
+        }
+        return 0;
+    }
+
     private Product extractProductFromResultSet(ResultSet rs) throws Exception {
         Product p = new Product();
         p.setId(rs.getInt("ProductID"));

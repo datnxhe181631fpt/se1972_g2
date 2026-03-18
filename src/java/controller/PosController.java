@@ -107,6 +107,7 @@ public class PosController extends HttpServlet {
         // Sản phẩm luôn lấy từ DB: lọc theo key (tên/SKU) và categoryId (Categories.CategoryID)
         String key = request.getParameter("key");
         String categoryIdStr = request.getParameter("categoryId");
+        String pageStr = request.getParameter("page");
         Integer categoryId = null;
         if (categoryIdStr != null && !categoryIdStr.trim().isEmpty()) {
             try {
@@ -115,10 +116,33 @@ public class PosController extends HttpServlet {
                 // ignore invalid categoryId
             }
         }
-        List<Product> products = productDAO.getProducts(key, categoryId, 24);
+        int page = 1;
+        if (pageStr != null && !pageStr.trim().isEmpty()) {
+            try {
+                page = Integer.parseInt(pageStr.trim());
+            } catch (NumberFormatException ignored) {
+                page = 1;
+            }
+        }
+        int pageSize = 12; // 4 x 3
+        int totalProducts = productDAO.countProductsForPos(key, categoryId);
+        int totalPages = (int) Math.ceil(totalProducts / (double) pageSize);
+        if (totalPages <= 0) {
+            totalPages = 1;
+        }
+        if (page < 1) {
+            page = 1;
+        }
+        if (page > totalPages) {
+            page = totalPages;
+        }
+
+        List<Product> products = productDAO.getProductsForPos(key, categoryId, page, pageSize);
         request.setAttribute("products", products);
         request.setAttribute("selectedCategoryId", categoryId);
         request.setAttribute("searchKey", key != null ? key : "");
+        request.setAttribute("currentPage", page);
+        request.setAttribute("totalPages", totalPages);
 
         String msg = (String) session.getAttribute("msg");
         if (msg != null) {
@@ -298,6 +322,7 @@ public class PosController extends HttpServlet {
             return;
         }
         String customerInput = request.getParameter("customerId");
+        String customerNameInput = request.getParameter("customerName");
         String note = request.getParameter("note");
         String discountPercentStr = request.getParameter("discountPercent");
         String paymentMethod = request.getParameter("paymentMethod");
@@ -360,9 +385,14 @@ public class PosController extends HttpServlet {
             }
             if (customer == null) {
                 // Mã KH/SĐT mới chưa có trong hệ thống -> tự động tạo khách hàng (coi input là SĐT)
+                if (customerNameInput == null || customerNameInput.trim().isEmpty()) {
+                    session.setAttribute("error", "Khách hàng mới: vui lòng nhập Tên khách hàng.");
+                    response.sendRedirect("pos");
+                    return;
+                }
                 Customer newCustomer = new Customer();
                 newCustomer.setCustomerID(customerDAO.getNextCustomerId());
-                newCustomer.setFullName("");
+                newCustomer.setFullName(customerNameInput.trim());
                 newCustomer.setEmail(null);
                 newCustomer.setPhoneNumber(trimmed);
                 newCustomer.setBirthday(java.time.LocalDate.of(1990, 1, 1));
