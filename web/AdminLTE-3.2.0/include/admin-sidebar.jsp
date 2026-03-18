@@ -100,6 +100,7 @@
                 </c:if>
                 <!-- ======================== MANAGER & STORE MANAGER MENU ======================== -->
                 <!-- Quản lý sản phẩm -->
+                <c:if test="${sessionScope.roleId == 3 || sessionScope.roleId == 5}">
                 <li class="nav-item">
                     <a href="#" class="nav-link">
                         <i class="nav-icon fas fa-book"></i>
@@ -129,7 +130,7 @@
                         </li>
                     </ul>
                 </li>
-
+                </c:if>
                 <!-- Quản lý kho -->
                 <li class="nav-item">
                     <a href="#" class="nav-link">
@@ -192,15 +193,15 @@
                         </a>
                         <ul class="nav nav-treeview">
                             <li class="nav-item">
-                                <a href="#" class="nav-link">
+                                <a href="${pageContext.request.contextPath}/admin/customers" class="nav-link">
                                     <i class="far fa-dot-circle nav-icon"></i>
                                     <p>Danh sách khách hàng</p>
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a href="#" class="nav-link">
+                                <a href="${pageContext.request.contextPath}/admin/customer-tiers" class="nav-link">
                                     <i class="far fa-dot-circle nav-icon"></i>
-                                    <p>Điểm tích lũy</p>
+                                    <p>Cấp bậc khách hàng</p>
                                 </a>
                             </li>
                         </ul>
@@ -210,7 +211,7 @@
                 <%-- ===== KHUYẾN MÃI – Saler (xem & tạo thông báo KM) ===== --%>
                 <c:if test="${sessionScope.roleId == 5}">
                     <li class="nav-item">
-                        <a href="${pageContext.request.contextPath}/promotions" class="nav-link">
+                        <a href="${pageContext.request.contextPath}/admin/promotions" class="nav-link">
                             <i class="nav-icon fas fa-tags"></i>
                             <p>Khuyến mãi</p>
                         </a>
