@@ -21,7 +21,7 @@ import java.util.*;
  *
  * Nếu không có quyền → redirect về /dashboard?error=unauthorized
  */
-@WebFilter(urlPatterns = {"/admin/*", "/staff/*", "/supplier", "/purchaseorder"})
+@WebFilter(urlPatterns = {"/admin/*", "/staff/*", "/supplier", "/purchaseorder", "/promotions", "/customer-tiers", "/pos"})
 public class RoleFilter implements Filter {
 
     /**
@@ -31,29 +31,34 @@ public class RoleFilter implements Filter {
     private static final LinkedHashMap<String, Set<Integer>> ROLE_MAP = new LinkedHashMap<>();
 
     static {
-        // ── Trang chỉ dành riêng cho Manager (roleId=1) ──
+        // ── Trang dành riêng cho Manager (roleId=1) ──
         ROLE_MAP.put("/admin/hr-audit-log", roleSet(1));
+        ROLE_MAP.put("/admin/employees", roleSet(1));
+        ROLE_MAP.put("/admin/products", roleSet(1));
+        ROLE_MAP.put("/admin/categories", roleSet(1));
+        ROLE_MAP.put("/admin/brands", roleSet(1));
 
         // ── Trang dành cho Manager + Store Manager ──
         ROLE_MAP.put("/admin/attendance", roleSet(1, 2));
-        ROLE_MAP.put("/admin/employees", roleSet(1, 2));
-        ROLE_MAP.put("/admin/shift-management", roleSet(1, 2, 3, 5));
         ROLE_MAP.put("/admin/swap-approval", roleSet(1, 2));
-        ROLE_MAP.put("/admin/promotions", roleSet(1, 2));
-        ROLE_MAP.put("/admin/products", roleSet(1, 2));
-        ROLE_MAP.put("/admin/categories", roleSet(1, 2));
-        ROLE_MAP.put("/admin/brands", roleSet(1, 2));
-        ROLE_MAP.put("/admin/customer-tiers", roleSet(1, 2));
+        ROLE_MAP.put("/supplier", roleSet(1, 2));
+        ROLE_MAP.put("/purchaseorder", roleSet(1, 2));
+        ROLE_MAP.put("/customer-tiers", roleSet(1, 2));
+
+        // ── Trang dành cho Sales (Saler + Manager) ──
+        ROLE_MAP.put("/promotions", roleSet(1, 5));
+
+        // ── Trang dành cho POS (Staff + Saler) ──
+        ROLE_MAP.put("/pos", roleSet(3, 5));
+
+        // ── Ca làm việc (Manager, Store Manager, Staff, Saler) ──
+        ROLE_MAP.put("/admin/shift-management", roleSet(1, 2, 3, 5));
 
         // ── Toàn bộ /admin/* còn lại → Manager + Store Manager ──
         ROLE_MAP.put("/admin/", roleSet(1, 2));
 
         // ── /staff/* → mọi nhân viên đã đăng nhập ──
         ROLE_MAP.put("/staff/", roleSet(1, 2, 3, 4, 5));
-
-        // ── Trang không có prefix /admin/ nhưng cần phân quyền ──
-        ROLE_MAP.put("/supplier", roleSet(1, 2));
-        ROLE_MAP.put("/purchaseorder", roleSet(1, 2));
     }
 
     @Override

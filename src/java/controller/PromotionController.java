@@ -16,7 +16,7 @@ import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.ArrayList;
 
-@WebServlet(name = "PromotionController", urlPatterns = { "/admin/promotions" })
+@WebServlet(name = "PromotionController", urlPatterns = { "/promotions" })
 public class PromotionController extends HttpServlet {
 
     private final PromotionDAO promotionDAO = new PromotionDAO();
@@ -71,7 +71,7 @@ public class PromotionController extends HttpServlet {
                 handleUpdate(request, response);
                 break;
             default:
-                response.sendRedirect(request.getContextPath() + "/admin/promotions");
+                response.sendRedirect(request.getContextPath() + "/promotions");
         }
     }
 
@@ -95,7 +95,7 @@ public class PromotionController extends HttpServlet {
 
         String idStr = request.getParameter("id");
         if (idStr == null || idStr.isBlank()) {
-            response.sendRedirect(request.getContextPath() + "/admin/promotions");
+            response.sendRedirect(request.getContextPath() + "/promotions");
             return;
         }
 
@@ -120,7 +120,7 @@ public class PromotionController extends HttpServlet {
             request.getRequestDispatcher("/AdminLTE-3.2.0/promotion-edit.jsp").forward(request, response);
 
         } catch (NumberFormatException e) {
-            response.sendRedirect(request.getContextPath() + "/admin/promotions");
+            response.sendRedirect(request.getContextPath() + "/promotions");
         }
     }
 
@@ -139,7 +139,7 @@ public class PromotionController extends HttpServlet {
             }
         }
 
-        String redirectUrl = request.getContextPath() + "/admin/promotions";
+        String redirectUrl = request.getContextPath() + "/promotions";
         String statusFilter = request.getParameter("status");
         String typeFilter = request.getParameter("type");
         if (statusFilter != null || typeFilter != null) {
@@ -200,7 +200,7 @@ public class PromotionController extends HttpServlet {
             throws IOException {
         String idStr = request.getParameter("promotionID");
         if (idStr == null || idStr.isBlank()) {
-            response.sendRedirect(request.getContextPath() + "/admin/promotions");
+            response.sendRedirect(request.getContextPath() + "/promotions");
             return;
         }
 
@@ -254,10 +254,10 @@ public class PromotionController extends HttpServlet {
                 }
             }
 
-            response.sendRedirect(request.getContextPath() + "/admin/promotions");
+            response.sendRedirect(request.getContextPath() + "/promotions");
 
         } catch (NumberFormatException e) {
-            response.sendRedirect(request.getContextPath() + "/admin/promotions");
+            response.sendRedirect(request.getContextPath() + "/promotions");
         }
     }
 
