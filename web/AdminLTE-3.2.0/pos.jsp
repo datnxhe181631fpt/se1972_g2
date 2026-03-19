@@ -16,63 +16,18 @@
         <link rel="stylesheet" href="${pageContext.request.contextPath}/AdminLTE-3.2.0/dist/css/adminlte.min.css">
         <style>
             body.dark-pos {
-                background-color: #020617;
-                color: black;
-            }
-
-            .dark-pos .content-wrapper {
-                background: radial-gradient(circle at top left, #fcfcfc, #f6f2f7);
-                color: black;
-            }
-
-            .pos-no-sidebar .main-sidebar {
-                position: fixed;
-                top: 0;
-                left: 0;
-                height: 100vh;
-                transform: translateX(-100%);
-                transition: transform 0.3s ease;
-                z-index: 1050;
-            }
-
-            .pos-sidebar-open .main-sidebar {
-                transform: translateX(0);
-            }
-
-            .pos-wrapper-full .content-wrapper {
-                margin-left: 0 !important;
-            }
-            
-            .pos-offcanvas-backdrop {
-                position: fixed;
-                inset: 0;
-                background: rgba(15, 23, 42, 0.6);
-                z-index: 1040;
-                opacity: 0;
-                visibility: hidden;
-                transition: opacity 0.3s ease, visibility 0.3s ease;
-            }
-            
-            .pos-sidebar-open .pos-offcanvas-backdrop {
-                opacity: 1;
-                visibility: visible;
-            }
-
-            .dark-pos .card,
-            .dark-pos .card-header,
-            .dark-pos .card-body,
-            .dark-pos .card-footer {
-                background-color: transparent;
-                border: none;
+                background-color: #f8fafc;
+                color: #1e293b;
             }
 
             .pos-search-bar {
                 background: white;
                 border-radius: 999px;
-                padding: 6px 16px;
+                padding: 8px 16px;
                 display: flex;
                 align-items: center;
-                box-shadow: 0 0 0 1px #1e293b;
+                box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+                border: 1px solid #e2e8f0;
             }
 
             .pos-search-bar i {
@@ -83,633 +38,434 @@
             .pos-search-bar input {
                 background: transparent;
                 border: none;
-                color: black;
+                color: #1e293b;
                 width: 100%;
                 outline: none;
-            }
-
-            .pos-search-bar input::placeholder {
-                color: black;
-            }
-
-            .pos-tabs {
-                margin-top: 16px;
-                margin-bottom: 16px;
-                display: flex;
-                flex-wrap: wrap;
-                gap: 8px;
-            }
-
-            .pos-tab {
-                padding: 6px 14px;
-                border-radius: 999px;
-                background: #020617;
-                color: #ff0000;
-                font-size: 13px;
-                border: 1px solid #1e293b;
-                cursor: pointer;
-                transition: all 0.15s ease;
-                display: inline-block;
-                text-decoration: none;
-            }
-
-            .pos-tab:hover {
-                color: #111827;
-            }
-
-            .pos-tab.active,
-            .pos-tab:hover {
-                background: #fbbf24;
-                border-color: #f59e0b;
-                color: #111827;
             }
 
             .pos-products-grid {
                 display: grid;
                 grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-                gap: 14px;
+                gap: 16px;
             }
 
             .pos-product-card {
-                background: wheat;
-                border-radius: 16px;
-                padding: 14px 12px;
-                border: 1px solid #1f2937;
-                position: relative;
-                cursor: pointer;
-                transition: transform 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease;
+                background: white;
+                border-radius: 12px;
+                padding: 16px;
+                border: 1px solid #e2e8f0;
+                transition: all 0.2s ease;
                 display: flex;
                 flex-direction: column;
                 height: 100%;
-                min-height: 210px;
+                text-align: left;
+                width: 100%;
             }
 
             .pos-product-card:hover {
                 transform: translateY(-2px);
-                border-color: #fbbf24;
-                box-shadow: 0 14px 30px rgba(15, 23, 42, 0.85);
-            }
-
-            .pos-product-icon {
-                width: 36px;
-                height: 36px;
-                border-radius: 12px;
-                background: #dea600;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-size: 18px;
-                margin-bottom: 10px;
+                border-color: #3b82f6;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.05);
             }
 
             .pos-product-name {
-                font-size: 20px;
-                font-weight: 500;
-                color: black;
-                margin-bottom: 4px;
-                min-height: 36px;
-            }
-
-            .pos-product-sku {
                 font-size: 15px;
-                color: black;
-                margin-bottom: 10px;
-            }
-
-            .pos-product-price-row {
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                margin-top: auto;
+                font-weight: 600;
+                color: #1e293b;
+                margin-bottom: 4px;
+                height: 45px;
+                overflow: hidden;
             }
 
             .pos-product-price {
-                font-weight: 600;
-                color: green;
-                font-size: 15px;
-            }
-
-            .pos-product-stock {
-                font-size: 11px;
-                color: white;
-            }
-
-            .pos-product-add-btn {
-                background: #f4dbff;
-                border-radius: 999px;
-                border: none;
-                color: #0b1120;
-                padding: 4px 10px;
-                font-size: 11px;
-                font-weight: 600;
-                display: inline-flex;
-                align-items: center;
-                gap: 4px;
-            }
-
-            .pos-product-add-btn i {
-                font-size: 10px;
+                font-weight: 700;
+                color: #2563eb;
+                font-size: 16px;
             }
 
             .pos-order-panel {
                 background: white;
-                border-radius: 20px;
-                border: 1px solid #1f2937;
-                padding: 16px 16px 10px;
-                box-shadow: 0 8px 20px rgba(15, 23, 42, 0.6);
-            }
-
-            .pos-order-header {
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                margin-bottom: 10px;
-            }
-
-            .pos-order-title {
-                font-size: 15px;
-                font-weight: 600;
-            }
-
-            .pos-order-tag {
-                font-size: 11px;
-                padding: 4px 10px;
-                background: rgba(34, 197, 94, 0.15);
-                color: #4ade80;
-                border-radius: 999px;
-                border: 1px solid rgba(34, 197, 94, 0.4);
-            }
-
-            .pos-order-items {
-                max-height: 280px;
-                overflow-y: auto;
-                padding-right: 4px;
-                margin-bottom: 8px;
-            }
-
-            .pos-order-item {
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                padding: 8px 0;
-                border-bottom: 1px solid #111827;
-            }
-
-            .pos-order-item:last-child {
-                border-bottom: none;
-            }
-
-            .pos-order-item-name {
-                font-size: 13px;
-                font-weight: 500;
-                color: #e5e7eb;
-            }
-
-            .pos-order-item-meta {
-                font-size: 11px;
-                color: #6b7280;
-            }
-
-            .pos-order-qty-input {
-                width: 60px;
-                background: #020617;
-                border-radius: 999px;
-                border: 1px solid #1f2937;
-                color: #e5e7eb;
-                padding: 2px 8px;
-                font-size: 12px;
-            }
-
-            .pos-chip-remove {
-                background: transparent;
-                border: none;
-                color: #f87171;
-                font-size: 12px;
+                border-radius: 12px;
+                border: 1px solid #e2e8f0;
+                padding: 20px;
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+                position: sticky;
+                top: 20px;
             }
 
             .pos-order-summary-row {
                 display: flex;
-                align-items: center;
                 justify-content: space-between;
-                font-size: 12px;
-                color: black;
-                margin-bottom: 4px;
-            }
-
-            .pos-order-summary-row strong {
-                color: #e5e7eb;
+                margin-bottom: 8px;
+                font-size: 14px;
             }
 
             .pos-total-amount {
-                font-size: 20px;
-                font-weight: 700;
-                color: #fbbf24;
+                font-size: 24px;
+                font-weight: 800;
+                color: #1e293b;
             }
 
             .pos-pay-btn {
                 width: 100%;
-                border-radius: 999px;
-                padding: 10px 0;
-                font-weight: 600;
-                font-size: 14px;
-            }
-
-            .pos-cancel-btn {
-                border-radius: 999px;
-                padding: 8px 0;
-                font-size: 13px;
-                width: 100%;
-            }
-
-            .pos-note {
-                background: white;
-                border-radius: 12px;
-                border: 1px solid #1f2937;
-                color: black;
-                font-size: 12px;
-            }
-
-            .pos-empty-state {
-                text-align: center;
-                padding: 40px 10px;
-                color: #6b7280;
-                font-size: 13px;
-            }
-
-            .pos-empty-icon {
-                font-size: 30px;
-                margin-bottom: 8px;
-                color: #4b5563;
-            }
-
-            .pos-select {
-                background: white !important;
-                border: 1px solid #1e293b;
-                color: black;
                 border-radius: 8px;
+                padding: 12px;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
             }
 
             .pos-payment-option {
                 flex: 1;
-                padding: 10px;
-                border-radius: 12px;
-                border: 2px solid #1e293b;
-                background: #e9ecf5;
-                color: #9ca3af;
+                padding: 12px;
+                border-radius: 8px;
+                border: 2px solid #e2e8f0;
+                background: #f8fafc;
                 cursor: pointer;
                 text-align: center;
-                transition: all 0.15s ease;
-            }
-
-            .pos-payment-option:hover {
-                border-color: #475569;
-                color: #e5e7eb;
+                transition: all 0.2s;
             }
 
             .pos-payment-option.active {
-                border-color: #fbbf24;
-                background: rgba(251, 191, 36, 0.15);
-                color: #fbbf24;
+                border-color: #3b82f6;
+                background: #eff6ff;
+                color: #2563eb;
             }
 
             .pos-payment-option input {
                 display: none;
             }
 
+            /* Pagination styling */
+            .pagination .page-link {
+                color: #475569;
+                border-radius: 6px;
+                margin: 0 2px;
+            }
+            .pagination .page-item.active .page-link {
+                background-color: #3b82f6;
+                border-color: #3b82f6;
+            }
+
+            .pos-sidebar-toggle {
+                display: none;
+            }
+            
             @media (max-width: 991.98px) {
-                .pos-products-grid {
-                    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+                .pos-sidebar-toggle {
+                    display: block;
                 }
             }
         </style>
     </head>
-    <body class="hold-transition dark-pos pos-no-sidebar">
-        <div class="wrapper pos-wrapper-full">
-            <jsp:include page="include/admin-sidebar.jsp"/>
-            <div class="pos-offcanvas-backdrop"></div>
-            <!-- Content Wrapper (full width, no sidebar) -->
-            <div class="content-wrapper">
+    <body class="hold-transition">
+        <div class="wrapper">
+            <!-- Content Wrapper -->
+            <div class="content-wrapper" style="margin-left: 0; background: #f8fafc;">
                 <section class="content-header">
                     <div class="container-fluid">
-                        <div class="row mb-2">
+                        <div class="row align-items-center">
                             <div class="col-sm-6 d-flex align-items-center">
-                                <button type="button" id="pos-sidebar-toggle" class="btn btn-sm btn-outline-secondary mr-2">
-                                    <i class="fas fa-bars"></i>
-                                </button>
-                                <h1 class="mb-0">Bán hàng (POS)</h1>
+                                <a href="${pageContext.request.contextPath}/dashboard" class="btn btn-link text-dark p-0 mr-3">
+                                    <i class="fas fa-arrow-left"></i>
+                                </a>
+                                <h1 class="m-0 font-weight-bold">Hệ thống Bán hàng (POS)</h1>
                             </div>
-                            <div class="col-sm-6">
-                                <ol class="breadcrumb float-sm-right">
-                                    <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/dashboard">Home</a></li>
-                                    <li class="breadcrumb-item active">POS</li>
-                                </ol>
+                            <div class="col-sm-6 text-right">
+                                <span class="badge badge-info p-2">
+                                    <i class="fas fa-user-tie mr-1"></i> Nhân viên: Cashier
+                                </span>
                             </div>
                         </div>
-                    </div><!-- /.container-fluid -->
+                    </div>
                 </section>
 
-                <!-- Main content -->
                 <section class="content">
                     <div class="container-fluid">
                         <div class="row">
-                            <!-- Left column: search & product list -->
-                            <div class="col-lg-8 mb-3">
+                            <!-- Left: Products -->
+                            <div class="col-lg-8">
                                 <!-- Messages -->
                                 <c:if test="${not empty msg}">
-                                    <div class="alert alert-success alert-dismissible fade show">
-                                        <i class="fas fa-check-circle"></i> ${msg}
-                                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                                            <span aria-hidden="true">&times;</span>
-                                        </button>
+                                    <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm">
+                                        <i class="fas fa-check-circle mr-2"></i> ${msg}
+                                        <button type="button" class="close" data-dismiss="alert">&times;</button>
                                     </div>
                                 </c:if>
                                 <c:if test="${not empty error}">
-                                    <div class="alert alert-danger alert-dismissible fade show">
-                                        <i class="fas fa-exclamation-triangle"></i> ${error}
-                                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                                            <span aria-hidden="true">&times;</span>
-                                        </button>
+                                    <div class="alert alert-danger alert-dismissible fade show border-0 shadow-sm">
+                                        <i class="fas fa-exclamation-triangle mr-2"></i> ${error}
+                                        <button type="button" class="close" data-dismiss="alert">&times;</button>
                                     </div>
                                 </c:if>
 
-                                <!-- Search bar -->
-                                <form action="<c:url value='/pos'/>" method="get" class="mb-3">
-                                    <div class="pos-search-bar">
-                                        <i class="fas fa-search"></i>
-                                        <input type="text" name="key" value="${searchKey}"
-                                               placeholder="Tìm sản phẩm theo tên, SKU..." autocomplete="off">
-                                    </div>
-                                </form>
+                                <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px;">
+                                    <div class="card-body">
+                                        <div class="row mb-4">
+                                            <div class="col-md-7">
+                                                <form action="<c:url value='/pos'/>" method="get">
+                                                    <div class="pos-search-bar">
+                                                        <i class="fas fa-search"></i>
+                                                        <input type="text" name="key" value="${searchKey}" placeholder="Tìm theo tên sản phẩm hoặc SKU..." autocomplete="off">
+                                                    </div>
+                                                </form>
+                                            </div>
+                                            <div class="col-md-5">
+                                                <form id="pos-category-form" action="<c:url value='/pos'/>" method="get">
+                                                    <input type="hidden" name="key" value="${searchKey}">
+                                                    <select name="categoryId" class="form-control" style="border-radius: 999px;" onchange="this.form.submit()">
+                                                        <option value="">Tất cả danh mục</option>
+                                                        <c:forEach var="cat" items="${categories}">
+                                                            <option value="${cat.categoryID}" ${selectedCategoryId == cat.categoryID ? 'selected' : ''}>${cat.categoryName}</option>
+                                                        </c:forEach>
+                                                    </select>
+                                                </form>
+                                            </div>
+                                        </div>
 
-                                <!-- Filter danh mục: dropdown (bảng Categories) -->
-                                <c:if test="${not empty categories}">
-                                    <div class="mb-3">
-                                        <form id="pos-category-form" action="<c:url value='/pos'/>" method="get" class="d-inline">
-                                            <input type="hidden" name="key" value="${searchKey}">
-                                            <label for="pos-category" class="mr-2 text-muted small">Danh mục:</label>
-                                            <select id="pos-category" name="categoryId" class="pos-select form-control form-control-sm d-inline-block" style="width: auto; min-width: 180px;">
-                                                <option value="">Tất cả</option>
-                                                <c:forEach var="cat" items="${categories}">
-                                                    <option value="${cat.categoryID}" ${selectedCategoryId != null && selectedCategoryId == cat.categoryID ? 'selected' : ''}>${cat.categoryName}</option>
-                                                </c:forEach>
-                                            </select>
-                                        </form>
-                                    </div>
-                                </c:if>
-
-                                <!-- Products grid -->
-                                <c:if test="${not empty products}">
-                                    <div class="pos-products-grid">
-                                        <c:forEach var="p" items="${products}">
-                                            <form action="<c:url value='/pos'/>" method="post">
-                                                <input type="hidden" name="action" value="addItem">
-                                                <input type="hidden" name="sku" value="${p.sku}">
-                                                <input type="hidden" name="quantity" value="1">
-                                                <button type="submit" class="pos-product-card" style="width: 100%; text-align: left;">
-                                                    <div class="d-flex justify-content-between align-items-start">
-                                                        <div class="pos-product-icon">
-                                                            <i class="fas fa-book"></i>
+                                        <div class="row mb-4">
+                                            <div class="col-12">
+                                                <form action="<c:url value='/pos'/>" method="post" class="form-inline">
+                                                    <input type="hidden" name="action" value="addItem">
+                                                    <div class="input-group input-group-sm mr-2" style="width: 250px;">
+                                                        <div class="input-group-prepend">
+                                                            <span class="input-group-text bg-white border-right-0" style="border-radius: 8px 0 0 8px;"><i class="fas fa-barcode"></i></span>
                                                         </div>
-                                                        <span class="badge badge-secondary" style="background: #ffffff; color: #000000; border-radius: 999px; font-size: 10px; border: 1px solid #1f2937;">
-                                                            <i class="fas fa-box-open"></i> ${p.stock}
-                                                        </span>
+                                                        <input type="text" id="sku" name="sku" class="form-control border-left-0" placeholder="Quét hoặc nhập SKU" style="border-radius: 0 8px 8px 0;" autofocus>
                                                     </div>
-                                                    <div class="pos-product-name">
-                                                        ${p.productName}
-                                                    </div>
-                                                    <div class="pos-product-sku">
-                                                        SKU: ${p.sku}
-                                                    </div>
-                                                    <div class="pos-product-price-row">
-                                                        <div class="pos-product-price">
-                                                            <fmt:formatNumber value="${p.sellingPrice}" type="number" maxFractionDigits="0"/> đ
+                                                    <input type="number" name="quantity" value="1" min="1" class="form-control form-control-sm mr-2" style="width: 60px; border-radius: 8px;">
+                                                    <button type="submit" class="btn btn-sm btn-primary" style="border-radius: 8px;">
+                                                        <i class="fas fa-plus mr-1"></i> Thêm
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </div>
+
+                                        <div class="pos-products-grid">
+                                            <c:forEach var="p" items="${products}">
+                                                <form action="<c:url value='/pos'/>" method="post">
+                                                    <input type="hidden" name="action" value="addItem">
+                                                    <input type="hidden" name="sku" value="${p.sku}">
+                                                    <input type="hidden" name="quantity" value="1">
+                                                    <button type="submit" class="pos-product-card">
+                                                        <div class="mb-2 text-right">
+                                                            <span class="badge ${p.stock > 10 ? 'badge-success' : 'badge-warning'}">Tồn: ${p.stock}</span>
                                                         </div>
-                                                        <span class="pos-product-add-btn">
-                                                            <i class="fas fa-plus"></i> Thêm
-                                                        </span>
-                                                    </div>
-                                                </button>
-                                            </form>
-                                        </c:forEach>
-                                    </div>
-                                </c:if>
+                                                        <div class="pos-product-name">${p.productName}</div>
+                                                        <div class="text-muted small mb-2">SKU: ${p.sku}</div>
+                                                        <div class="mt-auto d-flex justify-content-between align-items-center">
+                                                            <div class="pos-product-price">
+                                                                <fmt:formatNumber value="${p.sellingPrice}" type="number" maxFractionDigits="0"/>đ
+                                                            </div>
+                                                            <div class="text-primary"><i class="fas fa-cart-plus fa-lg"></i></div>
+                                                        </div>
+                                                    </button>
+                                                </form>
+                                            </c:forEach>
+                                        </div>
 
-                                <c:if test="${empty products}">
-                                    <div class="pos-empty-state">
-                                        <div class="pos-empty-icon">
-                                            <i class="fas fa-book-open"></i>
-                                        </div>
-                                        Nhập từ khóa hoặc SKU để tìm và thêm sản phẩm vào đơn hàng.
+                                        <c:if test="${totalPages > 1}">
+                                            <nav aria-label="Pagination" class="mt-4">
+                                                <ul class="pagination pagination-sm justify-content-center">
+                                                    <li class="page-item ${currentPage <= 1 ? 'disabled' : ''}">
+                                                        <a class="page-link" href="?page=${currentPage-1}&key=${searchKey}&categoryId=${selectedCategoryId}"><i class="fas fa-chevron-left"></i></a>
+                                                    </li>
+                                                    <c:forEach begin="1" end="${totalPages}" var="i">
+                                                        <li class="page-item ${i == currentPage ? 'active' : ''}">
+                                                            <a class="page-link" href="?page=${i}&key=${searchKey}&categoryId=${selectedCategoryId}">${i}</a>
+                                                        </li>
+                                                    </c:forEach>
+                                                    <li class="page-item ${currentPage >= totalPages ? 'disabled' : ''}">
+                                                        <a class="page-link" href="?page=${currentPage+1}&key=${searchKey}&categoryId=${selectedCategoryId}"><i class="fas fa-chevron-right"></i></a>
+                                                    </li>
+                                                </ul>
+                                            </nav>
+                                        </c:if>
                                     </div>
-                                </c:if>
-
-                                <!-- Quick add by SKU (fallback) -->
-                                <div class="mt-4">
-                                    <form action="<c:url value='/pos'/>" method="post" class="form-inline">
-                                        <input type="hidden" name="action" value="addItem">
-                                        <div class="form-group mr-2 mb-2">
-                                            <label for="sku" class="mr-2 text-sm">SKU nhanh:</label>
-                                            <input type="text" class="form-control form-control-sm" id="sku" name="sku" placeholder="VD: VN-001, NN-001...">
-                                        </div>
-                                        <div class="form-group mr-2 mb-2">
-                                            <label for="quantity" class="mr-2 text-sm">SL:</label>
-                                            <input type="number" min="1" class="form-control form-control-sm" id="quantity" name="quantity" value="1">
-                                        </div>
-                                        <button type="submit" class="btn btn-sm btn-outline-info mb-2">
-                                            <i class="fas fa-plus"></i> Thêm
-                                        </button>
-                                    </form>
                                 </div>
                             </div>
 
-                            <!-- Right column: cart & payment -->
+                            <!-- Right: Order & Payment -->
                             <div class="col-lg-4">
                                 <div class="pos-order-panel">
-                                    <div class="pos-order-header">
-                                        <div>
-                                            <div class="pos-order-title">
-                                                Đơn hàng
-                                            </div>
-                                            <small class="text-muted">Khách vãng lai</small>
-                                        </div>
-                                        <div class="pos-order-tag">
-                                            Ca đang mở
-                                        </div>
-                                    </div>
-                                    <div class="card-body p-0">
-                                        <c:if test="${not empty cart}">
-                                            <div class="table-responsive" style="max-height: 360px;">
-                                                <table class="table table-striped table-hover mb-0">
-                                                    <thead>
-                                                        <tr>
-                                                            <th>Sản phẩm</th>
-                                                            <th class="text-center" style="width: 90px;">SL</th>
-                                                            <th class="text-right" style="width: 110px;">Đơn giá</th>
-                                                            <th class="text-right" style="width: 110px;">Thành tiền</th>
-                                                            <th class="text-center" style="width: 60px;"></th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        <c:forEach var="item" items="${cart}">
-                                                            <tr>
-                                                                <td>
-                                                                    <strong>${item.product.productName}</strong><br>
-                                                                    <small class="text-muted">SKU: ${item.product.sku}</small>
-                                                                </td>
-                                                                <td class="text-center">
-                                                                    <form action="<c:url value='/pos'/>" method="post" class="form-inline justify-content-center">
-                                                                        <input type="hidden" name="action" value="updateQty">
-                                                                        <input type="hidden" name="productId" value="${item.product.productID}">
-                                                                        <input type="number" name="quantity" value="${item.quantity}" min="1" class="form-control form-control-sm" style="width: 60px;">
-                                                                    </form>
-                                                                </td>
-                                                                <td class="text-right">
-                                                                    <fmt:formatNumber value="${item.unitPrice}" type="number" maxFractionDigits="0"/> đ
-                                                                </td>
-                                                                <td class="text-right">
-                                                                    <fmt:formatNumber value="${item.lineTotal}" type="number" maxFractionDigits="0"/> đ
-                                                                </td>
-                                                                <td class="text-center">
-                                                                    <form action="<c:url value='/pos'/>" method="post">
-                                                                        <input type="hidden" name="action" value="removeItem">
-                                                                        <input type="hidden" name="productId" value="${item.product.productID}">
-                                                                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Xóa sản phẩm này khỏi giỏ?');">
-                                                                            <i class="fas fa-times"></i>
-                                                                        </button>
-                                                                    </form>
-                                                                </td>
-                                                            </tr>
-                                                        </c:forEach>
-                                                    </tbody>
-                                                </table>
-                                            </div>
-                                        </c:if>
-
-                                        <c:if test="${empty cart}">
-                                            <div class="pos-empty-state">
-                                                <div class="pos-empty-icon">
-                                                    <i class="fas fa-shopping-basket"></i>
+                                    <h4 class="font-weight-bold mb-4">Chi tiết đơn hàng</h4>
+                                    
+                                    <div class="mb-4" style="max-height: 300px; overflow-y: auto;">
+                                        <c:forEach var="item" items="${cart}">
+                                            <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom">
+                                                <div style="flex: 1;">
+                                                    <div class="font-weight-bold text-truncate" style="max-width: 151px;">${item.product.productName}</div>
+                                                    <div class="text-muted small">
+                                                        <fmt:formatNumber value="${item.unitPrice}" type="number" maxFractionDigits="0"/>đ x ${item.quantity}
+                                                    </div>
                                                 </div>
-                                                Chọn sản phẩm bên trái để thêm vào đơn hàng.
+                                                <div class="d-flex align-items-center">
+                                                    <form action="<c:url value='/pos'/>" method="post" class="mr-2">
+                                                        <input type="hidden" name="action" value="updateQty">
+                                                        <input type="hidden" name="productId" value="${item.product.productID}">
+                                                        <input type="number" name="quantity" value="${item.quantity}" min="1" class="form-control form-control-sm" style="width: 50px;" onchange="this.form.submit()">
+                                                    </form>
+                                                    <form action="<c:url value='/pos'/>" method="post">
+                                                        <input type="hidden" name="action" value="removeItem">
+                                                        <input type="hidden" name="productId" value="${item.product.productID}">
+                                                        <button type="submit" class="btn btn-link text-danger p-0"><i class="fas fa-trash"></i></button>
+                                                    </form>
+                                                </div>
+                                                <div class="text-right font-weight-bold ml-2" style="min-width: 80px;">
+                                                    <fmt:formatNumber value="${item.lineTotal}" type="number" maxFractionDigits="0"/>đ
+                                                </div>
+                                            </div>
+                                        </c:forEach>
+                                        <c:if test="${empty cart}">
+                                            <div class="text-center py-5 text-muted">
+                                                <i class="fas fa-shopping-cart fa-3x mb-3 opacity-25"></i>
+                                                <p>Chưa có sản phẩm nào</p>
                                             </div>
                                         </c:if>
                                     </div>
-                                    <div class="card-footer px-0">
-                                        <div class="mb-2">
-                                            <div class="pos-order-summary-row">
-                                                <span>Tạm tính</span>
-                                                <span id="pos-subtotal"><fmt:formatNumber value="${totalAmount}" type="number" maxFractionDigits="0"/> đ</span>
-                                            </div>
-                                            <div class="pos-order-summary-row">
-                                                <span>Giảm giá (<span id="pos-discount-pct">0</span>%)</span>
-                                                <span id="pos-discount-amount">0 đ</span>
-                                            </div>
-                                            <div class="pos-order-summary-row">
-                                                <span>Thuế</span>
-                                                <span>0 đ</span>
-                                            </div>
-                                            <hr style="border-color:#111827; margin: 6px 0;">
-                                            <div class="d-flex justify-content-between align-items-center">
-                                                <span class="text-sm text-muted">TỔNG CỘNG</span>
-                                                <span class="pos-total-amount" id="pos-final-amount">
-                                                    <fmt:formatNumber value="${totalAmount}" type="number" maxFractionDigits="0"/> đ
-                                                </span>
-                                            </div>
+
+                                    <div class="bg-gray-50 p-3 rounded-lg border mb-4">
+                                        <div class="pos-order-summary-row">
+                                            <span>Tạm tính</span>
+                                            <span id="js-subtotal" class="font-weight-bold text-dark"><fmt:formatNumber value="${totalAmount}" type="number" maxFractionDigits="0"/> đ</span>
                                         </div>
-                                        <div class="mb-2">
-                                            <label for="pos-discount" class="mb-1"><small>Giảm giá (%)</small></label>
-                                            <input form="checkout-form" type="number" id="pos-discount" name="discountPercent" min="0" max="100" step="0.5" value="0"
-                                                   class="form-control form-control-sm pos-note" placeholder="0">
+                                        <div class="pos-order-summary-row text-success">
+                                            <span>Khuyến mãi (Tự động)</span>
+                                            <span id="js-auto-discount" class="font-weight-bold">- <fmt:formatNumber value="${autoPromoDiscount}" type="number" maxFractionDigits="0"/> đ</span>
                                         </div>
-                                        <div class="mb-2">
-                                            <label class="mb-1"><small>Phương thức thanh toán</small></label>
+                                        <div class="pos-order-summary-row text-primary">
+                                            <span>Giảm thêm (<span id="js-manual-percent">0</span>%)</span>
+                                            <span id="js-manual-discount" class="font-weight-bold">0 đ</span>
+                                        </div>
+                                        <div class="pos-order-summary-row">
+                                            <span>VAT (0%/5%)</span>
+                                            <span class="font-weight-bold"><fmt:formatNumber value="${vatAmount}" type="number" maxFractionDigits="0"/> đ</span>
+                                        </div>
+                                        <hr>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span class="font-weight-bold">TỔNG CỘNG</span>
+                                            <span class="pos-total-amount" id="js-final-amount">
+                                                <fmt:formatNumber value="${totalAmount - autoPromoDiscount + vatAmount}" type="number" maxFractionDigits="0"/> đ
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <form id="checkout-form" action="<c:url value='/pos'/>" method="post">
+                                        <input type="hidden" name="action" value="checkout">
+                                        
+                                        <div class="form-group mb-3">
+                                            <label class="small font-weight-bold text-uppercase text-muted">Giảm giá thêm (%)</label>
+                                            <input type="number" id="pos-discount" name="discountPercent" min="0" max="100" step="0.5" value="0" class="form-control" placeholder="0">
+                                        </div>
+
+                                        <div class="form-group mb-4">
+                                            <label class="small font-weight-bold text-uppercase text-muted">Phương thức thanh toán</label>
                                             <div class="d-flex" style="gap: 12px;">
-                                                <label class="pos-payment-option active">
-                                                    <input form="checkout-form" type="radio" name="paymentMethod" value="CASH" checked>
+                                                <label class="pos-payment-option active" id="label-cash">
+                                                    <input type="radio" name="paymentMethod" value="CASH" checked onchange="togglePayment(this)">
                                                     <i class="fas fa-money-bill-wave d-block mb-1"></i>
                                                     Tiền mặt
                                                 </label>
-                                                <label class="pos-payment-option">
-                                                    <input form="checkout-form" type="radio" name="paymentMethod" value="TRANSFER">
+                                                <label class="pos-payment-option" id="label-transfer">
+                                                    <input type="radio" name="paymentMethod" value="TRANSFER" onchange="togglePayment(this)">
                                                     <i class="fas fa-credit-card d-block mb-1"></i>
                                                     Chuyển khoản
                                                 </label>
                                             </div>
                                         </div>
-                                        <div class="mb-2">
-                                            <label for="customerId" class="mb-1"><small>Email khách hàng (tùy chọn)</small></label>
-                                            <input form="checkout-form" type="email" id="customerId" name="customerId" class="form-control form-control-sm"
-                                                   placeholder="VD: khachhang@example.com">
-                                        </div>
-                                        <div class="mb-2">
-                                            <label class="mb-1"><small>Ghi chú hóa đơn</small></label>
-                                            <textarea form="checkout-form" name="note" rows="2" class="form-control pos-note"
-                                                      placeholder="VD: Khách lấy sách làm quà, giao tận nơi..."></textarea>
-                                        </div>
-                                        <div class="d-flex">
-                                            <form action="<c:url value='/pos'/>" method="post" class="flex-fill mr-2">
-                                                <input type="hidden" name="action" value="clearCart">
-                                                <button type="submit" class="btn btn-outline-secondary pos-cancel-btn"
-                                                        <c:if test="${empty cart}">disabled</c:if>>
-                                                            Hủy
-                                                        </button>
-                                                </form>
-                                                <form id="checkout-form" action="<c:url value='/pos'/>" method="post" class="flex-fill">
-                                                <input type="hidden" name="action" value="checkout">
-                                                <button type="submit" class="btn btn-warning pos-pay-btn"
-                                                        <c:if test="${empty cart}">disabled</c:if>>
-                                                            Thanh toán
-                                                        </button>
-                                                </form>
+
+                                        <div id="cash-section">
+                                            <div class="form-group mb-3">
+                                                <label class="small font-weight-bold text-uppercase text-muted">Tiền khách đưa</label>
+                                                <div class="input-group">
+                                                    <input type="number" id="pos-cash" name="cashReceived" class="form-control form-control-lg font-weight-bold" placeholder="0">
+                                                    <div class="input-group-append"><span class="input-group-text">đ</span></div>
+                                                </div>
+                                            </div>
+                                            <div class="d-flex justify-content-between align-items-center mb-4 p-2 bg-light rounded">
+                                                <span class="text-muted">Tiền thừa trả khách:</span>
+                                                <span id="js-change-amount" class="h5 m-0 font-weight-bold text-success">0 đ</span>
                                             </div>
                                         </div>
-                                    </div>
+
+                                        <div class="form-group mb-3">
+                                            <label class="small font-weight-bold text-uppercase text-muted">Số điện thoại (ID Khách hàng)</label>
+                                            <input type="text" name="customerId" class="form-control" placeholder="Nhập SĐT khách hàng">
+                                        </div>
+                                        
+                                        <div class="form-group mb-3">
+                                            <label class="small font-weight-bold text-uppercase text-muted">Tên khách hàng (Nếu khách mới)</label>
+                                            <input type="text" name="customerName" class="form-control" placeholder="Nguyễn Văn A">
+                                        </div>
+
+                                        <div class="form-group mb-4">
+                                            <label class="small font-weight-bold text-uppercase text-muted">Ghi chú</label>
+                                            <textarea name="note" rows="2" class="form-control" placeholder="Ghi chú đơn hàng..."></textarea>
+                                        </div>
+
+                                        <div class="row no-gutters">
+                                            <div class="col-4 pr-2">
+                                                <button type="button" class="btn btn-outline-secondary btn-block py-3" onclick="location.href='?action=clearCart'" ${empty cart ? 'disabled' : ''}>Hủy</button>
+                                            </div>
+                                            <div class="col-8">
+                                                <button type="submit" class="btn btn-primary pos-pay-btn" ${empty cart ? 'disabled' : ''}>Xác nhận thanh toán</button>
+                                            </div>
+                                        </div>
+                                    </form>
                                 </div>
                             </div>
                         </div>
-                    </section>
-                </div>
-                <!-- /.content-wrapper -->
+                    </div>
+                </section>
             </div>
+        </div>
 
-            <script src="${pageContext.request.contextPath}/AdminLTE-3.2.0/plugins/jquery/jquery.min.js"></script>
+        <script src="${pageContext.request.contextPath}/AdminLTE-3.2.0/plugins/jquery/jquery.min.js"></script>
         <script src="${pageContext.request.contextPath}/AdminLTE-3.2.0/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
-        <script src="${pageContext.request.contextPath}/AdminLTE-3.2.0/dist/js/adminlte.min.js"></script>
-        <script>
-                                                                            var posSubtotal = ${totalAmount};
-                                                                            function posUpdateSummary() {
-                                                                                var pct = parseFloat($('#pos-discount').val()) || 0;
-                                                                                if (pct < 0)
-                                                                                    pct = 0;
-                                                                                if (pct > 100)
-                                                                                    pct = 100;
-                                                                                var discount = posSubtotal * pct / 100;
-                                                                                var finalAmount = posSubtotal - discount;
-                                                                                $('#pos-discount-pct').text(pct);
-                                                                                $('#pos-discount-amount').text(discount.toLocaleString('vi-VN', {maximumFractionDigits: 0}) + ' đ');
-                                                                                $('#pos-final-amount').text(finalAmount.toLocaleString('vi-VN', {maximumFractionDigits: 0}) + ' đ');
-                                                                            }
-                                                                            $(function () {
-                                                                                $('#pos-category').on('change', function () {
-                                                                                    $('#pos-category-form').submit();
-                                                                                });
-                                                                                $('#pos-discount').on('input change', posUpdateSummary);
-                                                                                $('input[name="paymentMethod"]').on('change', function () {
-                                                                                    $('.pos-payment-option').removeClass('active');
-                                                                                    $(this).closest('.pos-payment-option').addClass('active');
-                                                                                });
+        
+        <!-- Hidden values for calculation -->
+        <input type="hidden" id="raw-subtotal" value="${totalAmount}">
+        <input type="hidden" id="raw-auto-discount" value="${autoPromoDiscount}">
+        <input type="hidden" id="raw-vat" value="${vatAmount}">
 
-                                                                                $('#pos-sidebar-toggle').on('click', function () {
-                                                                                    $('body').toggleClass('pos-sidebar-open');
-                                                                                });
-                                                                                $('.pos-offcanvas-backdrop').on('click', function () {
-                                                                                    $('body').removeClass('pos-sidebar-open');
-                                                                                });
-                                                                            });
-                                                                            $(document).on('change', 'input[name="quantity"]', function () {
-                                                                                $(this).closest('form').submit();
-                                                                            });
+        <script>
+            function updateSummary() {
+                var subtotal = parseFloat($('#raw-subtotal').val()) || 0;
+                var autoDiscount = parseFloat($('#raw-auto-discount').val()) || 0;
+                var vat = parseFloat($('#raw-vat').val()) || 0;
+                
+                var manualPct = parseFloat($('#pos-discount').val()) || 0;
+                if (manualPct < 0) manualPct = 0;
+                if (manualPct > 100) manualPct = 100;
+                
+                var manualDiscount = subtotal * manualPct / 100;
+                var finalAmount = subtotal - autoDiscount - manualDiscount + vat;
+                if (finalAmount < 0) finalAmount = 0;
+                
+                $('#js-manual-percent').text(manualPct);
+                $('#js-manual-discount').text('- ' + manualDiscount.toLocaleString('vi-VN') + ' đ');
+                $('#js-final-amount').text(finalAmount.toLocaleString('vi-VN') + ' đ');
+                
+                var cash = parseFloat($('#pos-cash').val()) || 0;
+                var change = cash - finalAmount;
+                if (change < 0) change = 0;
+                $('#js-change-amount').text(change.toLocaleString('vi-VN') + ' đ');
+            }
+
+            function togglePayment(radio) {
+                $('.pos-payment-option').removeClass('active');
+                $(radio).closest('.pos-payment-option').addClass('active');
+                if (radio.value === 'TRANSFER') {
+                    $('#cash-section').slideUp();
+                } else {
+                    $('#cash-section').slideDown();
+                }
+            }
+
+            $(document).ready(function() {
+                $('#pos-discount, #pos-cash').on('input change', updateSummary);
+                $('#sku').focus();
+            });
         </script>
     </body>
 </html>
-

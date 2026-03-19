@@ -7,7 +7,7 @@
             <head>
                 <meta charset="utf-8">
                 <meta name="viewport" content="width=device-width, initial-scale=1">
-                <title>Cài Đặt Cấp Bậc & Tích Điểm Khách Hàng</title>
+                <title>Cài Đặt Cấp Bậc Khách Hàng</title>
 
                 <!-- Google Font: Source Sans Pro -->
                 <link rel="stylesheet"
@@ -35,7 +35,7 @@
                             <div class="container-fluid">
                                 <div class="row mb-2">
                                     <div class="col-sm-6">
-                                        <h1><i class="fas fa-trophy"></i> CẤP BẬC & TÍCH ĐIỂM KHÁCH HÀNG</h1>
+                                        <h1><i class="fas fa-trophy"></i> CẤP BẬC KHÁCH HÀNG</h1>
                                     </div>
                                 </div>
                             </div>
@@ -44,6 +44,18 @@
                         <!-- Main content -->
                         <section class="content">
                             <div class="container-fluid">
+                                <c:if test="${not empty errorMessage}">
+                                    <div class="alert alert-danger alert-dismissible">
+                                        <button type="button" class="close" data-dismiss="alert">&times;</button>
+                                        <i class="fas fa-exclamation-triangle"></i> ${errorMessage}
+                                    </div>
+                                </c:if>
+                                <c:if test="${not empty successMessage}">
+                                    <div class="alert alert-success alert-dismissible">
+                                        <button type="button" class="close" data-dismiss="alert">&times;</button>
+                                        <i class="fas fa-check-circle"></i> ${successMessage}
+                                    </div>
+                                </c:if>
 
                                 <!-- Tier Classification Rules Card -->
                                 <div class="card">
@@ -51,7 +63,7 @@
                                         <h3 class="card-title text-bold text-uppercase" style="margin-top: 5px;">Quy Tắc
                                             Phân Loại Cấp Bậc</h3>
                                         <div class="card-tools">
-                                            <a href="<%= request.getContextPath() %>/admin/customer-tiers"
+                                            <a href="<%= request.getContextPath() %>/customer-tiers"
                                                 class="btn btn-success btn-sm">
                                                 <i class="fas fa-plus"></i> Thêm Cấp Bậc
                                             </a>
@@ -113,9 +125,9 @@
                                                                 <td>${tier.discountRate}%</td>
                                                                 <td>
                                                                     <a
-                                                                        href="<%= request.getContextPath() %>/admin/customer-tiers?action=edit&id=${tier.tierID}">Sửa</a>
+                                                                        href="<%= request.getContextPath() %>/customer-tiers?action=edit&id=${tier.tierID}">Sửa</a>
                                                                     <span class="text-muted mx-1">|</span>
-                                                                    <a href="<%= request.getContextPath() %>/admin/customer-tiers?action=delete&id=${tier.tierID}"
+                                                                    <a href="<%= request.getContextPath() %>/customer-tiers?action=delete&id=${tier.tierID}"
                                                                         class="text-danger"
                                                                         onclick="return confirm('Bạn có chắc muốn xoá cấp bậc này?');">Xoá</a>
                                                                 </td>
@@ -143,7 +155,7 @@
                                             </c:choose>
                                         </h3>
                                     </div>
-                                    <form action="<%= request.getContextPath() %>/admin/customer-tiers" method="post">
+                                    <form action="<%= request.getContextPath() %>/customer-tiers" method="post">
                                         <input type="hidden" name="action"
                                             value="${not empty selectedTier ? 'update' : 'add'}">
                                         <c:if test="${not empty selectedTier}">
@@ -199,7 +211,7 @@
                                         </div>
 
                                         <div class="card-footer bg-transparent border-top-0 d-flex justify-content-end">
-                                            <a href="<%= request.getContextPath() %>/admin/customer-tiers"
+                                            <a href="<%= request.getContextPath() %>/customer-tiers"
                                                 class="btn btn-secondary mr-2"
                                                 style="background-color: #6c757d; border-color: #6c757d; color: white;">Hủy</a>
                                             <button type="submit" class="btn btn-primary"
@@ -225,6 +237,38 @@
                     src="<%= request.getContextPath() %>/AdminLTE-3.2.0/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
                 <!-- AdminLTE App -->
                 <script src="<%= request.getContextPath() %>/AdminLTE-3.2.0/dist/js/adminlte.min.js"></script>
+                <script>
+                    document.getElementById('promotionForm') || (function() {
+                        var form = document.querySelector('form[action*="customer-tiers"]');
+                        if (form) {
+                            form.addEventListener('submit', function(e) {
+                                var minPoint = document.getElementById('spendingRequirement');
+                                var discountRate = document.getElementById('discountRate');
+                                var tierName = document.getElementById('tierName');
+
+                                if (tierName && tierName.value.trim() === '') {
+                                    alert('Tên bậc không được để trống.');
+                                    e.preventDefault();
+                                    return;
+                                }
+
+                                var minVal = parseFloat(minPoint.value.replace(/,/g, ''));
+                                if (isNaN(minVal) || minVal < 0) {
+                                    alert('Điểm tối thiểu không được nhỏ hơn 0.');
+                                    e.preventDefault();
+                                    return;
+                                }
+
+                                var discVal = parseFloat(discountRate.value.replace(/%/g, '').trim());
+                                if (isNaN(discVal) || discVal < 0) {
+                                    alert('Tỷ lệ giảm giá không được nhỏ hơn 0.');
+                                    e.preventDefault();
+                                    return;
+                                }
+                            });
+                        }
+                    })();
+                </script>
             </body>
 
             </html>
