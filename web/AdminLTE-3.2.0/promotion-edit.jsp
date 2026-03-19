@@ -263,8 +263,8 @@
                                         <ol class="breadcrumb float-sm-right">
                                             <li class="breadcrumb-item"><a href="#">Home</a></li>
                                             <li class="breadcrumb-item">
-                                                <a href="<%= request.getContextPath() %>/admin/promotions">Promotion
-                                                    &amp; Campaigns</a>
+                                                <a href="<%= request.getContextPath() %>/admin/promotions">Chiến Dịch
+                                                    Khuyến Mãi</a>
                                             </li>
                                             <li class="breadcrumb-item active">Chỉnh Sửa</li>
                                         </ol>
@@ -319,7 +319,8 @@
                                                             Dịch:</label>
                                                         <input type="text" class="form-control promo-input"
                                                             id="promotionCode" name="promotionCode"
-                                                            value="${promotion.promotionCode}" readonly>
+                                                            value="${promotion.promotionCode}" required>
+                                                        <div class="invalid-feedback">Vui lòng nhập mã chiến dịch.</div>
                                                     </div>
 
                                                     <!-- Promotion Name -->
@@ -381,20 +382,12 @@
                                                             <option value="ALL">Tất Cả Loại Sách</option>
                                                             <c:set var="selectedCat"
                                                                 value="${not empty promotion.applicableCategories ? promotion.applicableCategories[0].categoryID : ''}" />
-                                                            <option value="1" ${selectedCat eq 1 ? 'selected' : '' }>
-                                                                Sách Truyện Tranh</option>
-                                                            <option value="2" ${selectedCat eq 2 ? 'selected' : '' }>
-                                                                Tiểu Thuyết</option>
-                                                            <option value="3" ${selectedCat eq 3 ? 'selected' : '' }>
-                                                                Khoa Học</option>
-                                                            <option value="4" ${selectedCat eq 4 ? 'selected' : '' }>
-                                                                Giáo Dục</option>
-                                                            <option value="5" ${selectedCat eq 5 ? 'selected' : '' }>
-                                                                Manga</option>
-                                                            <option value="6" ${selectedCat eq 6 ? 'selected' : '' }>
-                                                                Lịch Sử</option>
-                                                            <option value="7" ${selectedCat eq 7 ? 'selected' : '' }>
-                                                                Khác</option>
+                                                            <c:forEach items="${categories}" var="category">
+                                                                <option value="${category.categoryID}" ${selectedCat eq
+                                                                    category.categoryID ? 'selected' : '' }>
+                                                                    ${category.categoryName}
+                                                                </option>
+                                                            </c:forEach>
                                                         </select>
                                                     </div>
 
@@ -629,6 +622,14 @@
                      */
                     function validateForm() {
                         var valid = true;
+
+                        var code = $.trim($('#promotionCode').val());
+                        if (!code) {
+                            $('#promotionCode').addClass('is-invalid');
+                            valid = false;
+                        } else {
+                            $('#promotionCode').removeClass('is-invalid');
+                        }
 
                         var name = $.trim($('#promotionName').val());
                         if (!name) {

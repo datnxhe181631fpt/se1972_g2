@@ -39,6 +39,7 @@ public class PromotionController extends HttpServlet {
         switch (action) {
             case "create":
                 request.setAttribute("customerTiers", new CustomerTierDAO().getAll());
+                request.setAttribute("categories", new CategoryDAO().getAllActiveCategories());
                 request.getRequestDispatcher("/AdminLTE-3.2.0/promotion-create.jsp").forward(request, response);
                 break;
             case "edit":
@@ -114,6 +115,7 @@ public class PromotionController extends HttpServlet {
             promotion.setApplicableCustomerTiers(tierDAO.getByPromotionId(id));
 
             request.setAttribute("customerTiers", new CustomerTierDAO().getAll());
+            request.setAttribute("categories", new CategoryDAO().getAllActiveCategories());
             request.setAttribute("promotion", promotion);
             request.getRequestDispatcher("/AdminLTE-3.2.0/promotion-edit.jsp").forward(request, response);
 

@@ -73,14 +73,12 @@ public class CustomerTierController extends HttpServlet {
     private void addTier(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
         String name = request.getParameter("tierName");
-        double minSpent = Double.parseDouble(request.getParameter("minTotalSpent").replace(",", ""));
-        double pointRate = Double.parseDouble(request.getParameter("pointRate").replace("x", "").trim());
+        double minPoint = Double.parseDouble(request.getParameter("minPoint").replace(",", ""));
         double discountRate = Double.parseDouble(request.getParameter("discountRate").replace("%", "").trim());
 
         CustomerTier tier = new CustomerTier();
         tier.setTierName(name);
-        tier.setMinTotalSpent(minSpent);
-        tier.setPointRate(pointRate);
+        tier.setMinPoint(minPoint);
         tier.setDiscountRate(discountRate);
 
         tierDAO.insert(tier);
@@ -92,15 +90,13 @@ public class CustomerTierController extends HttpServlet {
         int id = Integer.parseInt(request.getParameter("tierID"));
         String name = request.getParameter("tierName");
         // Remove formatting characters before parsing
-        double minSpent = Double.parseDouble(request.getParameter("minTotalSpent").replace(",", ""));
-        double pointRate = Double.parseDouble(request.getParameter("pointRate").replace("x", "").trim());
+        double minPoint = Double.parseDouble(request.getParameter("minPoint").replace(",", ""));
         double discountRate = Double.parseDouble(request.getParameter("discountRate").replace("%", "").trim());
 
         CustomerTier tier = new CustomerTier();
         tier.setTierID(id);
         tier.setTierName(name);
-        tier.setMinTotalSpent(minSpent);
-        tier.setPointRate(pointRate);
+        tier.setMinPoint(minPoint);
         tier.setDiscountRate(discountRate);
 
         tierDAO.update(tier);
