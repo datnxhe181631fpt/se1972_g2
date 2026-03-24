@@ -245,7 +245,8 @@ public class SalesInvoiceDAO extends DBContext {
         }
 
         StringBuilder sql = new StringBuilder();
-        sql.append("SELECT TOP ").append(limit).append("""
+        sql.append("SELECT TOP ").append(limit).append(" ");
+        sql.append("""
                 si.InvoiceID,
                 si.InvoiceCode,
                 si.TotalAmount,

@@ -184,27 +184,71 @@ public class ProductDAO extends DBContext {
         return 0;
     }
 
+    /** Tránh SQLException khi bảng Products thiếu cột (script cũ / DB khác phiên bản). */
+    private static boolean hasColumn(ResultSet rs, String column) throws SQLException {
+        ResultSetMetaData md = rs.getMetaData();
+        int n = md.getColumnCount();
+        for (int i = 1; i <= n; i++) {
+            if (column.equalsIgnoreCase(md.getColumnLabel(i))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private Product extractProductFromResultSet(ResultSet rs) throws Exception {
         Product p = new Product();
         p.setId(rs.getInt("ProductID"));
         p.setProductName(rs.getString("ProductName"));
         p.setCategoryId(rs.getInt("CategoryID"));
-        // BrandID, SupplierID may be nullable
-        p.setBrandId(rs.getObject("BrandID") != null ? rs.getInt("BrandID") : null);
-        p.setSupplierId(rs.getObject("SupplierID") != null ? rs.getInt("SupplierID") : null);
+        if (hasColumn(rs, "BrandID")) {
+            Object o = rs.getObject("BrandID");
+            p.setBrandId(o != null ? ((Number) o).intValue() : null);
+        }
+        if (hasColumn(rs, "SupplierID")) {
+            Object o = rs.getObject("SupplierID");
+            p.setSupplierId(o != null ? ((Number) o).intValue() : null);
+        }
         p.setSku(rs.getString("SKU"));
         p.setDescription(rs.getString("Description"));
-        p.setSpecifications(rs.getString("Specifications"));
-        p.setImageURL(rs.getString("ImageURL"));
+        if (hasColumn(rs, "Specifications")) {
+            p.setSpecifications(rs.getString("Specifications"));
+        }
+        if (hasColumn(rs, "ImageURL")) {
+            p.setImageURL(rs.getString("ImageURL"));
+        }
         p.setCostPrice(rs.getObject("CostPrice") != null ? rs.getDouble("CostPrice") : null);
         p.setSellingPrice(rs.getDouble("SellingPrice"));
-        p.setCompareAtPrice(rs.getObject("CompareAtPrice") != null ? rs.getDouble("CompareAtPrice") : null);
+        if (hasColumn(rs, "CompareAtPrice")) {
+            p.setCompareAtPrice(rs.getObject("CompareAtPrice") != null ? rs.getDouble("CompareAtPrice") : null);
+        }
         p.setStock(rs.getInt("Stock"));
-        p.setReorderLevel(rs.getInt("ReorderLevel"));
-        p.setActive(rs.getBoolean("IsActive"));
-        p.setIsCombo(rs.getBoolean("IsCombo"));
-        p.setCreatedDate(rs.getTimestamp("CreatedDate"));
-        p.setUpdatedDate(rs.getTimestamp("UpdatedDate"));
+        if (hasColumn(rs, "ReservedStock")) {
+            p.setReservedStock(rs.getInt("ReservedStock"));
+        }
+        p.setReorderLevel(hasColumn(rs, "ReorderLevel") ? rs.getInt("ReorderLevel") : 0);
+        p.setActive(hasColumn(rs, "IsActive") && rs.getBoolean("IsActive"));
+        if (hasColumn(rs, "IsCombo")) {
+            p.setIsCombo(rs.getBoolean("IsCombo"));
+        }
+        if (hasColumn(rs, "LastLowStockAlertAt")) {
+            Timestamp t = rs.getTimestamp("LastLowStockAlertAt");
+            if (t != null) {
+                p.setLastLowStockAlertAt(new java.util.Date(t.getTime()));
+            }
+        }
+        if (hasColumn(rs, "CreatedDate")) {
+            Timestamp t = rs.getTimestamp("CreatedDate");
+            if (t != null) {
+                p.setCreatedDate(new java.util.Date(t.getTime()));
+            }
+        }
+        if (hasColumn(rs, "UpdatedDate")) {
+            Timestamp t = rs.getTimestamp("UpdatedDate");
+            if (t != null) {
+                p.setUpdatedDate(new java.util.Date(t.getTime()));
+            }
+        }
         return p;
     }
 
@@ -664,64 +708,5 @@ public class ProductDAO extends DBContext {
             System.out.println("ERR: getAllActiveNonComboProducts: " + e.getMessage());
         }
         return products;
-    }
-    public int countProductsForPos(String keyword, Integer categoryId) {
-        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM Products WHERE IsActive = 1");
-        if (keyword != null && !keyword.trim().isEmpty()) {
-            sql.append(" AND (ProductName LIKE ? OR SKU LIKE ?)");
-}
-        if (categoryId != null) {
-            sql.append(" AND CategoryID = ?");
-        }
-        try (Connection conn = getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
-            int idx = 1;
-            if (keyword != null && !keyword.trim().isEmpty()) {
-                String pattern = "%" + keyword.trim() + "%";
-                ps.setString(idx++, pattern);
-                ps.setString(idx++, pattern);
-            }
-            if (categoryId != null) {
-                ps.setInt(idx++, categoryId);
-            }
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) return rs.getInt(1);
-        } catch (Exception e) {
-            System.out.println("ERR: countProductsForPos: " + e.getMessage());
-        }
-        return 0;
-    }
-
-    public List<Product> getProductsForPos(String keyword, Integer categoryId, int page, int pageSize) {
-        List<Product> list = new ArrayList<>();
-        StringBuilder sql = new StringBuilder("SELECT * FROM Products WHERE IsActive = 1");
-        if (keyword != null && !keyword.trim().isEmpty()) {
-            sql.append(" AND (ProductName LIKE ? OR SKU LIKE ?)");
-        }
-        if (categoryId != null) {
-            sql.append(" AND CategoryID = ?");
-        }
-        sql.append(" ORDER BY ProductID DESC OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
-        try (Connection conn = getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
-            int idx = 1;
-            if (keyword != null && !keyword.trim().isEmpty()) {
-                String pattern = "%" + keyword.trim() + "%";
-                ps.setString(idx++, pattern);
-                ps.setString(idx++, pattern);
-            }
-            if (categoryId != null) {
-                ps.setInt(idx++, categoryId);
-            }
-            ps.setInt(idx++, (page - 1) * pageSize);
-            ps.setInt(idx++, pageSize);
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()) {
-                list.add(extractProductFromResultSet(rs));
-            }
-        } catch (Exception e) {
-            System.out.println("ERR: getProductsForPos: " + e.getMessage());
-        }
-        return list;
     }
 }

@@ -13,6 +13,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.sql.Date;
 import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Map;
 
@@ -28,8 +29,20 @@ public class ReportController extends HttpServlet {
         String toStr = request.getParameter("toDate");
 
         LocalDate today = LocalDate.now();
-        LocalDate from = (fromStr != null && !fromStr.isEmpty()) ? LocalDate.parse(fromStr) : today.minusDays(30);
-        LocalDate to = (toStr != null && !toStr.isEmpty()) ? LocalDate.parse(toStr) : today;
+        LocalDate from = today.minusDays(30);
+        LocalDate to = today;
+        try {
+            if (fromStr != null && !fromStr.isBlank()) {
+                from = LocalDate.parse(fromStr.trim());
+            }
+        } catch (DateTimeParseException ignored) {
+        }
+        try {
+            if (toStr != null && !toStr.isBlank()) {
+                to = LocalDate.parse(toStr.trim());
+            }
+        } catch (DateTimeParseException ignored) {
+        }
 
         if (from.isAfter(to)) {
             from = to.minusDays(30);
