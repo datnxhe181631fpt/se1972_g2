@@ -34,10 +34,6 @@ public class CustomerController extends HttpServlet {
                 deleteCustomer(request, response);
                 break;
             case "add":
-                // Màn hình customer-management.jsp có nút thêm,
-                // nhưng trong file jsp chưa thấy form thêm riêng.
-                // Có thể dùng detail panel để thêm hoặc redirect sang trang khác.
-                // Tạm thời quay về list.
                 listCustomers(request, response);
                 break;
             default:
