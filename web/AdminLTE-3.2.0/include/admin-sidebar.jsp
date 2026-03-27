@@ -10,7 +10,20 @@
 
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<style>
+    .nav-sidebar .nav-treeview {
+        padding-left: 5px !important; 
+    }
 
+    .nav-sidebar .nav-link > .nav-icon {
+        margin-left: -3px; 
+        width: 1.2rem;    
+    }
+
+    .nav-sidebar .nav-link p {
+        margin-left: 5px;
+    }
+</style>
 <!-- Main Sidebar Container -->
 <aside class="main-sidebar sidebar-dark-primary elevation-4">
     <!-- Brand Logo -->
@@ -162,13 +175,13 @@
                         </li>
                         <li class="nav-item">
                             <a href="${pageContext.request.contextPath}/admin/stocktake" class="nav-link">
-                                <i class="fas fa-list-check nav-icon"></i>
+                                <i class="fas fa-tasks nav-icon"></i>
                                 <p>Kiểm kho</p>
                             </a>
                         </li>
                         <li class="nav-item">
                             <a href="${pageContext.request.contextPath}/admin/stockdisposal" class="nav-link">
-                                <i class="fas fa-trash-can nav-icon"></i>
+                                <i class="fas fa-trash-alt nav-icon"></i>
                                 <p>Xuất hủy</p>
                             </a>
                         </li>

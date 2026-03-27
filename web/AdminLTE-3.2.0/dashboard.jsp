@@ -125,7 +125,7 @@
                   <p>Nhà cung cấp</p>
                 </div>
                 <div class="small-box-footer">
-                  <a href="${pageContext.request.contextPath}/admin/suppliers" class="small-box-footer">
+                  <a href="${pageContext.request.contextPath}/admin/supplier" class="small-box-footer">
                     Xem chi tiết <i class="fas fa-arrow-circle-right"></i>
                   </a>
                 </div>

@@ -137,6 +137,10 @@
                                                                         <i class="fas fa-edit"></i>
                                                                     </a>
 
+                                                                    <c:set var="userRole" value="${sessionScope.roleName}"/>
+                                                                    <c:set var="canEdit" value="${userRole == 'Admin' || userRole == 'Store Manager' || userRole == 'Manager'}"/>
+
+                                                                    <c:if test="${canEdit}">
                                                                     <c:if test="${item.isActive}">
                                                                         <form action="${pageContext.request.contextPath}/admin/supplier" method="post" style="display: inline-block;">
                                                                             <input type="hidden" name="code" value="${item.supplierCode}">
@@ -160,6 +164,7 @@
                                                                             <i class="fas fa-trash"></i>
                                                                         </button>
                                                                     </form>
+                                                                    </c:if>
                                                                 </div>
                                                             </td>
                                                         </tr>
@@ -212,13 +217,13 @@
                                         </div>
                                     </c:if>
                                 </div>
-                                </div>
                             </div>
                         </div>
-                    </section>
-                </div>
+                    </div>
+                </section>
+            </div>
             <jsp:include page="include/admin-footer.jsp" />
         </div>
-     
+
     </body>
 </html>
