@@ -115,12 +115,15 @@ public class SupplierController extends HttpServlet {
         }
         String code = request.getParameter("code");
         String redirectUrl = request.getContextPath() + "/admin/supplier?action=list";
-
+      
         String msg = "";
         boolean success;
-        
+
         switch (action) {
             case "delete":
+                if(!requireManager(request, response, "/admin/supplier?action=list")){
+                    return;
+                }
                 if (!supDAO.canDeleteSupplier(code)) {
                     request.getSession().setAttribute("msg", "fail_delete_has_orders");
                     response.sendRedirect(redirectUrl);
@@ -131,6 +134,9 @@ public class SupplierController extends HttpServlet {
                 break;
 
             case "deactive":
+                if(!requireManager(request, response, "/admin/supplier?action=list")){
+                    return;
+                }
                 if (!supDAO.canLockSupplier(code)) {
                     int blockingCount = supDAO.getBlockingOrdersCount(code);
                     request.getSession().setAttribute("msg", "fail_lock_active_orders");
@@ -143,6 +149,9 @@ public class SupplierController extends HttpServlet {
                 break;
 
             case "active":
+                if(!requireManager(request, response, "/admin/supplier?action=list")){
+                    return;
+                }
                 success = supDAO.activeSupplier(code);
                 msg = success ? "success_active" : "fail";
                 break;
@@ -158,9 +167,9 @@ public class SupplierController extends HttpServlet {
                 //validate
                 Validation valid = new Validation();
                 valid.required("Tên NCC", name).minLength("Tên nhà cung cấp", name, 3)
-                     .required("Người liên hệ", contactPerson)
-                     .required("Số điện thoại", phone).phone("Số điện thoại", phone)
-                     .email("Email", email);
+                        .required("Người liên hệ", contactPerson)
+                        .required("Số điện thoại", phone).phone("Số điện thoại", phone)
+                        .email("Email", email);
 
                 if (!valid.isValid()) {
                     request.setAttribute("supplier", sup);
@@ -202,5 +211,16 @@ public class SupplierController extends HttpServlet {
             request.setAttribute("blockingCount", blockingCount);
             request.getSession().removeAttribute("blockingCount");
         }
+    }
+
+    private boolean requireManager(HttpServletRequest request, HttpServletResponse response,
+            String redirectUrl) throws IOException {
+        String role = (String) request.getSession(false).getAttribute("roleName");
+        if (!"Store Manager".equals(role) && !"Admin".equals(role) && !"Manager".equals(role)) {
+            request.getSession().setAttribute("msg", "access_denied");
+            response.sendRedirect(redirectUrl);
+            return false;
+        }
+        return true;
     }
 }

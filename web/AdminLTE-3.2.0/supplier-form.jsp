@@ -37,6 +37,7 @@
 
             <!-- Sidebar -->
             <jsp:include page="include/admin-sidebar.jsp" />
+            <jsp:include page="include/admin-header.jsp" />
 
             <!-- Content Wrapper. Contains page content -->
             <div class="content-wrapper">

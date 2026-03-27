@@ -73,10 +73,21 @@
                                     <div class="card-header">
                                         <h3 class="card-title"><i class="fas fa-search"></i> Tìm kiếm &amp; Lọc</h3>
                                         <div class="card-tools">
-                                            <a href="${pageContext.request.contextPath}/admin/stocktake?action=create"
-                                               class="btn btn-success btn-sm">
-                                                <i class="fas fa-plus"></i> Tạo phiếu kiểm kê mới
-                                            </a>
+                                            <c:choose>
+                                                <c:when test="${isLocked}">
+                                                    <span class="d-inline-block" data-toggle="tooltip" data-placement="left" title="Không thể tạo! Phiếu ${activeSTNumber} đang chờ xử lý." >
+                                                        <button class="btn btn-success btn-sm disabled" style="opacity: 0.5; cursor: not-allowed">
+                                                            <i class="fas fa-plus"></i> Tạo phiếu kiểm kê mới
+                                                        </button>
+                                                    </span>
+                                                </c:when>
+                                                <c:otherwise>
+                                                    <a href="${pageContext.request.contextPath}/admin/stocktake?action=create"
+                                                       class="btn btn-success btn-sm">
+                                                        <i class="fas fa-plus"></i> Tạo phiếu kiểm kê mới
+                                                    </a>
+                                                </c:otherwise>
+                                            </c:choose>
                                         </div>
                                     </div>
                                     <div class="card-body">
@@ -258,5 +269,10 @@
             </div><!-- ./content-wrapper -->
             <jsp:include page="include/admin-footer.jsp"/>
         </div><!-- ./wrapper -->
+        <script>
+            $(function () {
+                $('[data-toggle="tooltip"]').tooltip();
+            });
+        </script>
     </body>
 </html>

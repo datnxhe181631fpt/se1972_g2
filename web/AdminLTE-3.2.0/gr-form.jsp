@@ -263,7 +263,7 @@
                                         <div class="col-md-4 form-group">
                                             <label class="text-muted">Đơn đặt hàng:</label>
                                             <div class="readonly-field">
-                                                <a href="${pageContext.request.contextPath}/admin/purchaseorder?action=view&poNumber=${gr.poNumber}">
+                                                <a href="${pageContext.request.contextPath}/admin/purchaseorder?action=detail&poNumber=${gr.poNumber}">
                                                     ${gr.poNumber}
                                                 </a>
                                             </div>

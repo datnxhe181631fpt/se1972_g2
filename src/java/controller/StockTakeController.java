@@ -124,7 +124,10 @@ public class StockTakeController extends HttpServlet {
         }
 
         List<StockTake> list = stDAO.searchWithPaginated(keyword, status, fromDate, toDate, page, pageSize);
-        
+        String activeSTNumber = stDAO.getActiveLockSTNumber();
+        request.setAttribute("activeSTNumber", activeSTNumber);
+        request.setAttribute("isLocked", activeSTNumber != null);
+
         request.setAttribute("lists", list);
         request.setAttribute("totalRecords", total);
         request.setAttribute("totalPages", totalPages);
@@ -250,7 +253,7 @@ public class StockTakeController extends HttpServlet {
         for (Product p : allProducts) {
             productMap.put(p.getId(), p);
         }
-        
+
         StockTake st = new StockTake(stNumber, date, createdBy);
         st.setScopeType(scope != null ? scope : StockTake.SCOPE_ALL);
         st.setScopeValue(request.getParameter("scopeValue"));
