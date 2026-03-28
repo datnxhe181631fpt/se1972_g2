@@ -9,6 +9,13 @@ import DAO.SalesInvoiceDAO;
 import entity.CartItem;
 import entity.Category;
 import entity.Product;
+<<<<<<< Updated upstream
+=======
+import util.VnPayConfig;
+import util.PointConfig;
+import util.PromotionService;
+import util.PromotionService.PromotionResult;
+>>>>>>> Stashed changes
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -25,8 +32,17 @@ public class PosController extends HttpServlet {
     private final ProductDAO productDAO = new ProductDAO();
     private final CategoryDAO categoryDAO = new CategoryDAO();
     private final SalesInvoiceDAO salesInvoiceDAO = new SalesInvoiceDAO();
+<<<<<<< Updated upstream
     // Tạm thời hard-code nhân viên & ca làm để dev POS nhanh
     private static final int DEFAULT_STAFF_ID = 5; // cashiers sample data
+=======
+    private final CustomerDAO customerDAO = new CustomerDAO();
+    private final EmployeeDAO employeeDAO = new EmployeeDAO();
+    private final CustomerPointDAO customerPointDAO = new CustomerPointDAO();
+    private final PromotionService promotionService = new PromotionService();
+    private final ComboProductDAO comboProductDAO = new ComboProductDAO();
+
+>>>>>>> Stashed changes
     private static final Integer DEFAULT_SHIFT_ID = 1;
 
     @Override
@@ -245,6 +261,100 @@ public class PosController extends HttpServlet {
             paymentMethod = "CASH";
         }
 
+<<<<<<< Updated upstream
+=======
+        // 1. Resolve customer: CustomerID hoặc SĐT (SĐT = CustomerID khi tạo mới)
+        String resolvedCustomerId = null;
+        if (customerInput != null && !customerInput.trim().isEmpty()) {
+            String trimmed = customerInput.trim();
+            Customer customer = customerDAO.getById(trimmed);
+            if (customer == null) {
+                customer = customerDAO.getByPhone(trimmed);
+            }
+            if (customer == null) {
+                if (customerNameInput == null || customerNameInput.trim().isEmpty()) {
+                    session.setAttribute("error", "Khách hàng mới: vui lòng nhập Tên khách hàng.");
+                    response.sendRedirect("pos");
+                    return;
+                }
+                Customer newCustomer = new Customer();
+                newCustomer.setCustomerID(trimmed);
+                newCustomer.setFullName(customerNameInput.trim());
+                newCustomer.setPhoneNumber(trimmed);
+                newCustomer.setStatus("ACTIVE");
+                customerDAO.insert(newCustomer);
+                resolvedCustomerId = newCustomer.getCustomerID();
+            } else {
+                resolvedCustomerId = customer.getCustomerID();
+            }
+        }
+
+        // 2. Nhân viên bán hàng = tài khoản đang đăng nhập
+        Integer sessionEmpId = (Integer) session.getAttribute("employeeId");
+        if (sessionEmpId == null) {
+            session.setAttribute("error", "Vui lòng đăng nhập để thanh toán.");
+            response.sendRedirect(request.getContextPath() + "/login");
+            return;
+        }
+        int staffId = sessionEmpId;
+        if (employeeDAO.getEmployeeByID(staffId) == null) {
+            session.setAttribute("error", "Không tìm thấy thông tin nhân viên đăng nhập.");
+            response.sendRedirect("pos");
+            return;
+        }
+
+        // 3. Tự động áp dụng promotion (My Logic)
+        PromotionResult promoResult = promotionService.calculatePromotionDiscount(cart);
+        double automaticDiscount = promoResult.getTotalDiscount();
+        
+        // Manual discount (Team's feature)
+        double manualDiscountPercent = 0;
+        try {
+            if (manualDiscountPercentStr != null) manualDiscountPercent = Double.parseDouble(manualDiscountPercentStr);
+        } catch (NumberFormatException e) {}
+        
+        double totalAmountOriginal = cart.stream().mapToDouble(CartItem::getLineTotal).sum();
+        double manualDiscountAmount = totalAmountOriginal * (manualDiscountAmountPercentToAmount(manualDiscountPercent));
+
+        double totalDiscount = automaticDiscount + manualDiscountAmount;
+        if (totalDiscount > totalAmountOriginal) totalDiscount = totalAmountOriginal;
+
+        double vatAmount = calculateVatAmount(cart, categoryDAO.getAllActiveCategories());
+        double finalAmount = totalAmountOriginal - totalDiscount + vatAmount;
+        if (finalAmount < 0) finalAmount = 0;
+
+        // 4. Validate tiền khách đưa (Team's Feature)
+        if ("CASH".equalsIgnoreCase(paymentMethod)) {
+            double cashReceived = 0;
+            try {
+                if (cashReceivedStr != null) cashReceived = Double.parseDouble(cashReceivedStr);
+            } catch (NumberFormatException e) {}
+            if (cashReceived + 0.000001 < finalAmount) {
+                session.setAttribute("error", "Tiền khách đưa phải lớn hơn hoặc bằng " + String.format("%,.0f", finalAmount) + "đ");
+                response.sendRedirect("pos");
+                return;
+            }
+        }
+
+        // 5. Thanh toán Chuyển khoản (VNPAY)
+        if ("TRANSFER".equalsIgnoreCase(paymentMethod)) {
+            session.setAttribute("pendingCart", new ArrayList<>(cart));
+            session.setAttribute("pendingNote", note);
+            session.setAttribute("pendingPromotionDiscount", totalDiscount);
+            session.setAttribute("pendingPromoName", promoResult.getAppliedPromotionName());
+            session.setAttribute("pendingCustomerId", resolvedCustomerId);
+            session.setAttribute("pendingVatAmount", vatAmount);
+            session.setAttribute("pendingStaffId", staffId);
+            session.setAttribute("pendingShiftId", DEFAULT_SHIFT_ID);
+
+            String txnRef = "POS-" + System.currentTimeMillis();
+            String paymentUrl = VnPayConfig.createPaymentUrl(request, finalAmount, "Thanh toan POS " + txnRef, txnRef);
+            response.sendRedirect(paymentUrl);
+            return;
+        }
+
+        // 6. Lưu hóa đơn (CASH)
+>>>>>>> Stashed changes
         String invoiceCode = salesInvoiceDAO.createInvoice(
                 customerId,
                 cart,

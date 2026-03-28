@@ -51,6 +51,7 @@
                     </a>
                 </li>
 
+<<<<<<< Updated upstream
                 <!-- POS - Bán hàng -->
                 <li class="nav-item">
                     <a href="${pageContext.request.contextPath}/pos" class="nav-link">
@@ -58,6 +59,17 @@
                         <p>Bán hàng (POS)</p>
                     </a>
                 </li>
+=======
+                <%-- ===== BÁN HÀNG (POS) – Manager (1), Staff (3), Saler (5); RoleFilter /pos ===== --%>
+                <c:if test="${sessionScope.roleId == 1 || sessionScope.roleId == 3 || sessionScope.roleId == 5}">
+                    <li class="nav-item">
+                        <a href="${pageContext.request.contextPath}/pos" class="nav-link">
+                            <i class="nav-icon fas fa-cash-register"></i>
+                            <p>Bán hàng (POS)</p>
+                        </a>
+                    </li>
+                </c:if>
+>>>>>>> Stashed changes
 
                 <!-- Quản lý sản phẩm -->
                 <li class="nav-item">

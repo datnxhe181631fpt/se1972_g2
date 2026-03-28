@@ -546,8 +546,276 @@
                                                                 </td>
                                                             </tr>
                                                         </c:forEach>
+<<<<<<< Updated upstream
                                                     </tbody>
                                                 </table>
+=======
+                                                        <li
+                                                            class="page-item ${currentPage >= totalPages ? 'disabled' : ''}">
+                                                            <a class="page-link"
+                                                                href="${pageContext.request.contextPath}/pos?page=${currentPage + 1}&key=${searchKey}&categoryId=${selectedCategoryId}">
+                                                                Sau
+                                                            </a>
+                                                        </li>
+                                                    </ul>
+                                                </nav>
+                                            </c:if>
+
+
+                                            <!-- Empty State -->
+                                            <c:if test="${empty products}">
+                                                <div class="pos-empty-state">
+
+                                                    <div class="pos-empty-icon">
+                                                        <i class="fas fa-book-open"></i>
+                                                    </div>
+
+                                                    Nhập từ khóa hoặc SKU để tìm và thêm sản phẩm vào đơn hàng.
+
+                                                </div>
+                                            </c:if>
+
+                                        </div>
+                                        <!-- Right column: cart & payment -->
+                                        <div class="col-lg-4">
+                                            <div class="pos-order-panel">
+                                                <div class="pos-order-header">
+                                                    <div>
+                                                        <div class="pos-order-title">
+                                                            Đơn hàng
+                                                        </div>
+                                                        <small class="text-muted">Nhân viên:
+                                                            <c:out
+                                                                value="${not empty sessionScope.employee ? sessionScope.employee.fullName : sessionScope.fullName}"
+                                                                default="—" /></small>
+                                                    </div>
+                                                    <div class="pos-order-tag">
+                                                        Ca đang mở
+                                                    </div>
+                                                </div>
+                                                <div class="card-body p-0">
+                                                    <c:if test="${not empty cart}">
+                                                        <div class="table-responsive" style="max-height: 360px;">
+                                                            <table class="table table-striped table-hover mb-0">
+                                                                <thead>
+                                                                    <tr>
+                                                                        <th style="font-size: 11px;">Sản phẩm</th>
+                                                                        <th class="text-center"
+                                                                            style="width: 70px; font-size: 11px;">SL
+                                                                        </th>
+                                                                        <th class="text-right"
+                                                                            style="width: 90px; font-size: 11px;">Thành
+                                                                            tiền</th>
+                                                                        <th class="text-center" style="width: 40px;">
+                                                                        </th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                    <c:forEach var="item" items="${cart}">
+                                                                        <tr>
+                                                                            <td>
+                                                                                <div class="text-truncate"
+                                                                                    style="max-width: 120px; font-size: 12px;"
+                                                                                    title="${item.product.productName}">
+                                                                                    <strong>${item.product.productName}</strong>
+                                                                                </div>
+                                                                                <small class="text-muted">SKU:
+                                                                                    ${item.product.sku}</small>
+                                                                            </td>
+                                                                            <td class="text-center">
+                                                                                <form action="<c:url value='/pos'/>"
+                                                                                    method="post">
+                                                                                    <input type="hidden" name="action"
+                                                                                        value="updateQty">
+                                                                                    <input type="hidden"
+                                                                                        name="productId"
+                                                                                        value="${item.product.productID}">
+                                                                                    <input type="number" name="quantity"
+                                                                                        value="${item.quantity}" min="1"
+                                                                                        class="form-control form-control-sm text-center"
+                                                                                        style="width: 50px; font-size: 11px;"
+                                                                                        onchange="this.form.submit()">
+                                                                                </form>
+                                                                            </td>
+                                                                            <td class="text-right"
+                                                                                style="font-size: 12px;">
+                                                                                <fmt:formatNumber
+                                                                                    value="${item.lineTotal}"
+                                                                                    type="number"
+                                                                                    maxFractionDigits="0" /> đ
+                                                                            </td>
+                                                                            <td class="text-center">
+                                                                                <form action="<c:url value='/pos'/>"
+                                                                                    method="post">
+                                                                                    <input type="hidden" name="action"
+                                                                                        value="removeItem">
+                                                                                    <input type="hidden"
+                                                                                        name="productId"
+                                                                                        value="${item.product.productID}">
+                                                                                    <button type="submit"
+                                                                                        class="btn btn-link text-danger p-0">
+                                                                                        <i class="fas fa-trash"></i>
+                                                                                    </button>
+                                                                                </form>
+                                                                            </td>
+                                                                        </tr>
+                                                                    </c:forEach>
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
+                                                    </c:if>
+
+                                                    <c:if test="${empty cart}">
+                                                        <div class="pos-empty-state">
+                                                            <div class="pos-empty-icon">
+                                                                <i class="fas fa-shopping-basket"></i>
+                                                            </div>
+                                                            Chọn sản phẩm để thêm vào đơn hàng.
+                                                        </div>
+                                                    </c:if>
+                                                </div>
+                                                <div class="card-footer px-0 mt-3">
+                                                    <div class="mb-3 bg-light p-2 rounded">
+                                                        <div class="pos-order-summary-row">
+                                                            <span>Tạm tính</span>
+                                                            <span id="pos-subtotal" class="font-weight-bold">
+                                                                <fmt:formatNumber value="${totalAmount}" type="number"
+                                                                    maxFractionDigits="0" /> đ
+                                                            </span>
+                                                        </div>
+                                                        <div class="pos-order-summary-row text-success">
+                                                            <span>Khuyến mãi (Tự động)</span>
+                                                            <span id="pos-auto-discount" class="font-weight-bold">-
+                                                                <fmt:formatNumber value="${autoPromoDiscount}"
+                                                                    type="number" maxFractionDigits="0" /> đ
+                                                            </span>
+                                                        </div>
+                                                        <div class="pos-order-summary-row">
+                                                            <span>Giảm thêm (<span
+                                                                    id="pos-discount-pct">0</span>%)</span>
+                                                            <span id="pos-discount-amount" class="font-weight-bold">- 0
+                                                                đ</span>
+                                                        </div>
+                                                        <div class="pos-order-summary-row border-top pt-1 mt-1">
+                                                            <span>Thuế VAT</span>
+                                                            <span class="font-weight-bold">
+                                                                <fmt:formatNumber value="${vatAmount}" type="number"
+                                                                    maxFractionDigits="0" /> đ
+                                                            </span>
+                                                        </div>
+                                                        <hr style="margin: 6px 0;">
+                                                        <div class="d-flex justify-content-between align-items-center">
+                                                            <span class="text-sm font-weight-bold text-muted">TỔNG
+                                                                CỘNG</span>
+                                                            <span class="pos-total-amount" id="pos-final-amount">
+                                                                <fmt:formatNumber
+                                                                    value="${totalAmount - autoPromoDiscount + vatAmount}"
+                                                                    type="number" maxFractionDigits="0" /> đ
+                                                            </span>
+                                                        </div>
+                                                    </div>
+
+                                                    <form id="checkout-form" action="<c:url value='/pos'/>"
+                                                        method="post">
+                                                        <input type="hidden" name="action" value="checkout">
+
+                                                        <div class="form-group mb-2">
+                                                            <label for="pos-discount"
+                                                                class="mb-1 small font-weight-bold text-uppercase text-muted">Giảm
+                                                                thêm (%)</label>
+                                                            <input type="number" id="pos-discount"
+                                                                name="discountPercent" min="0" max="100" step="0.5"
+                                                                value="0" class="form-control form-control-sm"
+                                                                placeholder="Nhập số %">
+                                                        </div>
+
+                                                        <div class="form-group mb-2">
+                                                            <label
+                                                                class="mb-1 small font-weight-bold text-uppercase text-muted">Phương
+                                                                thức thanh toán</label>
+                                                            <div class="d-flex" style="gap: 8px;">
+                                                                <label
+                                                                    class="pos-payment-option active border flex-fill">
+                                                                    <input type="radio" name="paymentMethod"
+                                                                        value="CASH" checked
+                                                                        onchange="togglePayment(this)">
+                                                                    <i class="fas fa-money-bill-wave d-block mb-1"></i>
+                                                                    <span style="font-size: 11px;">Tiền mặt</span>
+                                                                </label>
+                                                                <label class="pos-payment-option border flex-fill">
+                                                                    <input type="radio" name="paymentMethod"
+                                                                        value="TRANSFER" onchange="togglePayment(this)">
+                                                                    <i class="fas fa-credit-card d-block mb-1"></i>
+                                                                    <span style="font-size: 11px;">Chuyển khoản</span>
+                                                                </label>
+                                                            </div>
+                                                        </div>
+
+                                                        <div id="cash-section">
+                                                            <div class="form-group mb-2">
+                                                                <label for="pos-cash"
+                                                                    class="mb-1 small font-weight-bold text-uppercase text-muted">Tiền
+                                                                    khách đưa</label>
+                                                                <input type="number" id="pos-cash" name="cashReceived"
+                                                                    min="0" step="1000"
+                                                                    class="form-control form-control-sm font-weight-bold text-primary"
+                                                                    placeholder="Nhập số tiền mặt">
+                                                            </div>
+                                                            <div
+                                                                class="d-flex justify-content-between align-items-center mb-2 px-2 py-1 bg-light rounded">
+                                                                <span class="text-xs text-muted">Tiền thừa trả
+                                                                    khách:</span>
+                                                                <span id="pos-change-amount"
+                                                                    class="font-weight-bold text-success">0 đ</span>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="form-group mb-2">
+                                                            <label
+                                                                class="mb-1 small font-weight-bold text-uppercase text-muted">SĐT
+                                                                Khách hàng</label>
+                                                            <input type="text" name="customerId"
+                                                                class="form-control form-control-sm"
+                                                                placeholder="09xxxxxxx">
+                                                        </div>
+
+                                                        <div class="form-group mb-2">
+                                                            <label
+                                                                class="mb-1 small font-weight-bold text-uppercase text-muted">Tên
+                                                                (Khách mới)</label>
+                                                            <input type="text" name="customerName"
+                                                                class="form-control form-control-sm"
+                                                                placeholder="Nguyễn Văn A">
+                                                        </div>
+
+                                                        <div class="form-group mb-3">
+                                                            <label
+                                                                class="mb-1 small font-weight-bold text-uppercase text-muted">Ghi
+                                                                chú</label>
+                                                            <textarea name="note" rows="2"
+                                                                class="form-control form-control-sm"
+                                                                placeholder="Ghi chú nếu có..."></textarea>
+                                                        </div>
+
+                                                        <div class="row no-gutters">
+                                                            <div class="col-4 pr-1">
+                                                                <button type="button"
+                                                                    class="btn btn-outline-secondary btn-block py-2"
+                                                                    onclick="if(confirm('Hủy giỏ hàng?')) location.href='?action=clearCart'"
+                                                                    <c:if test="${empty cart}">disabled</c:if>
+                                                                    >Hủy</button>
+                                                            </div>
+                                                            <div class="col-8">
+                                                                <button type="submit"
+                                                                    class="btn btn-warning pos-pay-btn" <c:if
+                                                                    test="${empty cart}">disabled</c:if>>
+                                                                    <i class="fas fa-check-circle mr-1"></i> THANH TOÁN
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </form>
+                                                </div>
+>>>>>>> Stashed changes
                                             </div>
                                         </c:if>
 
