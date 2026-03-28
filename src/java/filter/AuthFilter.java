@@ -20,7 +20,9 @@ import java.io.IOException;
         "/customers",
         "/customer-tiers",
         "/promotions",
-        "/products"
+        "/products",
+        "/pos",
+        "/vnpay-return"
 })
 public class AuthFilter implements Filter {
 

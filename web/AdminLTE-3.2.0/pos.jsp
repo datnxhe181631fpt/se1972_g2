@@ -643,7 +643,10 @@
                                                         <div class="pos-order-title">
                                                             Đơn hàng
                                                         </div>
-                                                        <small class="text-muted">Nhân viên: Cashier</small>
+                                                        <small class="text-muted">Nhân viên:
+                                                            <c:out
+                                                                value="${not empty sessionScope.employee ? sessionScope.employee.fullName : sessionScope.fullName}"
+                                                                default="—" /></small>
                                                     </div>
                                                     <div class="pos-order-tag">
                                                         Ca đang mở

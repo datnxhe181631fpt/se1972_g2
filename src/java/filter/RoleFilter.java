@@ -17,10 +17,11 @@ import java.util.*;
  *   1 = Manager        – quản lý toàn bộ hệ thống
  *   2 = Store Manager  – quản lý kho, nhà cung cấp, chấm công
  *   3 = Staff           – POS, chấm công, ca làm việc
+ *   4 = Cashier         – thu ngân (mẫu DB, tuỳ triển khai)
  *   5 = Saler           – POS, khách hàng, khuyến mãi
  *
  * Mapping dựa trên admin-sidebar.jsp:
- *   /pos                           → 3, 5
+ *   /pos                           → 1, 3, 5 (Manager, Staff, Saler)
  *   /staff/attendance-checkin      → 2, 3, 5
  *   /admin/shift-management        → 1, 2, 3, 5
  *   /staff/swap                    → 1, 2, 3, 5
@@ -99,8 +100,8 @@ public class RoleFilter implements Filter {
         // ── /staff/* → mọi nhân viên đã đăng nhập ──
         ROLE_MAP.put("/staff/", roleSet(1, 2, 3, 5));
 
-        // ── POS – Store Manager + Staff + Saler ──
-        ROLE_MAP.put("/pos", roleSet(2, 3, 5));
+        // ── POS – Manager + Staff + Saler (RoleID 1, 3, 5) ──
+        ROLE_MAP.put("/pos", roleSet(1, 3, 5));
 
         // ── Khách hàng & cửa hàng public (Staff/Saler) ──
         ROLE_MAP.put("/customers", roleSet(1, 2, 5));

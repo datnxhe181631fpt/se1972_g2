@@ -166,11 +166,12 @@
                 </div>
               </div>
             </div>
+          </div>
           </c:if>
 
-          <!-- PHẦN DÀNH CHO STAFF & SALER (Role 3, 4, 5) -->
-          <c:if test="${sessionScope.roleId == 3 || sessionScope.roleId == 4 || sessionScope.roleId == 5}">
+          <!-- POS / chấm công / đổi ca – đồng bộ sidebar & RoleFilter -->
           <div class="row">
+            <c:if test="${sessionScope.roleId == 2 || sessionScope.roleId == 3 || sessionScope.roleId == 5}">
             <div class="col-lg-4 col-6">
               <div class="small-box bg-success">
                 <div class="inner">
@@ -185,7 +186,9 @@
                 </a>
               </div>
             </div>
+            </c:if>
 
+            <c:if test="${sessionScope.roleId == 2 || sessionScope.roleId == 3 || sessionScope.roleId == 4 || sessionScope.roleId == 5}">
             <div class="col-lg-4 col-6">
               <div class="small-box bg-info">
                 <div class="inner">
@@ -200,7 +203,9 @@
                 </a>
               </div>
             </div>
+            </c:if>
 
+            <c:if test="${sessionScope.roleId == 3 || sessionScope.roleId == 5}">
             <div class="col-lg-4 col-12">
               <div class="small-box bg-warning">
                 <div class="inner">
@@ -215,9 +220,10 @@
                 </a>
               </div>
             </div>
+            </c:if>
           </div>
-          </c:if>
 
+          <div class="row mt-3">
             <div class="col-md-6">
               <div class="card card-outline card-secondary">
                 <div class="card-header">

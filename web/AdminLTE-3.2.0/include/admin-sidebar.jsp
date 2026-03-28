@@ -75,8 +75,8 @@
                     </a>
                 </li>
 
-                <%-- ===== BÁN HÀNG (POS) – Store Manager, Staff, Saler ===== --%>
-                <c:if test="${sessionScope.roleId == 2 || sessionScope.roleId == 3 || sessionScope.roleId == 5}">
+                <%-- ===== BÁN HÀNG (POS) – Manager (1), Staff (3), Saler (5) ===== --%>
+                <c:if test="${sessionScope.roleId == 1 || sessionScope.roleId == 3 || sessionScope.roleId == 5}">
                     <li class="nav-item">
                         <a href="${pageContext.request.contextPath}/pos" class="nav-link">
                             <i class="nav-icon fas fa-cash-register"></i>

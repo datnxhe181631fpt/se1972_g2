@@ -15,7 +15,6 @@ import entity.Customer;
 import entity.CartItem;
 import entity.Category;
 import entity.Product;
-import entity.Employee;
 import util.VnPayConfig;
 import util.PointConfig;
 import util.PromotionService;
@@ -45,8 +44,6 @@ public class PosController extends HttpServlet {
     private final ComboProductDAO comboProductDAO = new ComboProductDAO();
     private final StockTakeDAO stockTakeDAO = new StockTakeDAO();
 
-    // Tạm thời hard-code nhân viên & ca làm để dev POS nhanh
-    private static final int DEFAULT_STAFF_ID = 5; // cashiers sample data
     private static final Integer DEFAULT_SHIFT_ID = 1;
 
     @Override
@@ -379,14 +376,18 @@ public class PosController extends HttpServlet {
             }
         }
 
-        // 2. Resolve staff
-        int staffId = DEFAULT_STAFF_ID;
-        Employee staff = employeeDAO.getEmployeeByID(DEFAULT_STAFF_ID);
-        if (staff == null) {
-            List<Employee> employees = employeeDAO.getEmployees(null, null, null, 1, 1);
-            if (!employees.isEmpty()) {
-                staffId = employees.get(0).getEmployeeId();
-            }
+        // 2. Nhân viên bán hàng = tài khoản đang đăng nhập
+        Integer sessionEmpId = (Integer) session.getAttribute("employeeId");
+        if (sessionEmpId == null) {
+            session.setAttribute("error", "Vui lòng đăng nhập để thanh toán.");
+            response.sendRedirect(request.getContextPath() + "/login");
+            return;
+        }
+        int staffId = sessionEmpId;
+        if (employeeDAO.getEmployeeByID(staffId) == null) {
+            session.setAttribute("error", "Không tìm thấy thông tin nhân viên đăng nhập.");
+            response.sendRedirect("pos");
+            return;
         }
 
         // 3. Tự động áp dụng promotion (My Logic)
