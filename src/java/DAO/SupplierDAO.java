@@ -340,6 +340,35 @@ public class SupplierDAO extends DBContext {
         return false;
     }
 
+     public boolean isNameExists(String name) {
+        String sql = "SELECT 1 FROM Suppliers WHERE LOWER(SupplierName) = LOWER(?)";
+        try {
+            Connection connection = getConnection();
+            stm = connection.prepareStatement(sql);
+            stm.setString(1, name);
+            rs = stm.executeQuery();
+            return rs.next();
+        } catch (Exception e) {
+            System.out.println("ERR: isNameExists: " + e.getMessage());
+        }
+        return false;
+    }
+     
+     public boolean isNameExistsExcept(String name, String currentCode) {
+        String sql = "SELECT 1 FROM Suppliers WHERE LOWER(SupplierName) = LOWER(?) AND SupplierCode != ?";
+        try {
+            Connection connection = getConnection();
+            stm = connection.prepareStatement(sql);
+            stm.setString(1, name);
+            stm.setString(2, currentCode);
+            rs = stm.executeQuery();
+            return rs.next();
+        } catch (Exception e) {
+            System.out.println("ERR: isNameExistsExcept: " + e.getMessage());
+        }
+        return false;
+    }
+    
     public String generateNextSupplierCode() {
         String sql = "select MAX(SupplierCode) from Suppliers where SupplierCode like 'SUP-%'";
         try {

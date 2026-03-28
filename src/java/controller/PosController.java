@@ -10,6 +10,7 @@ import DAO.SalesInvoiceDAO;
 import DAO.EmployeeDAO;
 import DAO.CustomerPointDAO;
 import DAO.ComboProductDAO;
+import DAO.StockTakeDAO;
 import entity.Customer;
 import entity.CartItem;
 import entity.Category;
@@ -42,8 +43,8 @@ public class PosController extends HttpServlet {
     private final CustomerPointDAO customerPointDAO = new CustomerPointDAO();
     private final PromotionService promotionService = new PromotionService();
     private final ComboProductDAO comboProductDAO = new ComboProductDAO();
+    private final StockTakeDAO stockTakeDAO = new StockTakeDAO();
 
-    
     // Tạm thời hard-code nhân viên & ca làm để dev POS nhanh
     private static final int DEFAULT_STAFF_ID = 5; // cashiers sample data
     private static final Integer DEFAULT_SHIFT_ID = 1;
@@ -124,7 +125,8 @@ public class PosController extends HttpServlet {
         if (categoryIdStr != null && !categoryIdStr.trim().isEmpty()) {
             try {
                 categoryId = Integer.parseInt(categoryIdStr.trim());
-            } catch (NumberFormatException e) {}
+            } catch (NumberFormatException e) {
+            }
         }
         int page = 1;
         if (pageStr != null && !pageStr.trim().isEmpty()) {
@@ -137,9 +139,15 @@ public class PosController extends HttpServlet {
         int pageSize = 10;
         int totalProducts = productDAO.countProductsForPos(key, categoryId);
         int totalPages = (int) Math.ceil(totalProducts / (double) pageSize);
-        if (totalPages <= 0) totalPages = 1;
-        if (page < 1) page = 1;
-        if (page > totalPages) page = totalPages;
+        if (totalPages <= 0) {
+            totalPages = 1;
+        }
+        if (page < 1) {
+            page = 1;
+        }
+        if (page > totalPages) {
+            page = totalPages;
+        }
 
         List<Product> products = productDAO.getProductsForPos(key, categoryId, page, pageSize);
         request.setAttribute("products", products);
@@ -164,8 +172,9 @@ public class PosController extends HttpServlet {
     }
 
     /**
-     * Tính tổng tiền thuế VAT cho giỏ hàng dựa trên loại sách.
-     * Các nhóm được áp dụng 0% VAT: giáo khoa, chính trị, pháp luật, khoa học/khoa học kỹ thuật; còn lại 5%.
+     * Tính tổng tiền thuế VAT cho giỏ hàng dựa trên loại sách. Các nhóm được áp
+     * dụng 0% VAT: giáo khoa, chính trị, pháp luật, khoa học/khoa học kỹ thuật;
+     * còn lại 5%.
      */
     private double calculateVatAmount(List<CartItem> cart, List<Category> categories) {
         if (cart == null || cart.isEmpty()) {
@@ -215,6 +224,14 @@ public class PosController extends HttpServlet {
     private void addItemToCart(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
         HttpSession session = request.getSession();
+        // Check if inventory lock is active (Stock Take in progress)
+        String activeLockSTNumber = stockTakeDAO.getActiveLockSTNumber();
+        if (activeLockSTNumber != null) {
+            session.setAttribute("error", "Cửa hàng đang khóa - Đang kiểm kê kho (" + activeLockSTNumber + "). Không thể bán hàng lúc này.");
+            response.sendRedirect("pos");
+            return;
+        }
+
         String sku = request.getParameter("sku");
         String quantityStr = request.getParameter("quantity");
 
@@ -227,7 +244,9 @@ public class PosController extends HttpServlet {
         int quantity = 1;
         try {
             quantity = Integer.parseInt(quantityStr);
-            if (quantity <= 0) quantity = 1;
+            if (quantity <= 0) {
+                quantity = 1;
+            }
         } catch (NumberFormatException e) {
             quantity = 1;
         }
@@ -266,7 +285,9 @@ public class PosController extends HttpServlet {
         try {
             int productId = Integer.parseInt(productIdStr);
             int qty = Integer.parseInt(quantityStr);
-            if (qty <= 0) qty = 1;
+            if (qty <= 0) {
+                qty = 1;
+            }
 
             List<CartItem> cart = getCart(session);
             for (CartItem item : cart) {
@@ -313,7 +334,14 @@ public class PosController extends HttpServlet {
             response.sendRedirect("pos");
             return;
         }
-        
+
+        String activeLockSTNumber = stockTakeDAO.getActiveLockSTNumber();
+        if (activeLockSTNumber != null) {
+            session.setAttribute("error", "Cửa hàng đang khóa - Đang kiểm kê kho (" + activeLockSTNumber + "). Không thể thanh toán lúc này. Vui lòng thử lại sau.");
+            response.sendRedirect("pos");
+            return;
+        }
+
         String customerInput = request.getParameter("customerId");
         String customerNameInput = request.getParameter("customerName");
         String note = request.getParameter("note");
@@ -356,35 +384,47 @@ public class PosController extends HttpServlet {
         Employee staff = employeeDAO.getEmployeeByID(DEFAULT_STAFF_ID);
         if (staff == null) {
             List<Employee> employees = employeeDAO.getEmployees(null, null, null, 1, 1);
-            if (!employees.isEmpty()) staffId = employees.get(0).getEmployeeId();
+            if (!employees.isEmpty()) {
+                staffId = employees.get(0).getEmployeeId();
+            }
         }
 
         // 3. Tự động áp dụng promotion (My Logic)
         PromotionResult promoResult = promotionService.calculatePromotionDiscount(cart);
         double automaticDiscount = promoResult.getTotalDiscount();
-        
+
         // Manual discount (Team's feature)
         double manualDiscountPercent = 0;
         try {
-            if (manualDiscountPercentStr != null) manualDiscountPercent = Double.parseDouble(manualDiscountPercentStr);
-        } catch (NumberFormatException e) {}
-        
+            if (manualDiscountPercentStr != null) {
+                manualDiscountPercent = Double.parseDouble(manualDiscountPercentStr);
+            }
+        } catch (NumberFormatException e) {
+        }
+
         double totalAmountOriginal = cart.stream().mapToDouble(CartItem::getLineTotal).sum();
         double manualDiscountAmount = totalAmountOriginal * (manualDiscountAmountPercentToAmount(manualDiscountPercent));
 
         double totalDiscount = automaticDiscount + manualDiscountAmount;
-        if (totalDiscount > totalAmountOriginal) totalDiscount = totalAmountOriginal;
+        if (totalDiscount > totalAmountOriginal) {
+            totalDiscount = totalAmountOriginal;
+        }
 
         double vatAmount = calculateVatAmount(cart, categoryDAO.getAllActiveCategories());
         double finalAmount = totalAmountOriginal - totalDiscount + vatAmount;
-        if (finalAmount < 0) finalAmount = 0;
+        if (finalAmount < 0) {
+            finalAmount = 0;
+        }
 
         // 4. Validate tiền khách đưa (Team's Feature)
         if ("CASH".equalsIgnoreCase(paymentMethod)) {
             double cashReceived = 0;
             try {
-                if (cashReceivedStr != null) cashReceived = Double.parseDouble(cashReceivedStr);
-            } catch (NumberFormatException e) {}
+                if (cashReceivedStr != null) {
+                    cashReceived = Double.parseDouble(cashReceivedStr);
+                }
+            } catch (NumberFormatException e) {
+            }
             if (cashReceived + 0.000001 < finalAmount) {
                 session.setAttribute("error", "Tiền khách đưa phải lớn hơn hoặc bằng " + String.format("%,.0f", finalAmount) + "đ");
                 response.sendRedirect("pos");
@@ -423,7 +463,7 @@ public class PosController extends HttpServlet {
         for (CartItem item : cart) {
             if (item.getProduct().isIsCombo()) {
                 comboProductDAO.decreaseComboQuantity(
-                    item.getProduct().getProductID(), item.getQuantity());
+                        item.getProduct().getProductID(), item.getQuantity());
             }
         }
 
@@ -439,14 +479,17 @@ public class PosController extends HttpServlet {
 
         StringBuilder msg = new StringBuilder("Thanh toán thành công. Mã: " + invoiceCode);
 
-
         session.setAttribute("msg", msg.toString());
         response.sendRedirect("pos");
     }
 
     private double manualDiscountAmountPercentToAmount(double percent) {
-        if (percent < 0) return 0;
-        if (percent > 100) return 1.0;
+        if (percent < 0) {
+            return 0;
+        }
+        if (percent > 100) {
+            return 1.0;
+        }
         return percent / 100.0;
     }
 

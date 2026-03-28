@@ -115,13 +115,13 @@ public class SupplierController extends HttpServlet {
         }
         String code = request.getParameter("code");
         String redirectUrl = request.getContextPath() + "/admin/supplier?action=list";
-      
+
         String msg = "";
         boolean success;
 
         switch (action) {
             case "delete":
-                if(!requireManager(request, response, "/admin/supplier?action=list")){
+                if (!requireManager(request, response, "/admin/supplier?action=list")) {
                     return;
                 }
                 if (!supDAO.canDeleteSupplier(code)) {
@@ -134,7 +134,7 @@ public class SupplierController extends HttpServlet {
                 break;
 
             case "deactive":
-                if(!requireManager(request, response, "/admin/supplier?action=list")){
+                if (!requireManager(request, response, "/admin/supplier?action=list")) {
                     return;
                 }
                 if (!supDAO.canLockSupplier(code)) {
@@ -149,7 +149,7 @@ public class SupplierController extends HttpServlet {
                 break;
 
             case "active":
-                if(!requireManager(request, response, "/admin/supplier?action=list")){
+                if (!requireManager(request, response, "/admin/supplier?action=list")) {
                     return;
                 }
                 success = supDAO.activeSupplier(code);
@@ -171,17 +171,28 @@ public class SupplierController extends HttpServlet {
                         .required("Số điện thoại", phone).phone("Số điện thoại", phone)
                         .email("Email", email);
 
+                boolean isUpdate = supDAO.isCodeExist(code);
+                 if (isUpdate) {
+                        if (supDAO.isNameExistsExcept(name, code)) {
+                        valid.addError("Tên nhà cung cấp '" + name + "' đã tồn tại.");
+                    }
+                 } else {
+                    if (supDAO.isNameExists(name)) {
+                        valid.addError("Tên nhà cung cấp '" + name + "' đã tồn tại.");
+                    }
+                }
+                 
                 if (!valid.isValid()) {
                     request.setAttribute("supplier", sup);
                     request.setAttribute("code", code);
                     request.setAttribute("error", valid.getFirstError());
-                    String mode = supDAO.isCodeExist(code) ? "edit" : "add";
+                    String mode = isUpdate ? "edit" : "add";
                     request.setAttribute("mode", mode);
                     request.getRequestDispatcher("/AdminLTE-3.2.0/supplier-form.jsp").forward(request, response);
                     return;
                 }
 
-                if (supDAO.isCodeExist(code)) {
+                if (isUpdate) {
                     success = supDAO.updateSupplier(sup);
                     msg = success ? "success_edit" : "fail";
                 } else {
