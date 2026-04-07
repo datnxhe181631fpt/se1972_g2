@@ -50,7 +50,9 @@ public class CustomerDAO extends DBContext {
     // READ by ID
     public Customer getById(String id) {
         String sql = """
-                    SELECT c.*, p.TotalPoints
+                    SELECT c.*, p.TotalPoints,
+                           (SELECT TOP 1 TierName FROM CustomerTiers WHERE MinPoint <= p.TotalPoints ORDER BY MinPoint DESC) AS TierName,
+                           (SELECT TOP 1 TierID FROM CustomerTiers WHERE MinPoint <= p.TotalPoints ORDER BY MinPoint DESC) AS TierID
                     FROM Customers c
                     LEFT JOIN CustomerPoints p ON c.CustomerID = p.CustomerID
                     WHERE c.CustomerID = ?
@@ -207,6 +209,8 @@ public class CustomerDAO extends DBContext {
         // Handle Points from JOIN
         try {
             c.setPoints(rs.getInt("TotalPoints"));
+            c.setTierName(rs.getString("TierName"));
+            c.setTierID(rs.getInt("TierID"));
         } catch (SQLException e) {
         }
 

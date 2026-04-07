@@ -52,7 +52,8 @@ import java.util.*;
  */
 @WebFilter(urlPatterns = {"/admin/*", "/staff/*", "/supplier", "/purchaseorder",
                           "/pos", "/customer-tiers", "/promotions",
-                          "/sales-invoices", "/report/*", "/customers", "/products"})
+                          "/sales-invoices", "/report/*", "/customers", "/products", 
+                          "/customer-profile", "/customer-profile-edit", "/customer-promotions", "/customer-history"})
 public class RoleFilter implements Filter {
 
     /**
@@ -105,13 +106,19 @@ public class RoleFilter implements Filter {
 
         // ── Khách hàng & cửa hàng public (Staff/Saler) ──
         ROLE_MAP.put("/customers", roleSet(1, 2, 5));
-        ROLE_MAP.put("/products", roleSet(1, 2, 3, 5));
+        ROLE_MAP.put("/products", roleSet(1, 2, 3, 5, 6));
 
         // ── Trang không có prefix /admin/ nhưng cần phân quyền ──
         ROLE_MAP.put("/supplier", roleSet(1, 2));
         ROLE_MAP.put("/purchaseorder", roleSet(1, 2));
         ROLE_MAP.put("/customer-tiers", roleSet(1, 2, 5));
         ROLE_MAP.put("/promotions", roleSet(1, 2, 5));
+
+        // ── Khách hàng hệ thống ──
+        ROLE_MAP.put("/customer-profile", roleSet(6));
+        ROLE_MAP.put("/customer-profile-edit", roleSet(6));
+        ROLE_MAP.put("/customer-promotions", roleSet(6));
+        ROLE_MAP.put("/customer-history", roleSet(6));
     }
 
     @Override
@@ -123,7 +130,7 @@ public class RoleFilter implements Filter {
         HttpSession         session  = request.getSession(false);
 
         // Nếu chưa đăng nhập → AuthFilter sẽ xử lý, cho qua filter này
-        if (session == null || session.getAttribute("employeeId") == null) {
+        if (session == null || (session.getAttribute("employeeId") == null && session.getAttribute("customerId") == null)) {
             chain.doFilter(req, res);
             return;
         }

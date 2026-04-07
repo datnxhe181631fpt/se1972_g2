@@ -772,6 +772,15 @@
                                                                     type="number" maxFractionDigits="0" /> đ
                                                             </span>
                                                         </div>
+                                                            
+                                                            <div class="d-flex justify-content-between align-items-center">
+                                                            <span class="text-sm font-weight-bold text-muted">Điểm</span>
+                                                            <span class="pos-total-point" id="pos-final-point">
+                                                                <fmt:formatNumber
+                                                                    value="${totalAmount / pricePerPoint}"
+                                                                    type="number" maxFractionDigits="0" /> đ
+                                                            </span>
+                                                        </div>
                                                     </div>
 
                                                     <form id="checkout-form" action="<c:url value='/pos'/>"

@@ -181,6 +181,40 @@ public class PromotionDAO extends DBContext {
         return null;
     }
 
+    /**
+     * Lấy danh sách khuyến mãi đang hoạt động và áp dụng cho hạng của khách hàng.
+     */
+    public List<Promotion> getPromotionsForCustomer(int tierID) {
+        List<Promotion> list = new ArrayList<>();
+        // Lấy các khuyến mãi ACTIVE, trong thời hạn.
+        // Điều kiện: (Có TierID tương ứng trong PromotionCustomerTiers) HOẶC (Không có bất kỳ TierID nào - tức là áp dụng cho tất cả)
+        String sql = """
+                    SELECT DISTINCT p.* 
+                    FROM Promotions p
+                    WHERE p.Status = 'ACTIVE' 
+                      AND p.StartDate <= CAST(GETDATE() AS DATE) 
+                      AND p.EndDate >= CAST(GETDATE() AS DATE)
+                      AND (
+                        EXISTS (SELECT 1 FROM PromotionCustomerTiers pct WHERE pct.PromotionID = p.PromotionID AND pct.TierID = ?)
+                        OR 
+                        NOT EXISTS (SELECT 1 FROM PromotionCustomerTiers pct WHERE pct.PromotionID = p.PromotionID)
+                      )
+                    ORDER BY p.Priority DESC, p.PromotionID ASC
+                """;
+        try (Connection con = getConnection();
+                PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, tierID);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapRow(rs));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
     // ── helper ──────────────────────────────────────────────────────────────
     private Promotion mapRow(ResultSet rs) throws SQLException {
         Promotion p = new Promotion();

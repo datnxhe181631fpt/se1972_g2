@@ -9,6 +9,7 @@ import DAO.CustomerDAO;
 import DAO.SalesInvoiceDAO;
 import DAO.EmployeeDAO;
 import DAO.CustomerPointDAO;
+import DAO.CustomerAccountDAO;
 import DAO.ComboProductDAO;
 import DAO.StockTakeDAO;
 import entity.Customer;
@@ -40,6 +41,7 @@ public class PosController extends HttpServlet {
     private final CustomerDAO customerDAO = new CustomerDAO();
     private final EmployeeDAO employeeDAO = new EmployeeDAO();
     private final CustomerPointDAO customerPointDAO = new CustomerPointDAO();
+    private final CustomerAccountDAO customerAccountDAO = new CustomerAccountDAO();
     private final PromotionService promotionService = new PromotionService();
     private final ComboProductDAO comboProductDAO = new ComboProductDAO();
     private final StockTakeDAO stockTakeDAO = new StockTakeDAO();
@@ -95,6 +97,7 @@ public class PosController extends HttpServlet {
             throws ServletException, IOException {
         HttpSession session = request.getSession();
         List<CartItem> cart = getCart(session);
+        int pricePerPoint = PointConfig.getPricePerPoint(getServletContext());
 
         double totalAmount = cart.stream()
                 .mapToDouble(CartItem::getLineTotal)
@@ -113,6 +116,7 @@ public class PosController extends HttpServlet {
         request.setAttribute("autoPromoDiscount", autoPromoDiscount);
         request.setAttribute("vatAmount", vatAmount);
         request.setAttribute("categories", categories);
+        request.setAttribute("pricePerPoint", pricePerPoint);
 
         // Sản phẩm lấy từ DB: lọc theo key (tên/SKU) và categoryId (Pagination Team's Update)
         String key = request.getParameter("key");
@@ -370,6 +374,13 @@ public class PosController extends HttpServlet {
                 newCustomer.setPhoneNumber(trimmed);
                 newCustomer.setStatus("ACTIVE");
                 customerDAO.insert(newCustomer);
+
+                // Create CustomerAccount for the new customer
+                entity.CustomerAccount acc = new entity.CustomerAccount();
+                acc.setCustomerID(trimmed);
+                acc.setPassword(trimmed);
+                customerAccountDAO.insert(acc);
+
                 resolvedCustomerId = newCustomer.getCustomerID();
             } else {
                 resolvedCustomerId = customer.getCustomerID();
@@ -482,6 +493,15 @@ public class PosController extends HttpServlet {
 
         session.setAttribute("msg", msg.toString());
         response.sendRedirect("pos");
+    }
+    private int CalculatePoint(HttpServletRequest request, HttpServletResponse response){
+        HttpSession session = request.getSession();
+        List<CartItem> cart = getCart(session);
+        int pointsAdded = 0;
+        double totalAmountOriginal = cart.stream().mapToDouble(CartItem::getLineTotal).sum();
+        int pricePerPoint = PointConfig.getPricePerPoint(getServletContext());
+            pointsAdded = (int) (totalAmountOriginal / pricePerPoint);
+        return pointsAdded;
     }
 
     private double manualDiscountAmountPercentToAmount(double percent) {

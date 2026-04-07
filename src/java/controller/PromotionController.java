@@ -303,6 +303,32 @@ public class PromotionController extends HttpServlet {
 
     private boolean validatePromotionValues(Promotion p, HttpServletRequest request) {
         boolean hasError = false;
+
+        // Date validation
+        LocalDate today = LocalDate.now();
+        String action = request.getParameter("action");
+
+        if (p.getStartDate() == null) {
+            request.setAttribute("error_startDate", "Ngày bắt đầu không hợp lệ.");
+            hasError = true;
+        } else if ("create".equals(action) && p.getStartDate().isBefore(today)) {
+            request.setAttribute("error_startDate", "Ngày bắt đầu không được chọn trong quá khứ.");
+            hasError = true;
+        }
+
+        if (p.getEndDate() == null) {
+            request.setAttribute("error_endDate", "Ngày kết thúc không hợp lệ.");
+            hasError = true;
+        } else if (p.getEndDate().isBefore(today)) {
+            request.setAttribute("error_endDate", "Ngày kết thúc không được chọn trong quá khứ.");
+            hasError = true;
+        }
+
+        if (p.getStartDate() != null && p.getEndDate() != null && p.getEndDate().isBefore(p.getStartDate())) {
+            request.setAttribute("errorMessage", "Ngày kết thúc phải sau hoặc bằng ngày bắt đầu.");
+            hasError = true;
+        }
+
         double val = p.getDiscount().getDiscountValue();
         if ("PERCENT".equals(p.getPromotionType())) {
             if (val < 0 || val > 100) {
@@ -387,19 +413,6 @@ public class PromotionController extends HttpServlet {
                 } catch (NumberFormatException ignored) {
                 }
             }
-        }
-
-        // Handle Conditions
-        String minOrderValue = request.getParameter("minOrderValue");
-        if (minOrderValue != null && !minOrderValue.isBlank()) {
-            List<PromotionCondition> conds = new ArrayList<>();
-            PromotionCondition pc = new PromotionCondition();
-            pc.setConditionType("MIN_ORDER_VALUE");
-            pc.setOperator(">=");
-            pc.setConditionValue(minOrderValue.replace(",", ""));
-            pc.setLogicalGroup("G1");
-            conds.add(pc);
-            p.setConditions(conds);
         }
 
         return p;

@@ -22,7 +22,11 @@ import java.io.IOException;
         "/promotions",
         "/products",
         "/pos",
-        "/vnpay-return"
+        "/vnpay-return",
+        "/customer-profile",
+        "/customer-profile-edit",
+        "/customer-promotions",
+        "/customer-history"
 })
 public class AuthFilter implements Filter {
 
@@ -33,8 +37,8 @@ public class AuthFilter implements Filter {
         HttpServletResponse httpResponse = (HttpServletResponse) response;
         HttpSession session = httpRequest.getSession(false);
 
-        // Check if user is logged in
-        if (session == null || session.getAttribute("employeeId") == null) {
+        // Check if user (either Employee or Customer) is logged in
+        if (session == null || (session.getAttribute("employeeId") == null && session.getAttribute("customerId") == null)) {
             httpResponse.sendRedirect(httpRequest.getContextPath() + "/login");
             return;
         }

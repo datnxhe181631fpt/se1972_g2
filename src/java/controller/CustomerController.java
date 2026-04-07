@@ -152,7 +152,7 @@ public class CustomerController extends HttpServlet {
         tiers.sort((t1, t2) -> Double.compare(t2.getMinPoint(), t1.getMinPoint()));
 
         for (Customer c : customers) {
-            String assignedTier = "Unknown";
+            String assignedTier = "Thành viên";
             for (CustomerTier t : tiers) {
                 if (c.getPoints() >= t.getMinPoint()) {
                     assignedTier = t.getTierName();

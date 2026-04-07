@@ -27,9 +27,6 @@ public class CustomerTierController extends HttpServlet {
             case "edit":
                 showEditForm(request, response);
                 break;
-            case "delete":
-                deleteTier(request, response);
-                break;
             default:
                 listTiers(request, response);
                 break;
@@ -117,12 +114,5 @@ public class CustomerTierController extends HttpServlet {
         tierDAO.update(tier);
         response.sendRedirect(
                 request.getContextPath() + "/customer-tiers?msg=update_success&action=edit&id=" + id);
-    }
-
-    private void deleteTier(HttpServletRequest request, HttpServletResponse response)
-            throws IOException {
-        int id = Integer.parseInt(request.getParameter("id"));
-        tierDAO.delete(id);
-        response.sendRedirect(request.getContextPath() + "/customer-tiers?msg=delete_success");
     }
 }

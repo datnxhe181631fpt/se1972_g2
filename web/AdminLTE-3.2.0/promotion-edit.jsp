@@ -396,23 +396,7 @@
                                                         </select>
                                                     </div>
 
-                                                    <!-- Min Order Value -->
-                                                    <div class="condition-row">
-                                                        <label class="check-label">
-                                                            <i class="fas fa-shopping-cart text-muted mr-1"></i> Đơn
-                                                            hàng tối thiểu:
-                                                        </label>
-                                                        <div class="input-group" style="width: 160px;">
-                                                            <input type="number" class="form-control promo-input"
-                                                                id="minOrderValue" name="minOrderValue" placeholder="0"
-                                                                value="${not empty promotion.conditions ? promotion.conditions[0].conditionValue : '0'}">
-                                                            <div class="input-group-append">
-                                                                <span class="input-group-text">đ</span>
-                                                            </div>
-                                                        </div>
-                                                        <small id="minOrderValueError" class="text-danger mt-1"
-                                                            style="display: none;"></small>
-                                                    </div>
+
 
                                                     <!-- Customer Tier -->
                                                     <div class="condition-row">
@@ -497,10 +481,11 @@
                                                         <div class="input-group date" id="fromDatePicker"
                                                             data-target-input="nearest">
                                                             <input type="text"
-                                                                class="form-control promo-input datetimepicker-input"
+                                                                class="form-control promo-input datetimepicker-input ${not empty error_startDate ? 'is-invalid' : ''}"
                                                                 name="startDate" id="startDate"
                                                                 data-target="#fromDatePicker" placeholder="mm/dd/yyyy"
-                                                                value="${promotion.startDateForm}" required>
+                                                                value="${promotion.startDateForm}"
+                                                                data-original="${promotion.startDateForm}" required>
                                                             <div class="input-group-append"
                                                                 data-target="#fromDatePicker"
                                                                 data-toggle="datetimepicker">
@@ -509,12 +494,15 @@
                                                                 </div>
                                                             </div>
                                                         </div>
+                                                        <c:if test="${not empty error_startDate}">
+                                                            <div class="text-danger small d-block w-100 mt-1">${error_startDate}</div>
+                                                        </c:if>
 
                                                         <span class="date-label">Đến:</span>
                                                         <div class="input-group date" id="toDatePicker"
                                                             data-target-input="nearest">
                                                             <input type="text"
-                                                                class="form-control promo-input datetimepicker-input"
+                                                                class="form-control promo-input datetimepicker-input ${not empty error_endDate ? 'is-invalid' : ''}"
                                                                 name="endDate" id="endDate" data-target="#toDatePicker"
                                                                 placeholder="mm/dd/yyyy"
                                                                 value="${promotion.endDateForm}" required>
@@ -525,6 +513,9 @@
                                                                 </div>
                                                             </div>
                                                         </div>
+                                                        <c:if test="${not empty error_endDate}">
+                                                            <div class="text-danger small d-block w-100 mt-1">${error_endDate}</div>
+                                                        </c:if>
                                                     </div>
                                                 </div>
 
@@ -568,6 +559,7 @@
                         // Init date pickers
                         $('#fromDatePicker').datetimepicker({
                             format: 'MM/DD/YYYY',
+                            minDate: moment().startOf('day'),
                             icons: {
                                 time: 'far fa-clock',
                                 date: 'far fa-calendar-alt',
@@ -583,6 +575,7 @@
 
                         $('#toDatePicker').datetimepicker({
                             format: 'MM/DD/YYYY',
+                            minDate: moment().startOf('day'),
                             useCurrent: false,
                             icons: {
                                 time: 'far fa-clock',
@@ -620,9 +613,7 @@
                             }
                         }
 
-                        $('#minOrderValue').on('input', function () {
-                            validateNumeric($(this), $('#minOrderValueError'), 'đơn hàng tối thiểu');
-                        });
+
                         $('#discountPercent').on('input', function () {
                             validateNumeric($(this), $('#discountPercentError'), 'tỷ lệ giảm giá');
                         });
@@ -684,17 +675,41 @@
 
                         var startDate = $.trim($('#startDate').val());
                         var endDate = $.trim($('#endDate').val());
+                        var today = moment().startOf('day');
+                        var originalStartDate = $('#startDate').data('original');
+
                         if (!startDate) {
                             $('#startDate').addClass('is-invalid');
                             valid = false;
                         } else {
-                            $('#startDate').removeClass('is-invalid');
+                            var startMoment = moment(startDate, 'MM/DD/YYYY');
+                            // Allow past date if it's the original one
+                            if (startMoment.isBefore(today) && startDate !== originalStartDate) {
+                                alert("Ngày bắt đầu không được chọn trong quá khứ.");
+                                $('#startDate').addClass('is-invalid');
+                                valid = false;
+                            } else {
+                                $('#startDate').removeClass('is-invalid');
+                            }
                         }
+
                         if (!endDate) {
                             $('#endDate').addClass('is-invalid');
                             valid = false;
                         } else {
-                            $('#endDate').removeClass('is-invalid');
+                            var endMoment = moment(endDate, 'MM/DD/YYYY');
+                            if (endMoment.isBefore(today) && endDate !== $('#endDate').val()) { // Fixed logic here
+                                // Actually for endDate, it should probably also be >= today
+                                if (endMoment.isBefore(today)) {
+                                     alert("Ngày kết thúc không được chọn trong quá khứ.");
+                                     $('#endDate').addClass('is-invalid');
+                                     valid = false;
+                                } else {
+                                     $('#endDate').removeClass('is-invalid');
+                                }
+                            } else {
+                                $('#endDate').removeClass('is-invalid');
+                            }
                         }
 
                         if (!valid) {
@@ -703,15 +718,7 @@
                         }
 
                         // Check values
-                        var type = $('#promotionType').val();
-                        var minOrder = parseFloat($('#minOrderValue').val());
-                        if (isNaN(minOrder) || minOrder < 0) {
-                            alert("Đơn hàng tối thiểu phải là số lớn hơn 0.");
-                            $('#minOrderValue').addClass('is-invalid');
-                            return false;
-                        } else {
-                            $('#minOrderValue').removeClass('is-invalid');
-                        }
+
 
                         if (type === 'PERCENT') {
                             var pct = parseFloat($('#discountPercent').val());

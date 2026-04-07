@@ -126,10 +126,6 @@
                                                                 <td>
                                                                     <a
                                                                         href="<%= request.getContextPath() %>/customer-tiers?action=edit&id=${tier.tierID}">Sửa</a>
-                                                                    <span class="text-muted mx-1">|</span>
-                                                                    <a href="<%= request.getContextPath() %>/customer-tiers?action=delete&id=${tier.tierID}"
-                                                                        class="text-danger"
-                                                                        onclick="return confirm('Bạn có chắc muốn xoá cấp bậc này?');">Xoá</a>
                                                                 </td>
                                                             </tr>
                                                         </c:forEach>

@@ -320,7 +320,48 @@ public class SalesInvoiceDAO extends DBContext {
         } catch (SQLException e) {
             System.out.println("ERR: searchInvoices: " + e.getMessage());
         }
+        return list;
+    }
 
+    public List<Map<String, Object>> getInvoicesByCustomerId(String customerId) {
+        List<Map<String, Object>> list = new ArrayList<>();
+        String sql = """
+                SELECT 
+                    si.InvoiceID,
+                    si.InvoiceCode,
+                    si.TotalAmount,
+                    si.DiscountAmount,
+                    si.FinalAmount,
+                    si.PaymentStatus,
+                    si.CreatedAt AS CreatedAt,
+                    p.PaymentMethod,
+                    p.PaidAt AS PaidAt
+                FROM SalesInvoice si
+                LEFT JOIN Payments p ON si.InvoiceID = p.InvoiceID AND p.Status = 'COMPLETED'
+                WHERE si.CustomerID = ?
+                ORDER BY si.CreatedAt DESC
+                """;
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, customerId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Map<String, Object> row = new HashMap<>();
+                    row.put("invoiceId", rs.getLong("InvoiceID"));
+                    row.put("invoiceCode", rs.getString("InvoiceCode"));
+                    row.put("totalAmount", rs.getDouble("TotalAmount"));
+                    row.put("discountAmount", rs.getDouble("DiscountAmount"));
+                    row.put("finalAmount", rs.getDouble("FinalAmount"));
+                    row.put("paymentStatus", rs.getString("PaymentStatus"));
+                    row.put("createdAt", rs.getTimestamp("CreatedAt"));
+                    row.put("paymentMethod", rs.getString("PaymentMethod"));
+                    row.put("paidAt", rs.getTimestamp("PaidAt"));
+                    list.add(row);
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println("ERR: getInvoicesByCustomerId: " + e.getMessage());
+        }
         return list;
     }
 }

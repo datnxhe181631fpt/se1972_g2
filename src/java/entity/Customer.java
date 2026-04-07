@@ -21,6 +21,7 @@ public class Customer {
     private String note;
     private int points;
     private String tierName;
+    private int tierID;
     private String phoneNumber;
 
     public Customer() {
@@ -107,6 +108,14 @@ public class Customer {
 
     public void setTierName(String tierName) {
         this.tierName = tierName;
+    }
+
+    public int getTierID() {
+        return tierID;
+    }
+
+    public void setTierID(int tierID) {
+        this.tierID = tierID;
     }
 
     public String getPhone() {

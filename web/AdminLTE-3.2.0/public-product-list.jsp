@@ -431,9 +431,27 @@
         <a href="${pageContext.request.contextPath}/products">
             <i class="fas fa-shopping-bag"></i> Sản phẩm
         </a>
-        <a href="${pageContext.request.contextPath}/login" class="btn-login-nav">
-            <i class="fas fa-sign-in-alt"></i> Đăng nhập
+        <a href="${pageContext.request.contextPath}/customer-promotions">
+            <i class="fas fa-ticket-alt"></i> Khuyến mãi
         </a>
+        <a href="${pageContext.request.contextPath}/customer-history">
+            <i class="fas fa-history"></i> Lịch sử mua hàng
+        </a>
+        <c:choose>
+            <c:when test="${not empty sessionScope.customer}">
+                <a href="${pageContext.request.contextPath}/customer-profile" class="btn-login-nav">
+                    <i class="fas fa-user-circle"></i> ${sessionScope.customer.customerName}
+                </a>
+                <a href="${pageContext.request.contextPath}/logout" style="color: #ff6b6b;">
+                    <i class="fas fa-sign-out-alt"></i>
+                </a>
+            </c:when>
+            <c:otherwise>
+                <a href="${pageContext.request.contextPath}/login" class="btn-login-nav">
+                    <i class="fas fa-sign-in-alt"></i> Đăng nhập
+                </a>
+            </c:otherwise>
+        </c:choose>
     </div>
 </nav>
 
